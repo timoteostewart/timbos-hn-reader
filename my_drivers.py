@@ -1,9 +1,10 @@
 import logging
 import traceback
-import config
 
-from selenium.webdriver.chrome.service import Service
 import undetected_chromedriver as uc
+from selenium.webdriver.chrome.service import Service
+
+import config
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -16,7 +17,7 @@ def get_chromedriver_noproxy(user_agent=""):
     chrome_options.add_argument("--incognito")  # optional
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
-    
+
     if user_agent:
         chrome_options.add_argument(f"--user-agent={user_agent}")
 
@@ -24,7 +25,9 @@ def get_chromedriver_noproxy(user_agent=""):
 
     try:
         driver = uc.Chrome(
-            browser_executable_path=config.settings["SCRAPING"]["PATH_TO_CHROME_BROWSER"],
+            browser_executable_path=config.settings["SCRAPING"][
+                "PATH_TO_CHROME_BROWSER"
+            ],
             options=chrome_options,
             service=chrome_service,
             use_subprocess=False,

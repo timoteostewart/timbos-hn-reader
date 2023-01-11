@@ -34,17 +34,13 @@ def main():
 
     # typical invocation: `python main.py new thnr /srv/timbos-hn-reader/settings.yaml`
     story_type = sys.argv[1]  # e.g., `top`
-    config.load_settings(
-        sys.argv[2], sys.argv[3]
-    )
+    config.load_settings(sys.argv[2], sys.argv[3])
 
     # configure root logger
     # compute name of today's log
     cur_year = datetime.datetime.now().year
     day_of_year = datetime.date.today().timetuple().tm_yday
-    log_filename = (
-        f"{config.settings['cur_host']}-thnr-{cur_year}-{day_of_year:03}.log"
-    )
+    log_filename = f"{config.settings['cur_host']}-thnr-{cur_year}-{day_of_year:03}.log"
     main.logger = logging.getLogger()
     main.logger.setLevel(logging.INFO)
     handler = logging.FileHandler(
@@ -65,7 +61,7 @@ def main():
 
     check_for_required_dirs()
     return hn.supervisor(cur_story_type=story_type)
-    
+
 
 if __name__ == "__main__":
     sys.exit(main())

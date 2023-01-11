@@ -81,7 +81,9 @@ delay_for_page_to_load_seconds = 4
 num_tries_for_page_retrieval = 3
 
 # other settings
-reading_speed_words_per_minute = 250  # this is used to divide word count of article to get reading time
+reading_speed_words_per_minute = (
+    250  # this is used to divide word count of article to get reading time
+)
 
 # various constants
 EMPTY_STRING = ""

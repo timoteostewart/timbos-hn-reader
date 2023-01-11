@@ -210,7 +210,6 @@ def get_reading_time_via_goose(story_as_object, page_source):
         return None
 
 
-
 def get_roster_for(driver, roster_story_type: str):
     if roster_story_type in ["active", "classic"]:
         roster = get_roster_via_screen_scraping(driver, roster_story_type)
