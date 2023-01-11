@@ -1,6 +1,8 @@
 import logging
 import traceback
+import config
 
+from selenium.webdriver.chrome.service import Service
 import undetected_chromedriver as uc
 
 logger = logging.getLogger(__name__)
@@ -9,19 +11,24 @@ logger.setLevel(logging.INFO)
 
 def get_chromedriver_noproxy(user_agent=""):
     chrome_options = uc.ChromeOptions()
-    chrome_options.add_argument("--disable-gpu")  # note: required for dockerized Chrome
-    chrome_options.add_argument("--headless")
+    # chrome_options.add_argument("--disable-gpu")  # note: required for dockerized Chrome
+    chrome_options.add_argument("--headless")  # note: required
     chrome_options.add_argument("--incognito")  # optional
     chrome_options.add_argument("--no-sandbox")
-
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    
     if user_agent:
         chrome_options.add_argument(f"--user-agent={user_agent}")
 
-    try:  # `undetected-chrome` helps to access websites sitting behind a CDN
+    chrome_service = Service(config.settings["SCRAPING"]["PATH_TO_CHROMEDRIVER"])
+
+    try:
         driver = uc.Chrome(
+            browser_executable_path=config.settings["SCRAPING"]["PATH_TO_CHROME_BROWSER"],
             options=chrome_options,
-            use_subprocess=True,
-        )  # `use_subprocess=True` is required by `uc.Chrome()` but must be removed for `webservice.Chrome()`
+            service=chrome_service,
+            use_subprocess=False,
+        )
     except Exception as exc:
         logger.error(f"get_chromedriver_noproxy(): {exc}")
         traceback.print_exc()

@@ -111,14 +111,14 @@ You might also consider increasing the resource limits in policy.xml while you'r
 
 ### Chromium and chromedriver
 
-Chromium and chromedriver and `undetected-chromedriver` can be finicky about working together.
-Here's how I install Chromium and chromedriver.
+Ensure that your versions of chromedriver and Chrome/Chromium are the same.
 
-```bash
-sudo add-apt-repository ppa:savoury1/chromium
-sudo apt-get update -y
-sudo apt-get install -y chromium-browser chromium-chromedriver
-```
+Download chromedriver here: https://chromedriver.storage.googleapis.com/index.html
+
+Download Chrome for Linux here: https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+
+In `settings.yaml`, set `PATH_TO_CHROMEDRIVER` and `PATH_TO_CHROME_BROWSER` to the paths to your chromedriver and Chrome/Chromium browser binaries:
+
 
 ### Python `Wand` dependencies
 

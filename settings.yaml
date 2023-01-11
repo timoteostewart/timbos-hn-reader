@@ -98,6 +98,9 @@ SCRAPING:
   REQUESTS_GET_TIMEOUT_S: 16
   FIREBASEIO_RETRY_DELAY: 8
   NUM_RETRIES_FOR_HN_FEEDS: 3
+  # ensure that chromedriver and chrome browser are same version
+  PATH_TO_CHROMEDRIVER: "/home/tim/bin/chromedriver/chromedriver"
+  PATH_TO_CHROME_BROWSER: "/usr/bin/google-chrome"
 
 SYMBOLS:
   DATA_SEPARATOR: "·"

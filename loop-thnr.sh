@@ -147,4 +147,10 @@ do
 	sleep $((PAUSE_BETWEEN_CYCLES_IN_MINUTES * 60))
 	# then increment loop number and resume loop
 	((LOOP_NUMBER += 1))
+
+    # periodically restart the host as a stability measure
+    if (( ${LOOP_NUMBER} == 100 )); then
+        sudo shutdown -r now
+    fi
+
 done

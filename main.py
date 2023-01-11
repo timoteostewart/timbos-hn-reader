@@ -65,7 +65,7 @@ def main():
 
     check_for_required_dirs()
     return hn.supervisor(cur_story_type=story_type)
-
+    
 
 if __name__ == "__main__":
     sys.exit(main())
