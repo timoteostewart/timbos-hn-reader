@@ -22,7 +22,7 @@ def get_chromedriver_noproxy(user_agent=""):
         chrome_options.add_argument(f"--user-agent={user_agent}")
 
     chrome_service = Service(
-        executable=config.settings["SCRAPING"]["PATH_TO_CHROMEDRIVER"]
+        executable_path=config.settings["SCRAPING"]["PATH_TO_CHROMEDRIVER"]
     )
 
     try:
