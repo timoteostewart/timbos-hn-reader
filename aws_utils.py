@@ -18,7 +18,8 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 boto3_session = boto3.Session(profile_name=my_secrets.AWS_PROFILE_NAME)
-s3_resource = boto3_session.resource("s3")
+s3_config = botocore.config.Config(max_pool_connections=25)
+s3_resource = boto3_session.resource("s3", config=s3_config)
 my_bucket = s3_resource.Bucket(my_secrets.S3_BUCKET_NAME)
 
 
