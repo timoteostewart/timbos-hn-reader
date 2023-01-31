@@ -48,8 +48,8 @@ for i in 1 2 3 4; do
     sleep "${seconds_delay_between_attempts}"
 done
 
-# we failed 4 times to login, so try rebooting, if we are sudo;
-# otherwise exit with error
+# check whether we're logged into the vpn.
+# if we're not, reboot if we're sudo, exit with error otherwise
 if ! am_logged_into_vpn_client; then
     if am-root; then
         shutdown -r now
@@ -59,7 +59,8 @@ if ! am_logged_into_vpn_client; then
 fi
 
 #
-# invariant now: we are logged in
+# invariant now: we are logged into the vpn.
+# (we are not necessarily connected to the vpn though.)
 #
 
 if vpn_is_connected; then
@@ -75,6 +76,10 @@ for i in 1 2 3 4; do
     sleep "${seconds_delay_between_attempts}"
 done
 
+#
+# invariant now: we are still not connected to the vpn
+#
+
 # try restarting the vpn service
 systemctl restart nordvpn
 sleep "${seconds_delay_between_attempts}"
@@ -88,7 +93,7 @@ for i in 1 2 3 4; do
     sleep "${seconds_delay_between_attempts}"
 done
 
-# try rebooting, if we are sudo; otherwise exit with error
+# we've tried just about everything. let's reboot.
 if am-root; then
     shutdown -r now
 else
