@@ -1,5 +1,6 @@
 import concurrent.futures
 import logging
+import traceback
 import os
 import pickle
 import time
@@ -80,6 +81,7 @@ def acquire_story_details_for_first_time(driver=None, item_id=None, pos_on_page=
                     driver=driver, url=story_as_object.url
                 )
             except Exception as exc:
+
                 logger.warning(
                     f"id {story_as_object.id}: problem getting page source from {story_as_object.url}: {exc}"
                 )
@@ -130,17 +132,31 @@ def acquire_story_details_for_first_time(driver=None, item_id=None, pos_on_page=
             else:
                 logger.info(f"id {story_as_object.id}: did not find og:image url")
 
-            reading_time = my_scrapers.get_reading_time(story_as_object, page_source)
-            if reading_time:
-                story_as_object.reading_time = reading_time
+            try:
+                reading_time = my_scrapers.get_reading_time(story_as_object, page_source)
+                if reading_time:
+                    story_as_object.reading_time = reading_time
+            except Exception as exc:
+                logger.error(
+                    f"id {story_as_object.id}: get_reading_time: {exc}; "
+                    f"traceback:\n{traceback.format_exc(exc)}"
+                )
+                raise exc
 
             ## create a slug for the linked URL's social-media website channel, if necessary.
             ## use details encoded in the url or the html page source
             ## https://hackernews-insight.vercel.app/domain-analysis
 
-            social_media.check_for_social_media_details(
-                driver=driver, story_as_object=story_as_object, page_source_soup=soup
-            )
+            try:
+                social_media.check_for_social_media_details(
+                    driver=driver, story_as_object=story_as_object, page_source_soup=soup
+                )
+            except Exception as exc:
+                logger.error(
+                    f"id {story_as_object.id}: check_for_social_media_details: {exc}"
+                )
+                raise exc
+
 
             if story_as_object.reading_time > 0:
                 create_reading_time_slug(story_as_object)
@@ -511,8 +527,6 @@ def page_package_processor(page_package):
 
     start_processing_page_ts = time_utils.get_time_now_in_seconds_float()
 
-    driver = my_drivers.get_chromedriver_noproxy()
-
     # customize links and labels
     # light mode
     other_stories_links_lm = ""
@@ -611,17 +625,23 @@ def page_package_processor(page_package):
             )
 
             try:
+                driver = my_drivers.get_chromedriver_noproxy(requestor=f"id {each_id}, page_package_processor({page_package.story_type}), page {page_package.page_number}")
                 (
                     cur_story_card_html,
                     pub_time_ago_display,
                 ) = acquire_story_details_for_first_time(
                     driver=driver, item_id=each_id, pos_on_page=rank
                 )
+                driver.close()
+                driver.quit()
             except UnsupportedStoryType as exc:
                 logger.info(f"id {each_id}: {exc}")
                 continue  # to next each_id
             except Exception as exc:
-                logger.error(f"id {each_id}: {exc}")
+                logger.error(
+                    f"id {each_id}: acquire_story_details_for_first_time: {exc}; "
+                    f"traceback:\n{traceback.format_exc(exc)}"
+                )
                 continue  # to next each_id
 
         if not cur_story_card_html:
@@ -872,8 +892,6 @@ def page_package_processor(page_package):
     logger.info(
         f"update_stories() shipped page {page_package.page_number:>2} of {page_package.story_type} in {h:02d}:{m:02d}:{s:02d}{s_frac}"
     )
-    driver.close()
-    driver.quit()
 
 
 def query_firebaseio_for_story_data(driver=None, item_id=None):
@@ -912,7 +930,7 @@ def supervisor(cur_story_type):
     )
 
     rosters = {}
-    driver = my_drivers.get_chromedriver_noproxy()
+    driver = my_drivers.get_chromedriver_noproxy(requestor=f"supervisor({cur_story_type})")
     for roster_story_type in config.settings["SCRAPING"]["STORY_ROSTERS"]:
         rosters[roster_story_type] = my_scrapers.get_roster_for(
             driver, roster_story_type

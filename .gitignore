@@ -2,12 +2,14 @@
 *.log
 *.pdf
 .vscode/
+bin/
 cached_stories/
 completed_pages/*.html
 most_recent_nordvpn_messages.txt
 my_secrets.py
 restats
 user-sync
+vpn_token.txt
 
 # ========================================
 # source: https://github.com/github/gitignore/blob/main/Global/VisualStudioCode.gitignore

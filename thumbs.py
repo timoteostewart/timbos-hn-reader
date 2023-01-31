@@ -333,9 +333,10 @@ def get_image_slug(story_as_object, img_loading="lazy"):
                         f"id {story_as_object.id}: wand PolicyError for {story_as_object.thumb_filename_details['base_name']}"
                     )
                 except Exception as exc:
-                    traceback.print_exc()
                     logger.error(
-                        f"id {story_as_object.id}: {story_as_object.thumb_filename_details['base_name']}, error with PDF: {exc}"
+                        f"id {story_as_object.id}: {story_as_object.thumb_filename_details['base_name']}, "
+                        f"error with PDF: {exc}; "
+                        f"traceback:\n{traceback.format_exc()}"
                     )
                     story_as_object.has_thumb = False
                     return

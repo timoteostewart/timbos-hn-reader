@@ -99,8 +99,8 @@ SCRAPING:
   FIREBASEIO_RETRY_DELAY: 8
   NUM_RETRIES_FOR_HN_FEEDS: 3
   # ensure that chromedriver and chrome browser are same version
-  PATH_TO_CHROMEDRIVER: "/home/tim/bin/chromedriver/chromedriver"
-  PATH_TO_CHROME_BROWSER: "/usr/bin/google-chrome"
+  PATH_TO_CHROMEDRIVER: "/srv/timbos-hn-reader/bin/chromedriver/109.0.5414.74/chromedriver"
+  PATH_TO_CHROME_BROWSER: "/usr/bin/google-chrome-stable"
 
 SYMBOLS:
   DATA_SEPARATOR: "·"

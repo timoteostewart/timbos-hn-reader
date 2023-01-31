@@ -48,10 +48,6 @@ def get_page_source_noproxy(
 def get_page_source_noproxy_helper(driver=None, url=None):
     try:
         driver.get(url)
-        time.sleep(
-            config.delay_for_page_to_load_seconds
-        )  # extra time for CDN (if any) to resolve and page to load
-
         page_source = driver.page_source
     except Exception as exc:
         logger.error(f"{sys._getframe(  ).f_code.co_name}: url {url}: {exc}")

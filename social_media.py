@@ -7,6 +7,7 @@ import urllib3
 from bs4 import BeautifulSoup
 
 import config
+import my_drivers
 import my_secrets
 import retrieve_by_url
 import text_utils
@@ -464,7 +465,9 @@ def create_github_languages_slug(story_as_object):
 
 
 def get_github_repo_languages(driver=None, repo_url=None):
+
     page_source = retrieve_by_url.get_page_source_noproxy(driver=driver, url=repo_url)
+
     soup = BeautifulSoup(page_source, "html.parser")
     h2_languages = soup.find("h2", text="Languages")
 
