@@ -1,9 +1,9 @@
 import concurrent.futures
 import logging
-import traceback
 import os
 import pickle
 import time
+import traceback
 
 import requests
 from bs4 import BeautifulSoup
@@ -133,7 +133,9 @@ def acquire_story_details_for_first_time(driver=None, item_id=None, pos_on_page=
                 logger.info(f"id {story_as_object.id}: did not find og:image url")
 
             try:
-                reading_time = my_scrapers.get_reading_time(story_as_object, page_source)
+                reading_time = my_scrapers.get_reading_time(
+                    story_as_object, page_source
+                )
                 if reading_time:
                     story_as_object.reading_time = reading_time
             except Exception as exc:
@@ -149,14 +151,15 @@ def acquire_story_details_for_first_time(driver=None, item_id=None, pos_on_page=
 
             try:
                 social_media.check_for_social_media_details(
-                    driver=driver, story_as_object=story_as_object, page_source_soup=soup
+                    driver=driver,
+                    story_as_object=story_as_object,
+                    page_source_soup=soup,
                 )
             except Exception as exc:
                 logger.error(
                     f"id {story_as_object.id}: check_for_social_media_details: {exc}"
                 )
                 raise exc
-
 
             if story_as_object.reading_time > 0:
                 create_reading_time_slug(story_as_object)
@@ -625,7 +628,9 @@ def page_package_processor(page_package):
             )
 
             try:
-                driver = my_drivers.get_chromedriver_noproxy(requestor=f"id {each_id}, page_package_processor({page_package.story_type}), page {page_package.page_number}")
+                driver = my_drivers.get_chromedriver_noproxy(
+                    requestor=f"id {each_id}, page_package_processor({page_package.story_type}), page {page_package.page_number}"
+                )
                 (
                     cur_story_card_html,
                     pub_time_ago_display,
@@ -930,7 +935,9 @@ def supervisor(cur_story_type):
     )
 
     rosters = {}
-    driver = my_drivers.get_chromedriver_noproxy(requestor=f"supervisor({cur_story_type})")
+    driver = my_drivers.get_chromedriver_noproxy(
+        requestor=f"supervisor({cur_story_type})"
+    )
     for roster_story_type in config.settings["SCRAPING"]["STORY_ROSTERS"]:
         rosters[roster_story_type] = my_scrapers.get_roster_for(
             driver, roster_story_type
