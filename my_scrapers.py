@@ -94,7 +94,6 @@ def download_og_image(story_as_object, alt_url=""):
             )
             with open(story_as_object.downloaded_orig_thumb_full_path, "wb") as fout:
                 fout.write(response.content)
-                fout.close()
             logger.info(
                 f"id {story_as_object.id}: download_og_image(): downloaded og:image {story_as_object.downloaded_orig_thumb_filename}"
             )
