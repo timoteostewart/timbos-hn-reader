@@ -174,15 +174,19 @@ def get_content_type_via_head_request(url: str):
     except Exception as exc:
         logger.error(f"{sys._getframe(  ).f_code.co_name}: {url}: {exc}")
         return ""
-    for each_header in headers.items():
-        if each_header[0].lower() == "content-type":
-            content_type_vals = each_header[1].lower().split(";")
-            for each_val in content_type_vals:
-                if "charset" in each_val:
-                    continue
-                if "/" in each_val:
-                    return each_val
-            return ""
+
+    try:
+        ct = headers["content-type"]
+        ct_vals = ct.split(";")
+        for each_val in ct_vals:
+            if "charset" in each_val:
+                continue
+            if "/" in each_val:
+                return each_val
+        return ""
+    except Exception as exc:
+        logger.error(f"{sys._getframe(  ).f_code.co_name}: {url}: {exc}")
+        return ""
 
 
 def get_reading_time(story_as_object, page_source):
