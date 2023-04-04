@@ -118,7 +118,7 @@ def can_find_a_shortcode(story_as_object, img_loading):
         )
 
         # load prepared image for certain size as image
-        for each_size in ["small", "medium", "large", "extralarge"]:
+        for each_size in ["medium", "extralarge"]:
             thumb_filename = get_webp_filename(story_as_object, each_size)
             shutil.copyfile(
                 os.path.join(
@@ -160,7 +160,7 @@ def create_img_slug_html(story_as_object, img_loading="lazy"):
         "srcset="
         f'"{config.settings["THUMBS_URL"]}{get_webp_filename(story_as_object, "extralarge")} 4x, '
         f'{config.settings["THUMBS_URL"]}{get_webp_filename(story_as_object, "extralarge")} 3x, '
-        f'{config.settings["THUMBS_URL"]}{get_webp_filename(story_as_object, "large")} 2x, '
+        f'{config.settings["THUMBS_URL"]}{get_webp_filename(story_as_object, "extralarge")} 2x, '
         f'{config.settings["THUMBS_URL"]}{get_webp_filename(story_as_object, "medium")} 1x" '
         'sizes="(min-width: 1440px) 350px, (min-width: 1080px) 350px, (min-width: 768px) 350px, 350px" '
         f'src="{config.settings["THUMBS_URL"]}{get_webp_filename(story_as_object, "medium")}" '
@@ -236,24 +236,24 @@ def get_image_slug(story_as_object, img_loading="lazy"):
     WEBP_MEDIUM_THUMB_COMPRESSION_QUALITY = int(
         config.settings["THUMBS"]["COMP_QUAL"]["MEDIUM"]
     )  # default value
-    WEBP_LARGE_THUMB_COMPRESSION_QUALITY = int(
-        config.settings["THUMBS"]["COMP_QUAL"]["LARGE"]
-    )  # default value
+    # WEBP_LARGE_THUMB_COMPRESSION_QUALITY = int(
+    #     config.settings["THUMBS"]["COMP_QUAL"]["LARGE"]
+    # )  # default value
     WEBP_EXTRALARGE_THUMB_COMPRESSION_QUALITY = int(
         config.settings["THUMBS"]["COMP_QUAL"]["EXTRALARGE"]
     )  # default value
 
     # preferentially render thumbs from certain domains with better quality
     if og_image_domains in domains_with_higher_quality_resizing:
-        WEBP_SMALL_THUMB_COMPRESSION_QUALITY = min(
-            100, WEBP_SMALL_THUMB_COMPRESSION_QUALITY + 5
-        )
+        # WEBP_SMALL_THUMB_COMPRESSION_QUALITY = min(
+        #     100, WEBP_SMALL_THUMB_COMPRESSION_QUALITY + 5
+        # )
         WEBP_MEDIUM_THUMB_COMPRESSION_QUALITY = min(
             100, WEBP_SMALL_THUMB_COMPRESSION_QUALITY + 10
         )
-        WEBP_LARGE_THUMB_COMPRESSION_QUALITY = min(
-            100, WEBP_SMALL_THUMB_COMPRESSION_QUALITY + 15
-        )
+        # WEBP_LARGE_THUMB_COMPRESSION_QUALITY = min(
+        #     100, WEBP_SMALL_THUMB_COMPRESSION_QUALITY + 15
+        # )
         WEBP_EXTRALARGE_THUMB_COMPRESSION_QUALITY = min(
             100, WEBP_SMALL_THUMB_COMPRESSION_QUALITY + 20
         )
@@ -366,21 +366,21 @@ def get_image_slug(story_as_object, img_loading="lazy"):
                 return
 
             # standard resizing
-            with Image(image=image_to_use) as small_thumb:
-                with small_thumb.convert("webp") as webp_image:
-                    webp_image.compression_quality = (
-                        WEBP_SMALL_THUMB_COMPRESSION_QUALITY
-                    )
-                    webp_image.transform(
-                        resize=f"{config.settings['THUMBS']['WIDTH_PX']['SMALL']}x"
-                    )
-                    try:
-                        save_thumb_where_it_should_go(
-                            webp_image, story_as_object, "small"
-                        )
-                    except Exception as exc:
-                        story_as_object.has_thumb = False
-                        return
+            # with Image(image=image_to_use) as small_thumb:
+            #     with small_thumb.convert("webp") as webp_image:
+            #         webp_image.compression_quality = (
+            #             WEBP_SMALL_THUMB_COMPRESSION_QUALITY
+            #         )
+            #         webp_image.transform(
+            #             resize=f"{config.settings['THUMBS']['WIDTH_PX']['SMALL']}x"
+            #         )
+            #         try:
+            #             save_thumb_where_it_should_go(
+            #                 webp_image, story_as_object, "small"
+            #             )
+            #         except Exception as exc:
+            #             story_as_object.has_thumb = False
+            #             return
 
             with Image(image=image_to_use) as medium_thumb:
                 with medium_thumb.convert("webp") as webp_image:
@@ -398,21 +398,21 @@ def get_image_slug(story_as_object, img_loading="lazy"):
                         story_as_object.has_thumb = False
                         return
 
-            with Image(image=image_to_use) as large_thumb:
-                with large_thumb.convert("webp") as webp_image:
-                    webp_image.compression_quality = (
-                        WEBP_LARGE_THUMB_COMPRESSION_QUALITY
-                    )
-                    webp_image.transform(
-                        resize=f"{config.settings['THUMBS']['WIDTH_PX']['LARGE']}x"
-                    )
-                    try:
-                        save_thumb_where_it_should_go(
-                            webp_image, story_as_object, "large"
-                        )
-                    except Exception as exc:
-                        story_as_object.has_thumb = False
-                        return
+            # with Image(image=image_to_use) as large_thumb:
+            #     with large_thumb.convert("webp") as webp_image:
+            #         webp_image.compression_quality = (
+            #             WEBP_LARGE_THUMB_COMPRESSION_QUALITY
+            #         )
+            #         webp_image.transform(
+            #             resize=f"{config.settings['THUMBS']['WIDTH_PX']['LARGE']}x"
+            #         )
+            #         try:
+            #             save_thumb_where_it_should_go(
+            #                 webp_image, story_as_object, "large"
+            #             )
+            #         except Exception as exc:
+            #             story_as_object.has_thumb = False
+            #             return
 
             with Image(image=image_to_use) as extralarge_thumb:
                 with extralarge_thumb.convert("webp") as webp_image:

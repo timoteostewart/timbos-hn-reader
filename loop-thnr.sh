@@ -39,10 +39,10 @@ if [[ -z ${UTILITY_ACCOUNT_USERNAME} ]]; then
 fi
 
 # looping settings
-PAUSE_BETWEEN_CYCLES_IN_MINUTES=20
+PAUSE_BETWEEN_CYCLES_IN_MINUTES=10
 
 # logging setup
-LOOP_LOG_PATH="${BASE_DIR}"
+LOOP_LOG_PATH="${BASE_DIR}/logs/"
 CUR_YEAR=$(printf '%(%Y)T\n' -1)
 CUR_DOY=$(printf '%(%j)T\n' -1)
 CUR_DOY_ZEROS="00${CUR_DOY}"
@@ -95,6 +95,8 @@ declare -a story_types=(
     "active"
 )
 
+LOOP_NUMBER=1
+
 while true
 do
     if ! "${BASE_DIR}connect_to_vpn.sh"; then
@@ -134,7 +136,7 @@ do
     loop_log_message info "Starting pause for ${PAUSE_BETWEEN_CYCLES_IN_MINUTES} minutes"
 	sleep $((PAUSE_BETWEEN_CYCLES_IN_MINUTES * 60))
 	# then increment loop number and resume loop
-	((LOOP_NUMBER += 1))
+	(( LOOP_NUMBER += 1 ))
 
     # periodically restart the host as a stability measure, if we're root
     if (( ${LOOP_NUMBER} == 25 )); then

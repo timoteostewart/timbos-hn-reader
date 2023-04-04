@@ -1,0 +1,15 @@
+THNR:
+- two images: one light mode, one dark mode
+- size: extralarge
+
+CHANGES:
+- create one extralarge image
+- create a dark mode desaturated version
+- don't create the other sizes
+
+EFFECTS:
+- decreased S3 fees
+- faster page processing time
+- shorter/simpler thumbs.py code
+
+

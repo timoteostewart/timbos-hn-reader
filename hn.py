@@ -895,7 +895,7 @@ def page_package_processor(page_package):
         time_utils.get_time_now_in_seconds_float() - start_processing_page_ts
     )
     logger.info(
-        f"update_stories() shipped page {page_package.page_number:>2} of {page_package.story_type} in {h:02d}:{m:02d}:{s:02d}{s_frac}"
+        f"update_stories() shipped page {page_package.page_number:>2} of {page_package.story_type} in {h:02d}:{m:02d}:{s:02d}"
     )
 
 

@@ -5,6 +5,8 @@
 bin/
 cached_stories/
 completed_pages/*.html
+logs/
+logs/*
 most_recent_nordvpn_messages.txt
 my_secrets.py
 restats

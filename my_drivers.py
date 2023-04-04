@@ -20,33 +20,33 @@ def get_chromedriver_noproxy(user_agent="", requestor=""):
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--verbose")
 
-    chrome_options.add_argument("--allow-insecure-localhost")
-    chrome_options.add_argument("--allow-running-insecure-content")
-    chrome_options.add_argument(
-        "--disable-browser-side-navigation"
-    )  # https://stackoverflow.com/a/49123152/1689770
-    chrome_options.add_argument("--disable-extensions")
-    chrome_options.add_argument(
-        "--disable-gpu"
-    )  # https://stackoverflow.com/questions/51959986/how-to-solve-selenium-chromedriver-timed-out-receiving-message-from-renderer-exc
-    chrome_options.add_argument("--disable-notifications")
-    chrome_options.add_argument("--disable-setuid-sandbox")
-    chrome_options.add_argument(
-        "--enable-automation"
-    )  # https://stackoverflow.com/a/43840128/1689770
-    chrome_options.add_argument("--force-device-scale-factor=2.0")
-    chrome_options.add_argument("--high-dpi-support=2.0")
-    chrome_options.add_argument("--ignore-certificate-errors")
-    chrome_options.add_argument("--mute-audio")
-    chrome_options.add_argument("--no-first-run")
-    chrome_options.add_argument(
-        "start-maximized"
-    )  # https://stackoverflow.com/a/26283818/1689770
-    chrome_options.add_argument("window-size=1920x1200")
+    # chrome_options.add_argument("--allow-insecure-localhost")
+    # chrome_options.add_argument("--allow-running-insecure-content")
+    # chrome_options.add_argument(
+    #     "--disable-browser-side-navigation"
+    # )  # https://stackoverflow.com/a/49123152/1689770
+    # chrome_options.add_argument("--disable-extensions")
+    # chrome_options.add_argument(
+    #     "--disable-gpu"
+    # )  # https://stackoverflow.com/questions/51959986/how-to-solve-selenium-chromedriver-timed-out-receiving-message-from-renderer-exc
+    # chrome_options.add_argument("--disable-notifications")
+    # chrome_options.add_argument("--disable-setuid-sandbox")
+    # chrome_options.add_argument(
+    #     "--enable-automation"
+    # )  # https://stackoverflow.com/a/43840128/1689770
+    # chrome_options.add_argument("--force-device-scale-factor=2.0")
+    # chrome_options.add_argument("--high-dpi-support=2.0")
+    # chrome_options.add_argument("--ignore-certificate-errors")
+    # chrome_options.add_argument("--mute-audio")
+    # chrome_options.add_argument("--no-first-run")
+    # chrome_options.add_argument(
+    #     "start-maximized"
+    # )  # https://stackoverflow.com/a/26283818/1689770
+    # chrome_options.add_argument("window-size=1920x1200")
 
-    chrome_options.add_argument("--bwsi")
-    chrome_options.add_argument("--noerrdialogs")
-    chrome_options.add_argument("--start-maximized")
+    # chrome_options.add_argument("--bwsi")
+    # chrome_options.add_argument("--noerrdialogs")
+    # chrome_options.add_argument("--start-maximized")
 
     # https://stackoverflow.com/questions/62889739/selenium-gives-timed-out-receiving-message-from-renderer-for-all-websites-afte
     chrome_options.add_experimental_option(

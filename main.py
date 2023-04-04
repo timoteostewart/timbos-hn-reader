@@ -31,7 +31,6 @@ def check_for_required_dirs():
 
 
 def main():
-
     # typical invocation: `python main.py new thnr /srv/timbos-hn-reader/settings.yaml`
     story_type = sys.argv[1]  # e.g., `top`
     config.load_settings(sys.argv[2], sys.argv[3])
@@ -44,7 +43,9 @@ def main():
     main.logger = logging.getLogger()
     main.logger.setLevel(logging.INFO)
     handler = logging.FileHandler(
-        os.path.join(config.settings["THNR_BASE_DIR"], log_filename), "a", "utf-8"
+        os.path.join(config.settings["THNR_BASE_DIR"], "logs", log_filename),
+        "a",
+        "utf-8",
     )
     story_type_padded = f"[{story_type}]     "[:9]
     handler.setFormatter(
