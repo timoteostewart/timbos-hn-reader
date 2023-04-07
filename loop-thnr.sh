@@ -22,11 +22,18 @@ am-root() {
     fi
 }
 
+if ! am-root; then
+    die "Please run as root."
+fi
+
 # handle of the server THNR is running on
 SERVER_NAME=thnr
 
 # THNR's base directory
 BASE_DIR=/srv/timbos-hn-reader/
+
+# .venv bin dir
+PYTHON_BIN_DIR="${BASE_DIR}.venv/bin"
 
 # settings yaml file
 SETTINGS_FILE="${BASE_DIR}settings.yaml"
@@ -71,19 +78,19 @@ loop_log_message() {
 
 cleanup_uc_binaries() {
     uc_temp_dir="/home/${UTILITY_ACCOUNT_USERNAME}/.local/share/undetected_chromedriver"
-    rm -r "${uc_temp_dir}"
+    # rm -r "${uc_temp_dir}"
 
-    if (( ${EUID:-$(id -u)} == 0 )); then
-        sudo -u "${UTILITY_ACCOUNT_USERNAME}" mkdir "${uc_temp_dir}"
-    else
-        mkdir "${uc_temp_dir}"
-    fi
+    # if (( ${EUID:-$(id -u)} == 0 )); then
+    #     sudo -u "${UTILITY_ACCOUNT_USERNAME}" mkdir "${uc_temp_dir}"
+    # else
+    #     mkdir "${uc_temp_dir}"
+    # fi
 }
 
 loop_log_message info "Starting ${BASH_SOURCE##*/}"
 
 cd "${BASE_DIR}"
-source "${BASE_DIR}.venv/bin/activate"
+source "${PYTHON_BIN_DIR}/activate"
 
 export PYTHONWARNINGS="ignore:Unverified HTTPS request"
 
@@ -95,6 +102,27 @@ declare -a story_types=(
     "active"
 )
 
+declare -a apt_packages=(
+    "chromium-browser-l10n"
+    "chromium-browser"
+    "chromium-chromedriver"
+    "chromium-codecs-ffmpeg-extra"
+    "google-chrome-beta"
+    "google-chrome-stable"
+    "nordvpn"
+)
+
+declare -a pip_packages=(
+    "pip"
+    "wheel"
+    "boto3"
+    "botocore"
+    "requests"
+    "selenium"
+    "undetected-chromedriver"
+    "urllib3"
+)
+
 LOOP_NUMBER=1
 
 while true
@@ -103,14 +131,26 @@ do
         exit 1
     fi
 
+    # update APT packages
+    for cur_package in ${apt_packages[@]}; do
+        apt-get -y install "${cur_package}"
+    done
+
+    # update pip packages
+    for cur_package in ${pip_packages[@]}; do
+        "${PYTHON_BIN_DIR}/pip" install "${cur_package}" --upgrade
+    done
+
+    "${PYTHON_BIN_DIR}/pip-review"
+
     for cur_story_type in ${story_types[@]}; do
         loop_log_message info "Starting main.py for \"${cur_story_type}\" (loop number ${LOOP_NUMBER})..."
         TIME_STARTED=$(printf '%(%s)T' -1)
 
         if (( ${EUID:-$(id -u)} == 0 )); then
-            sudo -u "${UTILITY_ACCOUNT_USERNAME}" "${BASE_DIR}.venv/bin/python" main.py "${cur_story_type}" "${SERVER_NAME}" "${SETTINGS_FILE}"
+            sudo -u "${UTILITY_ACCOUNT_USERNAME}" "${PYTHON_BIN_DIR}/python" main.py "${cur_story_type}" "${SERVER_NAME}" "${SETTINGS_FILE}"
         else
-            "${BASE_DIR}.venv/bin/python" main.py "${cur_story_type}" "${SERVER_NAME}" "${SETTINGS_FILE}"
+            "${PYTHON_BIN_DIR}/python" main.py "${cur_story_type}" "${SERVER_NAME}" "${SETTINGS_FILE}"
         fi
         
         THNR_ERROR_CODE=$?

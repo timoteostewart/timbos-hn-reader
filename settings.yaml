@@ -99,7 +99,7 @@ SCRAPING:
   FIREBASEIO_RETRY_DELAY: 8
   NUM_RETRIES_FOR_HN_FEEDS: 3
   # ensure that chromedriver and chrome browser are same version
-  PATH_TO_CHROMEDRIVER: "/srv/timbos-hn-reader/bin/chromedriver/111.0.5563.64/chromedriver"
+  PATH_TO_CHROMEDRIVER: "/srv/timbos-hn-reader/bin/chromedriver/112.0.5615.49/chromedriver"
   PATH_TO_CHROME_BROWSER: "/usr/bin/google-chrome-stable"
 
 SYMBOLS:
@@ -108,4 +108,3 @@ SYMBOLS:
   DOUBLE_OBLIQUE_HYPHEN: "&#11799;"
 
 MINUTES_BEFORE_REFRESHING_STORY_METADATA: 60
-

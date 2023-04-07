@@ -1,6 +1,8 @@
 import logging
+import os
 import sys
 import traceback
+import zipfile
 
 import undetected_chromedriver as uc
 from selenium.webdriver.chrome.service import Service
@@ -9,6 +11,31 @@ import config
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+
+
+# monkey patch undetected_chromedriver here
+def new_unzip_package(self, fp):
+    logger.debug("unzipping %s" % fp)
+    try:
+        os.unlink(self.zip_path)
+    except (FileNotFoundError, OSError):
+        pass
+
+    os.makedirs(self.zip_path, mode=0o755, exist_ok=True)
+    with zipfile.ZipFile(fp, mode="r") as zf:
+        zf.extract(self.exe_name, self.zip_path)
+    # specifically, the monkey patch is adding try-except handling to this problematic line.
+    try:
+        os.rename(os.path.join(self.zip_path, self.exe_name), self.executable_path)
+    except:
+        pass
+    os.remove(fp)
+    os.rmdir(self.zip_path)
+    os.chmod(self.executable_path, 0o755)
+    return self.executable_path
+
+
+uc.Patcher.unzip_package = new_unzip_package
 
 
 def get_chromedriver_noproxy(user_agent="", requestor=""):
@@ -54,7 +81,7 @@ def get_chromedriver_noproxy(user_agent="", requestor=""):
         {
             "intl.accept_languages": "en,en_US",
             "download.prompt_for_download": False,
-            "download.default_directory": "/dev/null",
+            "download.default_directory": "/tmp",
             "automatic_downloads": 2,
             "download_restrictions": 3,
             "notifications": 2,

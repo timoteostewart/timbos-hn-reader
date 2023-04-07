@@ -18,7 +18,7 @@ UTILITY_ACCOUNT_USERNAME=tim
 DAYS_TO_KEEP_CACHED_STORIES=3
 
 # setup logging details
-LOOP_LOG_PATH="${BASE_DIR}"
+LOOP_LOG_PATH="${BASE_DIR}/logs/"
 CUR_YEAR=$(printf '%(%Y)T\n' -1)
 CUR_DOY=$(printf '%(%j)T\n' -1)
 CUR_DOY_ZEROS="00${CUR_DOY}"
