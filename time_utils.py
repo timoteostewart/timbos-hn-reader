@@ -8,6 +8,15 @@ import config
 import text_utils
 
 
+def convert_epoch_seconds_to_utc(epoch_seconds):
+    now_utc = datetime.datetime.fromtimestamp(epoch_seconds, pytz.utc)
+    now_utc = str(now_utc)
+    now_utc = now_utc[slice(now_utc.index("+"))]
+    now_utc = now_utc.replace(" ", "T")
+    now_utc += "Z"
+    return now_utc
+
+
 def convert_seconds_ago_to_human_readable(seconds_ago: int, force_int=False):
     if seconds_ago < config.SECONDS_PER_MINUTE:
         unit = "just now"
@@ -44,7 +53,7 @@ def convert_time_duration_to_human_readable_v1(new_page_ts):
     dt_str = str(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
     dt_str = dt_str[slice(0, dt_str.find("."))]
     dt_str += "Z"
-    page_gen_elapsed = get_time_now_in_seconds_float() - new_page_ts
+    page_gen_elapsed = get_time_now_in_epoch_seconds_float() - new_page_ts
     if page_gen_elapsed < 1.0:
         page_gen_elapsed *= 1000
         page_gen_elapsed_str = f"{int(page_gen_elapsed)} milliseconds"
@@ -139,7 +148,7 @@ def convert_time_duration_to_human_readable(duration_sec):
 
 
 def get_hms_for_page_gen(new_page_ts):
-    this_page_elapsed_seconds = get_time_now_in_seconds_float() - new_page_ts
+    this_page_elapsed_seconds = get_time_now_in_epoch_seconds_float() - new_page_ts
     m, s = divmod(this_page_elapsed_seconds, 60)
     h, m = divmod(m, 60)
     h = int(h)
@@ -148,21 +157,14 @@ def get_hms_for_page_gen(new_page_ts):
     return h, m, s
 
 
-def get_time_now_in_seconds_int():
+def get_time_now_in_epoch_seconds_int():
     return int(time.time())
 
 
-def get_time_now_in_seconds_float():
+def get_time_now_in_epoch_seconds_float():
     return time.time()
 
 
-def get_zulu_time_string():
-    datetime_str = str(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
-    datetime_str = datetime_str[slice(0, datetime_str.find("."))]
-    datetime_str += "Z"
-    return datetime_str
-
-
 def how_long_ago_human_readable(past_time_seconds):
-    seconds_ago = get_time_now_in_seconds_int() - past_time_seconds
+    seconds_ago = get_time_now_in_epoch_seconds_int() - past_time_seconds
     return convert_seconds_ago_to_human_readable(seconds_ago)

@@ -46,7 +46,7 @@ class Item:
             "%Y-%m-%dT%H:%M:%SZ"
         )  # note: in ISO 8601 in UTC
 
-        time_now = time_utils.get_time_now_in_seconds_int()
+        time_now = time_utils.get_time_now_in_epoch_seconds_int()
         seconds_ago = time_now - ztime
         self.time_ago_display = time_utils.convert_seconds_ago_to_human_readable(
             seconds_ago
@@ -82,7 +82,6 @@ class Story(Item):
         text: str,
         url: str,
     ) -> None:
-
         if not url:
             self.is_ask_show_tell_launch_hn: bool = True
             self.url: str = f"https://news.ycombinator.com/item?id={id}"
@@ -120,7 +119,7 @@ class Story(Item):
         self.score_display = text_utils.add_singular_plural(self.score, "point")
 
         self.time_of_last_firebaseio_query: int = (
-            time_utils.get_time_now_in_seconds_int()
+            time_utils.get_time_now_in_epoch_seconds_int()
         )
 
         # by analyzing self.text:

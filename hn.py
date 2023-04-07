@@ -35,7 +35,6 @@ badge_codes = {
 
 
 def acquire_story_details_for_first_time(driver=None, item_id=None, pos_on_page=None):
-
     try:
         story_as_dict = query_firebaseio_for_story_data(item_id=item_id)
     except Exception as exc:
@@ -59,7 +58,6 @@ def acquire_story_details_for_first_time(driver=None, item_id=None, pos_on_page=
         raise Exception(f"id {item_id}: failed to get story details")
 
     if story_as_object.url:
-
         story_as_object.linked_url_content_type = (
             my_scrapers.get_content_type_via_head_request(story_as_object.url)
         )
@@ -81,7 +79,6 @@ def acquire_story_details_for_first_time(driver=None, item_id=None, pos_on_page=
                     driver=driver, url=story_as_object.url
                 )
             except Exception as exc:
-
                 logger.warning(
                     f"id {story_as_object.id}: problem getting page source from {story_as_object.url}: {exc}"
                 )
@@ -357,7 +354,7 @@ def freshen_up(story_as_object=None):
         raise exc
 
     story_as_object.time_of_last_firebaseio_query = (
-        time_utils.get_time_now_in_seconds_int()
+        time_utils.get_time_now_in_epoch_seconds_int()
     )
 
     # update title if needed
@@ -451,7 +448,6 @@ def get_story_page_url(story_type, page_num, light_mode=True, from_other_mode=Fa
 
 
 def item_factory(story_as_dict):
-
     item_type = story_as_dict["type"]
 
     if item_type == "story":
@@ -523,12 +519,11 @@ def item_factory(story_as_dict):
 
 
 def page_package_processor(page_package):
-
     logger.info(
         f"entering page_package_processor with {page_package.story_type} page {page_package.page_number}"
     )
 
-    start_processing_page_ts = time_utils.get_time_now_in_seconds_float()
+    start_processing_page_ts = time_utils.get_time_now_in_epoch_seconds_float()
 
     # customize links and labels
     # light mode
@@ -549,7 +544,6 @@ def page_package_processor(page_package):
     page_html = ""
 
     for rank, each_id in enumerate(page_package.story_ids):
-
         if os.path.exists(
             os.path.join(
                 config.settings["CACHED_STORIES_DIR"], get_pickle_filename(each_id)
@@ -567,7 +561,7 @@ def page_package_processor(page_package):
             )
 
             seconds_ago_since_last_firebaseio_update = (
-                time_utils.get_time_now_in_seconds_int()
+                time_utils.get_time_now_in_epoch_seconds_int()
                 - story_as_object.time_of_last_firebaseio_query
             )
             time_ago_since_last_firebaseio_update_display = (
@@ -758,13 +752,18 @@ def page_package_processor(page_package):
 
         stories_channel_contents_bottom_section = "</table>\n</div>\n"
 
-        datetime_str = time_utils.get_zulu_time_string()
+        now_in_epoch_seconds = time_utils.get_time_now_in_epoch_seconds_int()
+        now_in_utc_readable = time_utils.convert_epoch_seconds_to_utc(
+            now_in_epoch_seconds
+        )
+
         how_long_to_generate_page_html = (
             time_utils.convert_time_duration_to_human_readable(
-                time_utils.get_time_now_in_seconds_float() - start_processing_page_ts
+                time_utils.get_time_now_in_epoch_seconds_float()
+                - start_processing_page_ts
             )
         )
-        html_generation_time_slug = f'<div class="html-generation-time">This page was generated in {how_long_to_generate_page_html} at {datetime_str}.</div>\n'
+        html_generation_time_slug = f'<div class="html-generation-time" data-html-generation-time-in-epoch-seconds="{now_in_epoch_seconds}">This page was generated in {how_long_to_generate_page_html} at {now_in_utc_readable}.</div>\n'
 
         # prepare light mode page
         stories_channel_contents_top_plus_page_html_plus_bottom = (
@@ -892,7 +891,7 @@ def page_package_processor(page_package):
 
     # compute how long it took to process this page
     h, m, s, s_frac = time_utils.convert_time_duration_to_hms(
-        time_utils.get_time_now_in_seconds_float() - start_processing_page_ts
+        time_utils.get_time_now_in_epoch_seconds_float() - start_processing_page_ts
     )
     logger.info(
         f"update_stories() shipped page {page_package.page_number:>2} of {page_package.story_type} in {h:02d}:{m:02d}:{s:02d}"
@@ -900,7 +899,6 @@ def page_package_processor(page_package):
 
 
 def query_firebaseio_for_story_data(driver=None, item_id=None):
-
     url = f"https://hacker-news.firebaseio.com/v0/item/{item_id}.json"
 
     try:
@@ -928,10 +926,10 @@ def query_firebaseio_for_story_data(driver=None, item_id=None):
 
 
 def supervisor(cur_story_type):
-    supervisor_start_ts = time_utils.get_time_now_in_seconds_float()
+    supervisor_start_ts = time_utils.get_time_now_in_epoch_seconds_float()
     uniq = hash_utils.get_sha1_of_current_time()
     logger.info(
-        f"supervisor({cur_story_type}) with unique id {uniq} started at {time_utils.get_zulu_time_string()}"
+        f"supervisor({cur_story_type}) with unique id {uniq} started at {time_utils.convert_epoch_seconds_to_utc(time_utils.get_time_now_in_epoch_seconds_int())}"
     )
 
     rosters = {}
@@ -965,7 +963,6 @@ def supervisor(cur_story_type):
     is_last_page = False
 
     while cur_roster:
-
         while (
             cur_roster
             and len(cur_story_ids) <= config.settings["PAGES"]["NUM_STORIES_PER_PAGE"]
@@ -1009,9 +1006,9 @@ def supervisor(cur_story_type):
     concurrent.futures.wait(page_processing_job_futures)
 
     h, m, s, s_frac = time_utils.convert_time_duration_to_hms(
-        time_utils.get_time_now_in_seconds_float() - supervisor_start_ts
+        time_utils.get_time_now_in_epoch_seconds_float() - supervisor_start_ts
     )
     logger.info(
-        f"supervisor({cur_story_type}) with unique id {uniq} completed in {h:02d}:{m:02d}:{s:02d}{s_frac} at {time_utils.get_zulu_time_string()}"
+        f"supervisor({cur_story_type}) with unique id {uniq} completed in {h:02d}:{m:02d}:{s:02d}{s_frac} at {time_utils.convert_epoch_seconds_to_utc(time_utils.get_time_now_in_epoch_seconds_int())}"
     )
     return 0

@@ -33,7 +33,6 @@ ignored_images_roster_by_substring = [
 
 
 def download_og_image(story_as_object, alt_url=""):
-
     # guard
     if not story_as_object.linked_url_og_image_url_initial:
         return False
@@ -229,7 +228,6 @@ def get_roster_for(driver, roster_story_type: str):
 
 
 def get_roster_via_endpoint(story_type: str):
-
     url = f"https://hacker-news.firebaseio.com/v0/{story_type}stories.json"
 
     try:
@@ -254,7 +252,6 @@ def get_roster_via_endpoint(story_type: str):
 
 
 def get_roster_via_screen_scraping(driver, roster_story_type: str):
-
     if roster_story_type not in ["active", "classic"]:
         raise Exception(
             f"{sys._getframe(  ).f_code.co_name}: cannot create a roster for unrecognized story type '{roster_story_type}'"
@@ -267,7 +264,7 @@ def get_roster_via_screen_scraping(driver, roster_story_type: str):
         )
         if prev_roster_as_dict:
             prev_time = prev_roster_as_dict["time_retrieved"]
-            cur_time = time_utils.get_time_now_in_seconds_int()
+            cur_time = time_utils.get_time_now_in_epoch_seconds_int()
             roster_age_seconds = cur_time - prev_time
             if 0 < roster_age_seconds < 2 * config.SECONDS_PER_HOUR:
                 if prev_roster_as_dict["story_ids"]:
@@ -334,7 +331,7 @@ def get_roster_via_screen_scraping(driver, roster_story_type: str):
 
     new_roster = {}
     new_roster["story_type"] = roster_story_type
-    new_roster["time_retrieved"] = time_utils.get_time_now_in_seconds_int()
+    new_roster["time_retrieved"] = time_utils.get_time_now_in_epoch_seconds_int()
     new_roster["story_ids"] = cur_roster
     aws_utils.upload_dict_to_s3_as_json(
         new_roster, f"rosters/{roster_story_type}_roster.json"
