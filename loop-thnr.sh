@@ -46,7 +46,7 @@ if [[ -z ${UTILITY_ACCOUNT_USERNAME} ]]; then
 fi
 
 # looping settings
-PAUSE_BETWEEN_CYCLES_IN_MINUTES=10
+PAUSE_BETWEEN_CYCLES_IN_MINUTES=30
 
 # logging setup
 LOOP_LOG_PATH="${BASE_DIR}/logs/"
@@ -76,15 +76,13 @@ loop_log_message() {
     fi
 }
 
-cleanup_uc_binaries() {
-    uc_temp_dir="/home/${UTILITY_ACCOUNT_USERNAME}/.local/share/undetected_chromedriver"
-    # rm -r "${uc_temp_dir}"
-
-    # if (( ${EUID:-$(id -u)} == 0 )); then
-    #     sudo -u "${UTILITY_ACCOUNT_USERNAME}" mkdir "${uc_temp_dir}"
-    # else
-    #     mkdir "${uc_temp_dir}"
-    # fi
+cleanup_uc_temp_files() {
+    # delete various stale temp files
+    MINUTES_TO_KEEP_TEMP_FILES=50
+    find "/tmp" -maxdepth 1 -type d -name "uc_*" -exec rm -rf {} \;
+    find "/tmp" -maxdepth 1 -type f -name "tmp*" -mmin "+${MINUTES_TO_KEEP_TEMP_FILES}" -exec rm {} \;
+    find "/tmp" -maxdepth 1 -type f -name ".com.google.Chrome*" -mmin "+${MINUTES_TO_KEEP_TEMP_FILES}" -exec rm {} \;
+    find "/tmp" -maxdepth 1 -type d -name ".com.google.Chrome*" -mmin "+${MINUTES_TO_KEEP_TEMP_FILES}" -exec rm -r {} \;
 }
 
 loop_log_message info "Starting ${BASH_SOURCE##*/}"
@@ -117,10 +115,10 @@ declare -a pip_packages=(
     "wheel"
     "boto3"
     "botocore"
-    "requests"
+    # "requests"
     "selenium"
     "undetected-chromedriver"
-    "urllib3"
+    # "urllib3"
 )
 
 LOOP_NUMBER=1
@@ -168,7 +166,7 @@ do
         sleep 10
 
         # remove any leftover chromedriver binaries
-        cleanup_uc_binaries
+        cleanup_uc_temp_files
 
     done
     

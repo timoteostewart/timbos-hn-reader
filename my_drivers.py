@@ -1,10 +1,13 @@
 import logging
 import os
+import shutil
 import sys
+import tempfile
 import traceback
 import zipfile
 
 import undetected_chromedriver as uc
+from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 
 import config
@@ -14,28 +17,29 @@ logger.setLevel(logging.INFO)
 
 
 # monkey patch undetected_chromedriver here
-def new_unzip_package(self, fp):
-    logger.debug("unzipping %s" % fp)
-    try:
-        os.unlink(self.zip_path)
-    except (FileNotFoundError, OSError):
-        pass
-
-    os.makedirs(self.zip_path, mode=0o755, exist_ok=True)
-    with zipfile.ZipFile(fp, mode="r") as zf:
-        zf.extract(self.exe_name, self.zip_path)
-    # specifically, the monkey patch is adding try-except handling to this problematic line.
-    try:
-        os.rename(os.path.join(self.zip_path, self.exe_name), self.executable_path)
-    except:
-        pass
-    os.remove(fp)
-    os.rmdir(self.zip_path)
-    os.chmod(self.executable_path, 0o755)
-    return self.executable_path
 
 
-uc.Patcher.unzip_package = new_unzip_package
+# def new_unzip_package(self, fp):
+#     # logger.debug("unzipping %s" % fp)
+#     # os.unlink(self.zip_path)
+
+#     os.makedirs(self.zip_path, mode=0o755, exist_ok=True)
+#     with zipfile.ZipFile(fp, mode="r") as zf:
+#         zf.extract(self.exe_name, self.zip_path)
+
+#     temp_dir = tempfile.mkdtemp(prefix="uc_", suffix=None, dir=None)
+#     self.executable_path = f"{temp_dir}/undetected_chromedriver"
+
+#     shutil.copy2(os.path.join(self.zip_path, self.exe_name), self.executable_path)
+
+#     # os.remove(fp)
+#     # os.rmdir(self.zip_path)
+#     os.chmod(self.executable_path, 0o755)
+
+#     return self.executable_path
+
+
+# uc.Patcher.unzip_package = new_unzip_package
 
 
 def get_chromedriver_noproxy(user_agent="", requestor=""):
@@ -104,14 +108,20 @@ def get_chromedriver_noproxy(user_agent="", requestor=""):
     )
 
     try:
-        driver = uc.Chrome(
-            browser_executable_path=config.settings["SCRAPING"][
-                "PATH_TO_CHROME_BROWSER"
-            ],
+        driver = webdriver.Chrome(
             options=chrome_options,
             service=chrome_service,
-            use_subprocess=False,
+
         )
+        
+        # driver = uc.Chrome(
+        #     # browser_executable_path=config.settings["SCRAPING"][
+        #     #     "PATH_TO_CHROME_BROWSER"
+        #     # ],
+        #     options=chrome_options,
+        #     service=chrome_service,
+        #     # use_subprocess=False,
+        # )
     except Exception as exc:
         logger.error(
             f"{sys._getframe(  ).f_code.co_name}: {requestor} failed to get a driver: {exc}"

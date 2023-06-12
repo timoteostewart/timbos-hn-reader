@@ -128,12 +128,12 @@ def can_find_a_shortcode(story_as_object, img_loading):
                 os.path.join(config.settings["TEMP_DIR"], thumb_filename),
             )
             try:
-                aws_utils.upload_thumb(thumb_filename)
+                aws_utils.upload_thumb(thumb_filename=thumb_filename)
             except Exception as exc:
                 logger.error(
                     f"{sys._getframe(  ).f_code.co_name}: "
                     f"id {story_as_object.id}: "
-                    f"failed to upload thumb to S3: {exc}"
+                    f"failed to upload thumb (prepared image) to S3: {exc}"
                 )
                 return False
 
@@ -176,7 +176,7 @@ def save_thumb_where_it_should_go(webp_image, story_as_object, size):
     thumb_filename = get_webp_filename(story_as_object, size)
     webp_image.save(filename=os.path.join(config.settings["TEMP_DIR"], thumb_filename))
     try:
-        aws_utils.upload_thumb(thumb_filename)
+        aws_utils.upload_thumb(thumb_filename=thumb_filename)
     except Exception as exc:
         logger.error(
             f"{sys._getframe(  ).f_code.co_name}: "
@@ -276,7 +276,6 @@ def get_image_slug(story_as_object, img_loading="lazy"):
         with Image(
             filename=story_as_object.downloaded_orig_thumb_full_path
         ) as downloaded_img:
-
             image_format = downloaded_img.format
 
             # if animation, use only first frame
@@ -696,7 +695,6 @@ def get_image_to_use(
     no_pad=False,
     shortcode="image",
 ):
-
     if downloaded_img.alpha_channel:
         downloaded_img.background = config.settings["THUMBS"][
             "BG_COLOR_FOR_TRANSPARENT_THUMBS"
@@ -787,7 +785,6 @@ def get_image_to_use(
 
 
 def draw_dogear(pdf_page_img):
-
     logger.info(f"entering draw_dogear() with pdf_page_img {pdf_page_img}")
 
     # pdf_page_img = Image(filename="prepared-image-small.webp")

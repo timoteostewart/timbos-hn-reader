@@ -18,7 +18,7 @@ UTILITY_ACCOUNT_USERNAME=tim
 DAYS_TO_KEEP_CACHED_STORIES=3
 DAYS_TO_KEEP_LOGS=3
 
-LOGFILE_DEST_DIR=/mnt/synology/logs/thnr2.home.arpa
+LOGFILE_ARCHIVE_DEST_DIR=/mnt/synology/logs/thnr2.home.arpa
 
 # setup logging details
 LOOP_LOG_PATH="${BASE_DIR}/logs/"
@@ -52,15 +52,14 @@ loop_log_message info "${BASH_SOURCE##*/} starting"
 
 # delete cached stories
 loop_log_message info "${BASH_SOURCE##*/} deleting cached stories older than ${DAYS_TO_KEEP_CACHED_STORIES} days"
-
 find "${BASE_DIR}/cached_stories" -maxdepth 1 -name "*.pickle" -mtime "+${DAYS_TO_KEEP_CACHED_STORIES}" -exec rm {} \;
 
 # archive old logs
-if [ -d "${LOGFILE_DEST_DIR}" ]; then
+if [ -d "${LOGFILE_ARCHIVE_DEST_DIR}" ]; then
     loop_log_message info "${BASH_SOURCE##*/} archiving logs older than ${DAYS_TO_KEEP_LOGS} days"
-    find "${BASE_DIR}/logs" -maxdepth 1 -name "*.log" -mtime "+${DAYS_TO_KEEP_LOGS}" -exec rsync -a --no-owner --no-group --remove-source-files {} "${LOGFILE_DEST_DIR}" \;
+    find "${BASE_DIR}/logs" -maxdepth 1 -name "*.log" -mtime "+${DAYS_TO_KEEP_LOGS}" -exec rsync -a --no-owner --no-group --remove-source-files {} "${LOGFILE_ARCHIVE_DEST_DIR}" \;
 else
-    loop_log_message warning "${BASH_SOURCE##*/} ${LOGFILE_DEST_DIR} doesn't exist!"
+    loop_log_message warning "${BASH_SOURCE##*/} ${LOGFILE_ARCHIVE_DEST_DIR} doesn't exist!"
 fi
 
 loop_log_message info "${BASH_SOURCE##*/} exiting"

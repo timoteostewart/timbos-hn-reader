@@ -333,8 +333,9 @@ def get_roster_via_screen_scraping(driver, roster_story_type: str):
     new_roster["story_type"] = roster_story_type
     new_roster["time_retrieved"] = time_utils.get_time_now_in_epoch_seconds_int()
     new_roster["story_ids"] = cur_roster
-    aws_utils.upload_dict_to_s3_as_json(
-        new_roster, f"rosters/{roster_story_type}_roster.json"
+    aws_utils.upload_roster_to_s3(
+        roster_dict=new_roster,
+        roster_dest_fullpath=f"rosters/{roster_story_type}_roster.json",
     )
 
     logger.info(
