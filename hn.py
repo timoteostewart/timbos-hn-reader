@@ -622,7 +622,7 @@ def page_package_processor(page_package):
             )
 
             try:
-                driver = my_drivers.get_chromedriver_noproxy(
+                driver = my_drivers.get_chromedriver(
                     requestor=f"id {each_id}, page_package_processor({page_package.story_type}), page {page_package.page_number}"
                 )
                 (
@@ -933,9 +933,7 @@ def supervisor(cur_story_type):
     )
 
     rosters = {}
-    driver = my_drivers.get_chromedriver_noproxy(
-        requestor=f"supervisor({cur_story_type})"
-    )
+    driver = my_drivers.get_chromedriver(requestor=f"supervisor({cur_story_type})")
     for roster_story_type in config.settings["SCRAPING"]["STORY_ROSTERS"]:
         rosters[roster_story_type] = my_scrapers.get_roster_for(
             driver, roster_story_type
