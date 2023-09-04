@@ -33,7 +33,6 @@ ARTICLE_SYMBOL = "📄"
 def check_for_social_media_details(
     driver=None, story_as_object=None, page_source_soup=None
 ):
-
     #
     # arstechnica.com
     #
@@ -377,7 +376,6 @@ def get_bloomberg_account_slug(
 
 
 def get_github_account_slug(github_url: str, story_as_object=None):
-
     account_name_url = text_utils.get_text_between(
         "github.com/",
         "/",
@@ -409,7 +407,6 @@ def get_github_account_slug(github_url: str, story_as_object=None):
 def get_github_gist_account_slug(
     github_gist_url=None, story_as_object=None, page_source_soup=None
 ):
-
     author_handle = None
     author_link = None
 
@@ -465,7 +462,6 @@ def create_github_languages_slug(story_as_object):
 
 
 def get_github_repo_languages(driver=None, repo_url=None):
-
     page_source = retrieve_by_url.get_page_source_noproxy(driver=driver, url=repo_url)
 
     soup = BeautifulSoup(page_source, "html.parser")
@@ -560,7 +556,6 @@ def get_theguardian_account_slug(
 
 
 def get_medium_account_slug(medium_url, story_as_object):
-
     if story_as_object.hostname["minus_www"].count(".") >= 2:
         domains_as_list = story_as_object.hostname["minus_www"].split(".")
         account_name_url = domains_as_list[-3]
@@ -617,11 +612,15 @@ def get_nytimes_article_slug(
     a_els = page_source_soup.select("a")
     for each_a in a_els:
         if each_a.has_attr("href"):
-            href_val = each_a["href"]
-            if "nytimes.com/by/" in href_val:
-                if each_a.text:
-                    possible_authors.update({each_a.text: 1})
-                    possible_author_urls.update({href_val: 1})
+            if "nytimes.com/by/" in each_a["href"]:
+                if not "More about" in each_a.text:
+                    if each_a.text:
+                        possible_authors.update({each_a.text: 1})
+                        possible_author_urls.update({each_a["href"]: 1})
+                else:
+                    logger.info(
+                        f"id {story_as_object.id}: successfully suppressed NYT 'More about' link with text '{each_a.text}'"
+                    )
 
     if not possible_authors:
         logger.info(
@@ -660,7 +659,6 @@ def get_nytimes_article_slug(
 
 
 def get_reddit_account_slug(reddit_url, story_as_object):
-
     if "reddit.com/r/" not in reddit_url:
         return config.EMPTY_STRING
 
@@ -689,7 +687,6 @@ def get_reddit_account_slug(reddit_url, story_as_object):
 
 
 def get_substack_account_slug(substack_url, story_as_object):
-
     account_name_url = story_as_object.hostname["minus_www"].split(".")[0]
 
     if not account_name_url:
@@ -714,7 +711,6 @@ def get_substack_account_slug(substack_url, story_as_object):
 def get_techcrunch_account_slug(
     techcrunch_url=None, story_as_object=None, page_source_soup=None
 ):
-
     author_display_name = None
     author_link = None
 
@@ -762,7 +758,6 @@ def get_techcrunch_account_slug(
 
 
 def get_twitter_account_slug(twitter_url: str, story_as_object=None):
-
     if "/events/" in twitter_url:
         return config.EMPTY_STRING
 
@@ -829,7 +824,6 @@ def get_wikipedia_article_slug(
 
 
 def get_youtube_channel_slug(youtube_url: str, story_as_object=None):
-
     if "youtube.com/watch?v=" in youtube_url:
         video_id = text_utils.get_text_between(
             "v=", "&", youtube_url, okay_to_elide_right_pattern=True
@@ -848,7 +842,6 @@ def get_youtube_channel_slug(youtube_url: str, story_as_object=None):
                 channel_id = json["items"][0]["snippet"]["channelId"]
                 account_url = f"https://www.youtube.com/channel/{channel_id}"
         except Exception as e:
-
             if story_as_object:
                 logger.warning(
                     f"id {story_as_object.id}: error getting video details for YouTube URL {youtube_url}: {e}"
