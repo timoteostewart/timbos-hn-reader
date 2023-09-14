@@ -411,6 +411,10 @@ def freshen_up(story_as_object=None):
             story_as_object.story_card_html = story_as_object.story_card_html.replace(
                 old_descendants_slug_string, new_descendants_slug_string, 1
             )
+            logger.info(
+                f"id {story_as_object.id}: updated comment count from {story_as_object.descendants} to {new_descendants}"
+            )
+
     else:
         logger.warning(
             f"id {story_as_object.id}: no key for 'descendants' in updated_story_data_as_dict"
@@ -430,17 +434,8 @@ def get_pickle_filename(id):
 
 def get_story_page_url(story_type, page_num, light_mode=True, from_other_mode=False):
     url = None
-    if config.settings["cur_host"] == "owl":
+    if config.settings["cur_host"] in ["tsio", "thnr-home-arpa", "thnr", "owl"]:
         url = f"./{get_html_page_filename(story_type, page_num, light_mode=light_mode)}"
-    elif config.settings["cur_host"] in ["tsio", "thnr-home-arpa", "thnr"]:
-        if light_mode and not from_other_mode:
-            url = os.path.join(f"../../{story_type}/{page_num}/", "")
-        elif not light_mode and not from_other_mode:
-            url = os.path.join(f"../../../{story_type}/{page_num}/dm/", "")
-        elif light_mode and from_other_mode:
-            url = os.path.join(f"../../../{story_type}/{page_num}/", "")
-        else:  # not light_mode and from_other_mode
-            url = os.path.join(f"../../{story_type}/{page_num}/dm/", "")
     else:
         raise Exception(f"host name {config.settings['cur_host']} is not supported")
 
@@ -583,7 +578,7 @@ def page_package_processor(page_package):
                 try:
                     freshen_up(story_as_object=story_as_object)
                 except Exception as exc:
-                    repickling_log_detail = "failed to freshen story"
+                    repickling_log_detail = f"failed to freshen story: {exc}"
                 else:
                     repickling_log_detail = "re-pickling freshened story"
 

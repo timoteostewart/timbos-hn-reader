@@ -36,7 +36,7 @@ def load_settings(cur_host, settings_file):
             settings["STATIC_URL"] = settings_yaml["STATIC_URL"][settings["cur_host"]]
             settings["STORIES_URL"] = settings_yaml["STORIES_URL"][settings["cur_host"]]
             settings["THUMBS_URL"] = settings_yaml["THUMBS_URL"][settings["cur_host"]]
-            settings["CSS_URL"] = os.path.join(settings["STATIC_URL"], "css", "")
+            settings["CSS_URL"] = settings_yaml["STATIC_URL"][settings["cur_host"]]
 
             settings["SHORT_URL_DISPLAY"] = settings_yaml["SHORT_URL_DISPLAY"][
                 settings["cur_host"]
@@ -71,7 +71,7 @@ def load_settings(cur_host, settings_file):
 # AWS settings: paths in S3 bucket
 # (name of actual bucket goes in `my_secrets.py`)
 s3_thumbs_path = "thumbs/"
-s3_stories_path = "hn_stories/"
+s3_stories_path = ""
 
 # concurrent futures
 max_workers = 8

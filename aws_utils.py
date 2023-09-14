@@ -22,7 +22,10 @@ logger.setLevel(logging.INFO)
 boto3_session = boto3.Session(profile_name=my_secrets.AWS_PROFILE_NAME)
 s3_config = botocore.config.Config(max_pool_connections=max(25, config.max_workers))
 s3_resource = boto3_session.resource("s3", config=s3_config)
-my_bucket = s3_resource.Bucket(my_secrets.S3_BUCKET_NAME)
+# my_bucket = s3_resource.Bucket(my_secrets.S3_BUCKET_NAME)
+
+bucket_cdn = s3_resource.Bucket(my_secrets.S3_BUCKET_NAME_CDN)
+bucket_html = s3_resource.Bucket(my_secrets.S3_BUCKET_NAME_HTML)
 
 
 # def does_object_exist(full_s3_key):
@@ -37,7 +40,7 @@ my_bucket = s3_resource.Bucket(my_secrets.S3_BUCKET_NAME)
 # def does_story_exist(story_filename):
 #     try:
 #         object = s3_resource.Object(
-#             my_secrets.S3_BUCKET_NAME, f"{config.s3_stories_path}{story_filename}"
+#             my_secrets.S3_BUCKET_NAME_CDN, f"{config.s3_stories_path}{story_filename}"
 #         )
 #         l = object.content_length
 #         return l >= 0
@@ -48,7 +51,7 @@ my_bucket = s3_resource.Bucket(my_secrets.S3_BUCKET_NAME)
 # def does_thumb_exist(thumb_filename):
 #     try:
 #         object = s3_resource.Object(
-#             my_secrets.S3_BUCKET_NAME, f"{config.s3_thumbs_path}{thumb_filename}"
+#             my_secrets.S3_BUCKET_NAME_CDN, f"{config.s3_thumbs_path}{thumb_filename}"
 #         )
 #         l = object.content_length
 #         return l >= 0
@@ -58,7 +61,9 @@ my_bucket = s3_resource.Bucket(my_secrets.S3_BUCKET_NAME)
 
 def get_json_from_s3_as_dict(full_s3_key):
     try:
-        obj = s3_resource.Object(bucket_name=my_secrets.S3_BUCKET_NAME, key=full_s3_key)
+        obj = s3_resource.Object(
+            bucket_name=my_secrets.S3_BUCKET_NAME_CDN, key=full_s3_key
+        )
         obj_body = obj.get()["Body"].read().decode("utf-8")
     except ClientError as exc:
         if exc.response["Error"]["Code"] == "NoSuchKey":
@@ -72,7 +77,7 @@ def get_json_from_s3_as_dict(full_s3_key):
 
 # def get_object_from_s3_as_bytes(full_s3_key):
 #     try:
-#         obj = s3_resource.Object(bucket_name=my_secrets.S3_BUCKET_NAME, key=full_s3_key)
+#         obj = s3_resource.Object(bucket_name=my_secrets.S3_BUCKET_NAME_CDN, key=full_s3_key)
 #     except Exception as e:
 #         logger.error(f"failed to retrieve s3 object {full_s3_key}")
 #         raise CouldNotGetObjectFromS3Error(
@@ -100,14 +105,14 @@ def upload_dict_to_s3_as_json(d, full_s3_key, extra_args=None):
     upload_string_to_s3(string=str(j), full_s3_key=full_s3_key, extra_args=extra_args)
 
     return True
-    # if does_object_exist(full_s3_key):
-    #     return True
-    # else:
-    #     return False
 
 
 def upload_file_to_s3(
-    full_s3_key=None, full_local_filename=None, extra_args=None, retries_left=3
+    full_s3_key=None,
+    full_local_filename=None,
+    extra_args=None,
+    retries_left=3,
+    bucket=None,
 ):
     if not extra_args:
         extra_args = {
@@ -115,7 +120,7 @@ def upload_file_to_s3(
         }
 
     try:
-        my_bucket.upload_file(
+        bucket.upload_file(
             Key=full_s3_key,
             Filename=full_local_filename,
             ExtraArgs=extra_args,
@@ -131,15 +136,12 @@ def upload_file_to_s3(
                 full_local_filename=full_local_filename,
                 extra_args=extra_args,
                 retries_left=retries_left - 1,
+                bucket=bucket,
             )
         else:
             raise exc
 
     return True
-    # if does_object_exist(full_s3_key):
-    #     return True
-    # else:
-    #     return False
 
 
 def upload_page_of_stories(page_filename):
@@ -156,6 +158,7 @@ def upload_page_of_stories(page_filename):
                 config.settings["COMPLETED_PAGES_DIR"], page_filename
             ),
             extra_args=extra_args,
+            bucket=bucket_html,
         )
     except Exception as exc:
         logger.error(
@@ -164,7 +167,7 @@ def upload_page_of_stories(page_filename):
         raise exc
 
 
-def upload_string_to_s3(string: str, full_s3_key, extra_args=None):
+def upload_string_to_s3(string: str, full_s3_key, extra_args=None, bucket=bucket_cdn):
     buffer = io.BytesIO(string.encode())
 
     if not extra_args:
@@ -172,7 +175,7 @@ def upload_string_to_s3(string: str, full_s3_key, extra_args=None):
             "Tagging": "Activity=UploadString",
         }
 
-    my_bucket.upload_fileobj(
+    bucket.upload_fileobj(
         Fileobj=buffer,
         Key=full_s3_key,
         ExtraArgs=extra_args,
@@ -195,6 +198,7 @@ def upload_thumb(thumb_filename: str):
                 config.settings["TEMP_DIR"], thumb_filename
             ),
             extra_args=extra_args,
+            bucket=bucket_cdn,
         )
     except Exception as exc:
         raise exc

@@ -5,32 +5,32 @@
 
 CANONICAL_URL:
   LM:
-    owl: https://www.thnr.net/
-    thnr: https://dev.thnr.net/
+    owl: https://thnr.net/
+    thnr: https://thnr.net/
   DM:
-    owl: https://www.thnr.net/dm/
-    thnr: https://dev.thnr.net/dm/
+    owl: https://thnr.net/
+    thnr: https://thnr.net/
   
 HEADER_HYPERLINK:
   LM:
     owl: file:///D:/var/www/thnr.net/hn_stories/top_stories_page_1.html
-    thnr: https://dev.thnr.net/
+    thnr: https://thnr.net/
   DM:
     owl: file:///D:/var/www/thnr.net/hn_stories/top_stories_page_1_dm.html
-    thnr: https://dev.thnr.net/dm/
+    thnr: https://thnr.net/
 
 ABOUT_HTML_URL:
   LM:
     owl: file:///D:/var/www/thnr.net/public_html/about.html
-    thnr: https://dev.thnr.net/about/
+    thnr: https://thnr.net/about.html
   DM:
     owl: file:///D:/var/www/thnr.net/public_html/about-dm.html
-    thnr: https://dev.thnr.net/dm/
+    thnr: https://thnr.net/about-dm.html
 
 
 SHORT_URL_DISPLAY:
   owl: thnr.net
-  thnr: dev.thnr.net
+  thnr: thnr.net
 
 DELEGATES:
   PDF2PNG:
@@ -51,7 +51,7 @@ STATIC_URL:
 
 STORIES_URL:
   owl: D:/var/www/thnr.net/hn_stories/
-  thnr: https://dev.thnr.net/
+  thnr: https://thnr.net/
 
 THUMBS_URL:
   owl: https://thnrcdn.com/thumbs/
