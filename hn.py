@@ -414,6 +414,9 @@ def freshen_up(story_as_object=None):
             logger.info(
                 f"id {story_as_object.id}: updated comment count from {story_as_object.descendants} to {new_descendants}"
             )
+            logger.info(
+                f"id {story_as_object.id}: old descendants slug string: {old_descendants_slug_string}, new descendants slug string: {new_descendants_slug_string} (Tim)"
+            )
 
     else:
         logger.warning(

@@ -607,42 +607,33 @@ def get_medium_account_slug(medium_url, story_as_object):
 def get_nytimes_article_slug(
     nytimes_url=None, story_as_object=None, page_source_soup=None
 ):
-    possible_authors = Counter()
-    possible_author_urls = Counter()
+    author_accumulator = []
     a_els = page_source_soup.select("a")
     for each_a in a_els:
         if each_a.has_attr("href"):
-            if "nytimes.com/by/" in each_a["href"]:
+            if "nytimes.com/by/" in each_a["href"] and each_a.text:
                 if not "More about" in each_a.text:
-                    if each_a.text:
-                        possible_authors.update({each_a.text: 1})
-                        possible_author_urls.update({each_a["href"]: 1})
-                else:
-                    logger.info(
-                        f"id {story_as_object.id}: successfully suppressed NYT 'More about' link with text '{each_a.text}'"
+                    author_accumulator.append(
+                        (each_a.text.replace(" ", "&nbsp;"), each_a["href"])
                     )
-
-    if not possible_authors:
+    if not author_accumulator:
         logger.info(
             f"id {story_as_object.id}: could not determine nytimes article authors"
         )
         return config.EMPTY_STRING
-    elif len(possible_authors) == 1:
-        article_author = list(possible_authors)[0]
-    else:
-        article_author = ", ".join(list(possible_authors))
 
-    if possible_author_urls:
-        article_author_link_href = list(possible_author_urls)[0]
-        author_slug = f'<a href="{article_author_link_href}">{article_author}</a>'
-    else:
-        author_slug = f"{article_author}"
+    author_slug = ", ".join(
+        [
+            f'<a href="{each_author[1]}">{each_author[0]}</a>'
+            for each_author in author_accumulator
+        ]
+    )
 
-    nowrap_class = check_if_nowrap_needed(article_author)
+    # nowrap_class = check_if_nowrap_needed(article_author)
 
     account_name_slug = (
         "<br/>"
-        f'<span class="social-media-account-name{nowrap_class}">'
+        f'<span class="social-media-account-name">'
         f'<span class="social-media-account-emoji">{SILHOUETTE_SYMBOL}</span>'
         f"{author_slug}"
         "</span>"

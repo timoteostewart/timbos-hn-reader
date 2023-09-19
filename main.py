@@ -6,6 +6,7 @@ import sys
 
 import config
 import hn
+import update_chromedriver
 
 logger = None
 
@@ -23,9 +24,8 @@ def check_for_required_dirs():
             try:
                 os.makedirs(each_dir)
             except Exception as e:
-                print(f"Error: {e}")
-                print(
-                    f"Missing required dir {each_dir} and was unable to create it. Exiting."
+                main.logger.error(
+                    f"Error: {e}. Missing required dir {each_dir} and was unable to create it. Exiting."
                 )
                 exit(1)
 
@@ -61,6 +61,12 @@ def main():
     )
 
     check_for_required_dirs()
+    try:
+        update_chromedriver.check_for_updated_chromedriver()
+    except Exception as exc:
+        main.logger.error(f"Error: {exc}. Exiting.")
+        exit(1)
+
     return hn.supervisor(cur_story_type=story_type)
 
 
