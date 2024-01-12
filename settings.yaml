@@ -1,17 +1,17 @@
 ABOUT_HTML_URL:
   DM:
     owl: file:///D:/var/www/thnr.net/public_html/about-dm.html
-    thnr: https://thnr.net/about-dm.html
+    thnr: https://www.thnr.net/about-dm.html
   LM:
     owl: file:///D:/var/www/thnr.net/public_html/about.html
-    thnr: https://thnr.net/about.html
+    thnr: https://www.thnr.net/about.html
 CANONICAL_URL:
   DM:
-    owl: https://thnr.net/
-    thnr: https://thnr.net/
+    owl: https://www.thnr.net/
+    thnr: https://www.thnr.net/
   LM:
-    owl: https://thnr.net/
-    thnr: https://thnr.net/
+    owl: https://www.thnr.net/
+    thnr: https://www.thnr.net/
 DELEGATES:
   PDF2PNG:
     owl: L:/utils/gs/bin/gswin64c.exe
@@ -19,10 +19,10 @@ DELEGATES:
 HEADER_HYPERLINK:
   DM:
     owl: file:///D:/var/www/thnr.net/hn_stories/top_stories_page_1_dm.html
-    thnr: https://thnr.net/
+    thnr: https://www.thnr.net/
   LM:
     owl: file:///D:/var/www/thnr.net/hn_stories/top_stories_page_1.html
-    thnr: https://thnr.net/
+    thnr: https://www.thnr.net/
 MINUTES_BEFORE_REFRESHING_STORY_METADATA: 60
 OG_IMAGE:
   MIN_DIM_PX: 250
@@ -31,7 +31,7 @@ PAGES:
 SCRAPING:
   FIREBASEIO_RETRY_DELAY: 8
   NUM_RETRIES_FOR_HN_FEEDS: 3
-  PATH_TO_CHROMEDRIVER: /srv/timbos-hn-reader/bin/chromedriver/117.0.5938.88/chromedriver-linux64/chromedriver
+  PATH_TO_CHROMEDRIVER: /srv/timbos-hn-reader/bin/chromedriver/120.0.6099.71/chromedriver-linux64/chromedriver
   PATH_TO_CHROME_BROWSER: /usr/bin/google-chrome-stable
   PERMITTED_STORY_TYPES:
   - top
@@ -59,7 +59,7 @@ STATIC_URL:
   thnr: /static/
 STORIES_URL:
   owl: D:/var/www/thnr.net/hn_stories/
-  thnr: https://thnr.net/
+  thnr: https://www.thnr.net/
 SYMBOLS:
   DATA_SEPARATOR: "\xB7"
   DOUBLE_OBLIQUE_HYPHEN: '&#11799;'

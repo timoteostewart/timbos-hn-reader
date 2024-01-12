@@ -46,8 +46,6 @@ def check_for_updated_chromedriver():
             latest_chromedriver["url"] = c.text
 
     tokens = latest_chromedriver["url"].split("/")
-    pattern = r"^[\d.]+$"
-    chromedriver_version_number = None
     for t in tokens:
         if is_a_version_number(t):
             latest_chromedriver["version"] = t

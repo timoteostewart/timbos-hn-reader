@@ -13,7 +13,6 @@ from selenium.webdriver.chrome.service import Service
 import config
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 
 def get_chromedriver(user_agent=None, requestor=""):
@@ -88,15 +87,6 @@ def get_chromedriver(user_agent=None, requestor=""):
             options=chrome_options,
             service=chrome_service,
         )
-
-        # driver = uc.Chrome(
-        #     # browser_executable_path=config.settings["SCRAPING"][
-        #     #     "PATH_TO_CHROME_BROWSER"
-        #     # ],
-        #     options=chrome_options,
-        #     service=chrome_service,
-        #     # use_subprocess=False,
-        # )
     except Exception as exc:
         logger.error(
             f"{sys._getframe(  ).f_code.co_name}: {requestor} failed to get a driver: {exc}"

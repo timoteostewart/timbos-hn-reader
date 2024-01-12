@@ -258,10 +258,10 @@ def create_badges_slug(story_id, story_type, rosters):
         for each_story_type in ["top", "new", "best", "active", "classic"]:
             if badge_codes[each_story_type]["letter"] in badges:
                 list_of_badges.append(
-                    f'<div class="{each_story_type}-badge" title="currently on /{badge_codes[each_story_type]["tooltip"]}">{badge_codes[each_story_type]["sigil"]}</div>'
+                    f'<div class="{each_story_type}-badge" title="This story is currently on /{badge_codes[each_story_type]["tooltip"]}.">{badge_codes[each_story_type]["sigil"]}</div>'
                 )
         list_of_badges[-1] = list_of_badges[-1].replace(
-            "class=", 'id="final-badge" class='
+            'class="', 'class="final-badge '
         )
         badges_slug = f'<div class="badges-tray">{"".join(list_of_badges)}</div>{data_separator_slug}'
     else:
@@ -359,36 +359,49 @@ def freshen_up(story_as_object=None):
 
     # update title if needed
     if "title" in updated_story_data_as_dict:
+        old_title = story_as_object.title
         new_title = updated_story_data_as_dict["title"]
-        if story_as_object.title != new_title:
-            new_title_slug = text_utils.insert_possible_line_breaks(new_title)
-            story_as_object.title_slug = new_title_slug
-            new_title_slug_string = (
-                f'<a href="{story_as_object.url}">{story_as_object.title_slug}</a>'
-            )
-            old_title_slug_string = (
-                f'<a href="{story_as_object.url}">{story_as_object.title_slug}</a>'
-            )
+
+        if "url" in updated_story_data_as_dict:
+            old_url = story_as_object.url
+            new_url = updated_story_data_as_dict["url"]
+        else:
+            old_url = story_as_object.url
+            new_url = f'https://news.ycombinator.com/item?id={updated_story_data_as_dict["id"]}'
+
+        old_title_slug_string = f'<a href="{old_url}">{text_utils.insert_possible_line_breaks(old_title)}</a>'
+        new_title_slug_string = f'<a href="{new_url}">{text_utils.insert_possible_line_breaks(new_title)}</a>'
+
+        if old_title_slug_string != new_title_slug_string:
+            pre = story_as_object.story_card_html
             story_as_object.story_card_html = story_as_object.story_card_html.replace(
                 old_title_slug_string, new_title_slug_string, 1
             )
+            post = story_as_object.story_card_html
+            if pre == post:
+                logger.error(
+                    f"id {story_as_object.id}: failed to update title. old title slug string: {old_title_slug_string} ; new title slug string: {new_title_slug_string}"
+                )
+            else:
+                logger.info(
+                    f"id {story_as_object.id}: updated title from '{old_title}' to '{new_title}'"
+                )
+
     else:
-        # re-use existing title
         logger.warning(
-            f"id {story_as_object.id}: no key for 'title' in updated_story_data_as_dict"
+            f"id {story_as_object.id}: no key for 'title' in updated_story_data_as_dict; story is probably dead"
         )
 
-    # update title if needed
+    # update score if needed
     if "score" in updated_story_data_as_dict:
         new_score = int(updated_story_data_as_dict["score"])
         if story_as_object.score != new_score:
-            new_score_display = text_utils.add_singular_plural(new_score, "point")
-            story_as_object.score_display = new_score_display
-            new_score_slug_string = (
-                f'<div class="story-score">{story_as_object.score_display}</div>'
-            )
             old_score_slug_string = (
                 f'<div class="story-score">{story_as_object.score_display}</div>'
+            )
+            new_score_display = text_utils.add_singular_plural(new_score, "point")
+            new_score_slug_string = (
+                f'<div class="story-score">{new_score_display}</div>'
             )
             story_as_object.story_card_html = story_as_object.story_card_html.replace(
                 old_score_slug_string, new_score_slug_string, 1
@@ -401,27 +414,21 @@ def freshen_up(story_as_object=None):
     # update comment count (i.e., "descendants") if needed
     if "descendants" in updated_story_data_as_dict:
         new_descendants = int(updated_story_data_as_dict["descendants"])
-        if story_as_object.descendants != new_descendants:
+        old_descendants = story_as_object.descendants
+        if old_descendants != new_descendants:
             old_descendants_slug_string = f'<div class="story-descendants"><a href="{story_as_object.hn_comments_url}">{story_as_object.descendants_display}</a></div>'
 
-            story_as_object.descendants_display = text_utils.add_singular_plural(
+            new_descendants_display = text_utils.add_singular_plural(
                 new_descendants, "comment"
             )
-            new_descendants_slug_string = f'<div class="story-descendants"><a href="{story_as_object.hn_comments_url}">{story_as_object.descendants_display}</a></div>'
+            new_descendants_slug_string = f'<div class="story-descendants"><a href="{story_as_object.hn_comments_url}">{new_descendants_display}</a></div>'
+
             story_as_object.story_card_html = story_as_object.story_card_html.replace(
                 old_descendants_slug_string, new_descendants_slug_string, 1
             )
             logger.info(
-                f"id {story_as_object.id}: updated comment count from {story_as_object.descendants} to {new_descendants}"
+                f"id {story_as_object.id}: updated comment count from {old_descendants} to {new_descendants}"
             )
-            logger.info(
-                f"id {story_as_object.id}: old descendants slug string: {old_descendants_slug_string}, new descendants slug string: {new_descendants_slug_string} (Tim)"
-            )
-
-    else:
-        logger.warning(
-            f"id {story_as_object.id}: no key for 'descendants' in updated_story_data_as_dict"
-        )
 
 
 def get_html_page_filename(story_type: str, page_number: int, light_mode: bool):
