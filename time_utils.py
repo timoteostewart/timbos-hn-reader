@@ -4,8 +4,15 @@ import time
 
 import pytz
 
-import config
 import text_utils
+
+# various constants
+SECONDS_PER_MINUTE = 60
+SECONDS_PER_HOUR = 3_600
+SECONDS_PER_DAY = 86_400
+SECONDS_PER_WEEK = 604_800
+SECONDS_PER_MONTH = 2_628_000
+SECONDS_PER_YEAR = 31_557_600
 
 
 def convert_epoch_seconds_to_utc(epoch_seconds):
@@ -18,25 +25,25 @@ def convert_epoch_seconds_to_utc(epoch_seconds):
 
 
 def convert_seconds_ago_to_human_readable(seconds_ago: int, force_int=False):
-    if seconds_ago < config.SECONDS_PER_MINUTE:
+    if seconds_ago < SECONDS_PER_MINUTE:
         unit = "just now"
-    elif seconds_ago < config.SECONDS_PER_HOUR:
-        number = seconds_ago / config.SECONDS_PER_MINUTE
+    elif seconds_ago < SECONDS_PER_HOUR:
+        number = seconds_ago / SECONDS_PER_MINUTE
         unit = "minute"
-    elif seconds_ago < config.SECONDS_PER_DAY:
-        number = seconds_ago / config.SECONDS_PER_HOUR
+    elif seconds_ago < SECONDS_PER_DAY:
+        number = seconds_ago / SECONDS_PER_HOUR
         unit = "hour"
-    elif seconds_ago < config.SECONDS_PER_WEEK:
-        number = seconds_ago / config.SECONDS_PER_DAY
+    elif seconds_ago < SECONDS_PER_WEEK:
+        number = seconds_ago / SECONDS_PER_DAY
         unit = "day"
-    elif seconds_ago < config.SECONDS_PER_MONTH:
-        number = seconds_ago / config.SECONDS_PER_WEEK
+    elif seconds_ago < SECONDS_PER_MONTH:
+        number = seconds_ago / SECONDS_PER_WEEK
         unit = "week"
-    elif seconds_ago < config.SECONDS_PER_YEAR:
-        number = seconds_ago / config.SECONDS_PER_MONTH
+    elif seconds_ago < SECONDS_PER_YEAR:
+        number = seconds_ago / SECONDS_PER_MONTH
         unit = "month"
     else:
-        number = seconds_ago / config.SECONDS_PER_YEAR
+        number = seconds_ago / SECONDS_PER_YEAR
         unit = "year"
 
     if unit == "just now":

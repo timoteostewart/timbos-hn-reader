@@ -266,7 +266,7 @@ def get_roster_via_screen_scraping(driver, roster_story_type: str):
             prev_time = prev_roster_as_dict["time_retrieved"]
             cur_time = time_utils.get_time_now_in_epoch_seconds_int()
             roster_age_seconds = cur_time - prev_time
-            if 0 < roster_age_seconds < 2 * config.SECONDS_PER_HOUR:
+            if 0 < roster_age_seconds < 2 * time_utils.SECONDS_PER_HOUR:
                 if prev_roster_as_dict["story_ids"]:
                     logger.info(
                         f"{sys._getframe(  ).f_code.co_name}: reusing old '{roster_story_type}' roster with length {len(prev_roster_as_dict['story_ids'])} since it's still recent"

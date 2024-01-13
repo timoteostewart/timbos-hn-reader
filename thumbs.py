@@ -19,6 +19,7 @@ from wand.image import Image
 import aws_utils
 import config
 import file_utils
+import text_utils
 import url_utils
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -30,17 +31,22 @@ logger.setLevel(logging.INFO)
 prepared_images_roster_by_full_url = {
     "https://149521506.v2.pressablecdn.com/wp-content/uploads/2018/06/seth_godin_ogimages_v02_18061313.jpg": "seths-blog",
     "https://a0.awsstatic.com/libra-css/images/logos/aws_logo_smile_1200x630.png": "aws-logo-smile",
+    "https://a0.awsstatic.com/libra-css/images/logos/aws_logo_smile_1200x630.png": "aws-logo-smile",
     "https://cdn.jamanetwork.com/images/logos/JAMA.png": "jama-network",
     "https://developer.mozilla.org/mdn-social-share.cd6c4a5a.png": "mdn-web-docs",
     "https://github.githubassets.com/images/modules/gists/gist-og-image.png": "github-gist",
+    "https://github.githubassets.com/assets/gist-og-image-54fd7dc0713e.png": "github-gist",
     "https://hacks.mozilla.org/files/2022/03/mdnplus.png": "hacks-mozilla",
-    "https://lemire.me/img/portrait2018facebook.jpg": "lemire",
-    "https://lethain.com/static/author.png": "lethain",
+    # "https://lemire.me/img/portrait2018facebook.jpg": "lemire",
+    # "https://lethain.com/static/author.png": "lethain",
     "https://media.npr.org/include/images/facebook-default-wide.jpg?s=1400": "npr-default",
+    "https://media.npr.org/include/images/facebook-default-wide-s1400-c100.jpg": "npr-default",
     "https://s1.reutersmedia.net/resources_v2/images/rcom-default.png?w=800": "reuters",
     "https://savo.rocks/assets/img/favicons/favicon.png": "savo",
     "https://static.npmjs.com/338e4905a2684ca96e08c7780fc68412.png": "npmjs",
+    "https://static-production.npmjs.com/338e4905a2684ca96e08c7780fc68412.png": "npmjs",
     "https://world.hey.com/dhh/avatar-20210222112907000000-293866624": "dhh",
+    "https://world.hey.com/dhh/avatar-df6405b0f7fafda980fd38b04c334bec936aef69": "dhh",
     "https://www.postgresql.org/media/img/about/press/elephant.png": "psql-press",
     "https://www.redditstatic.com/new-icon.png": "new-reddit-icon",
     "https://www.reuters.com/pf/resources/images/reuters/reuters-default.png?d=76": "reuters",
@@ -50,17 +56,32 @@ prepared_images_roster_by_full_url = {
 prepared_images_roster_by_substring = {
     "hey.com/dhh/avatar": "dhh",
     "logo_chromium.png": "chromium-logo",
-    "media.npr.org/include/images/facebook-default-wide.jpg": "npr-default",
+    "media.npr.org/include/images/facebook-default-wide": "npr-default",
     "reuters-default.png": "reuters",
     "reutersmedia.net/resources_v2/images/rcom-default.png": "reuters",
     "seth_godin_ogimages": "seths-blog",
+    "hey.com/dhh/avatar": "dhh",
 }
 
 domains_exempt_from_trim = ["opengraph.githubassets.com"]
 
 domains_with_higher_quality_resizing = ["opengraph.githubassets.com"]
 
-filename_substrings_making_exempt_from_trim = ["flag"]
+filename_substrings_making_exempt_from_trim = [
+    "flag",
+]
+
+ignore_images_whose_urls_contain_these_substrings = [
+    "https://www.redditstatic.com/new-icon.png",
+]
+
+ignore_images_at_these_urls = [
+    "https://pastebin.com/i/facebook.png",
+    "https://s0.wp.com/i/blank.jpg",
+    "https://assets.msn.com/staticsb/statics/latest/homepage/msn-logo.svg",
+]
+
+ignore_images_from_these_domains = []
 
 
 def sanitize(s: str):
@@ -192,11 +213,24 @@ def save_thumb_where_it_should_go(webp_image, story_as_object, size):
 
 def get_image_slug(story_as_object, img_loading="lazy"):
     # initialize image slug as an empty string
-    story_as_object.image_slug = config.EMPTY_STRING
+    story_as_object.image_slug = text_utils.EMPTY_STRING
     # bgcolor_as_Color = (None,)
     force_aspect = None
     no_trim = False
     no_pad = False
+
+    # check if we ignore the exact URL
+    if story_as_object.linked_url_og_image_url_final in ignore_images_at_these_urls:
+        story_as_object.has_thumb = False
+        return
+
+    # check if we ignore the exact domain
+    _, og_image_domains = url_utils.get_domains_from_url(
+        story_as_object.linked_url_og_image_url_final
+    )
+    if og_image_domains in ignore_images_from_these_domains:
+        story_as_object.has_thumb = False
+        return
 
     if can_find_a_shortcode(story_as_object, img_loading):
         return
@@ -228,6 +262,14 @@ def get_image_slug(story_as_object, img_loading="lazy"):
                 force_no_trim = True
                 no_trim = True
                 break
+
+        for pattern in ignore_images_whose_urls_contain_these_substrings:
+            if pattern in story_as_object.thumb_filename_details["base_name"].lower():
+                logger.info(
+                    f"id {story_as_object.id}: will skip image with base filename {story_as_object.thumb_filename_details['base_name']} since it constains substring {pattern}"
+                )
+                story_as_object.has_thumb = False
+                return
 
     # initialize webp compression levels from settings
     WEBP_SMALL_THUMB_COMPRESSION_QUALITY = int(

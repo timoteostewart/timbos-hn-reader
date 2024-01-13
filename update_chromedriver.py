@@ -37,7 +37,7 @@ def check_for_updated_chromedriver():
     )
 
     response = requests.get("https://googlechromelabs.github.io/chrome-for-testing/")
-    soup = bs4.BeautifulSoup(response.text, "html.parser")
+    soup = bs4.BeautifulSoup(response.text, "lxml")
     stable = soup.find("section", {"id": "stable"})
     codes = stable.find_all("code")
     latest_chromedriver = {}

@@ -7,6 +7,7 @@ import urllib3
 
 import config
 import retrieve_by_url
+import text_utils
 from multiple_tlds import is_multiple_tlds
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -21,7 +22,6 @@ CHARS_IN_DOMAINS_BREAK_AFTER = "-"
 
 
 def create_domains_slug(hostname_dict: str):
-
     if not hostname_dict["minus_www"]:
         return
 
@@ -71,7 +71,6 @@ def create_domains_slug(hostname_dict: str):
     else:
         domains_for_search_as_list = split_domain_on_chars(domains_for_hn_search)
         for i in range(len(domains_for_search_as_list)):
-
             # skip over periods and hyphens in the list
             if "&ZeroWidthSpace;" in domains_for_search_as_list[i]:
                 continue
@@ -117,7 +116,7 @@ def create_domains_slug(hostname_dict: str):
 
 def get_domains_from_url(url: str):
     if not url:
-        return config.EMPTY_STRING, config.EMPTY_STRING
+        return text_utils.EMPTY_STRING, text_utils.EMPTY_STRING
 
     # remove scheme
     if url.startswith("http"):

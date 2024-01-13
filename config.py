@@ -84,12 +84,3 @@ num_tries_for_page_retrieval = 3
 reading_speed_words_per_minute = (
     250  # this is used to divide word count of article to get reading time
 )
-
-# various constants
-EMPTY_STRING = ""
-SECONDS_PER_MINUTE = 60
-SECONDS_PER_HOUR = 3_600
-SECONDS_PER_DAY = 86_400
-SECONDS_PER_WEEK = 604_800
-SECONDS_PER_MONTH = 2_628_000
-SECONDS_PER_YEAR = 31_557_600

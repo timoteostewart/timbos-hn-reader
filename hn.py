@@ -11,7 +11,6 @@ from bs4 import BeautifulSoup
 import aws_utils
 import config
 import hash_utils
-import my_classes
 import my_drivers
 import my_scrapers
 import retrieve_by_url
@@ -20,6 +19,8 @@ import text_utils
 import thumbs
 import time_utils
 from my_exceptions import *
+from PageOfStories import PageOfStories
+from Story import Story
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -180,13 +181,13 @@ def acquire_story_details_for_first_time(driver=None, item_id=None, pos_on_page=
                 create_pdf_page_count_slug(story_as_object)
 
         else:
-            story_as_object.image_slug = config.EMPTY_STRING
+            story_as_object.image_slug = text_utils.EMPTY_STRING
             story_as_object.has_thumb = False
 
     else:
         logger.info(f"id {story_as_object.id} has no url (probably an Ask HN, etc.)")
         story_as_object.url = story_as_object.hn_comments_url
-        story_as_object.image_slug = config.EMPTY_STRING
+        story_as_object.image_slug = text_utils.EMPTY_STRING
         story_as_object.has_thumb = False
 
     ##
@@ -194,8 +195,8 @@ def acquire_story_details_for_first_time(driver=None, item_id=None, pos_on_page=
     ##
 
     # if we have no thumbnail, then make sure we don't include a `story_content_type_slug`
-    if story_as_object.image_slug == config.EMPTY_STRING:
-        story_as_object.story_content_type_slug = config.EMPTY_STRING
+    if story_as_object.image_slug == text_utils.EMPTY_STRING:
+        story_as_object.story_content_type_slug = text_utils.EMPTY_STRING
     else:
         # apply "[pdf]" label after title if it's not there but is probably applicable
         if (
@@ -394,8 +395,9 @@ def freshen_up(story_as_object=None):
 
     # update score if needed
     if "score" in updated_story_data_as_dict:
+        old_score = story_as_object.score
         new_score = int(updated_story_data_as_dict["score"])
-        if story_as_object.score != new_score:
+        if old_score != new_score:
             old_score_slug_string = (
                 f'<div class="story-score">{story_as_object.score_display}</div>'
             )
@@ -406,6 +408,11 @@ def freshen_up(story_as_object=None):
             story_as_object.story_card_html = story_as_object.story_card_html.replace(
                 old_score_slug_string, new_score_slug_string, 1
             )
+
+            logger.info(
+                f"id {story_as_object.id}: updated score from {old_score} to {new_score}"
+            )
+
     else:
         logger.warning(
             f"id {story_as_object.id}: no key for 'score' in updated_story_data_as_dict"
@@ -475,7 +482,7 @@ def item_factory(story_as_dict):
             story_as_dict["text"] = ""
         if "url" not in story_as_dict:
             story_as_dict["url"] = ""
-        return my_classes.Story(
+        return Story(
             story_as_dict["by"],
             story_as_dict["descendants"],
             story_as_dict["id"],
@@ -507,7 +514,7 @@ def item_factory(story_as_dict):
             story_as_dict["text"] = ""
         if "url" not in story_as_dict:
             story_as_dict["url"] = ""
-        return my_classes.Story(
+        return Story(
             story_as_dict["by"],
             story_as_dict["descendants"],
             story_as_dict["id"],
@@ -565,19 +572,23 @@ def page_package_processor(page_package):
                 )
             )
 
-            seconds_ago_since_last_firebaseio_update = (
-                time_utils.get_time_now_in_epoch_seconds_int()
-                - story_as_object.time_of_last_firebaseio_query
-            )
-            time_ago_since_last_firebaseio_update_display = (
-                time_utils.convert_seconds_ago_to_human_readable(
-                    seconds_ago_since_last_firebaseio_update,
-                    force_int=True,
+            minutes_ago_since_last_firebaseio_update = int(
+                (
+                    time_utils.get_time_now_in_epoch_seconds_int()
+                    - story_as_object.time_of_last_firebaseio_query
                 )
+                / 60
+            )
+
+            time_ago_since_last_firebaseio_update_display = (
+                text_utils.add_singular_plural(
+                    minutes_ago_since_last_firebaseio_update, "minute", force_int=True
+                )
+                + " ago"
             )
 
             if (
-                seconds_ago_since_last_firebaseio_update / 60
+                minutes_ago_since_last_firebaseio_update
                 > config.settings["MINUTES_BEFORE_REFRESHING_STORY_METADATA"]
             ):
                 logger.info(
@@ -975,7 +986,7 @@ def supervisor(cur_story_type):
             if len(cur_roster) == 0:
                 is_last_page = True
 
-        cur_page = my_classes.PageOfStories(
+        cur_page = PageOfStories(
             cur_story_type,
             int(cur_page_number),
             list(cur_story_ids),

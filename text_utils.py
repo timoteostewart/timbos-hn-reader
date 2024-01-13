@@ -6,6 +6,8 @@ import config
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+EMPTY_STRING = ""
+
 
 def get_frac(number, precision):
 
