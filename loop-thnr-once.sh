@@ -114,11 +114,11 @@ source "${PYTHON_BIN_DIR}/activate"
 export PYTHONWARNINGS="ignore:Unverified HTTPS request"
 
 declare -a story_types=(
-    "top"
-    "best"
-    "new"
-    "classic"
     "active"
+    "best"
+    "classic"
+    "new"
+    "top"
 )
 
 declare -a apt_packages=(
@@ -203,9 +203,11 @@ do
         # remove any leftover chromedriver binaries
         cleanup_uc_temp_files
 
-        exit 0
+
 
     done
+
+    exit 0
 
     # longer pause between cycles
     loop_log_message info "Starting pause for ${PAUSE_BETWEEN_CYCLES_IN_MINUTES} minutes"

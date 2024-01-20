@@ -46,7 +46,7 @@ def download_og_image(story_as_object, alt_url=None):
             #             story_as_object.linked_url_og_image_url_final.replace("//", "/")
             #         )
 
-            story_as_object.downloaded_og_image_filename_details = (
+            story_as_object.og_image_filename_details_from_url = (
                 url_utils.get_filename_details_from_url(
                     story_as_object.linked_url_og_image_url_final
                 )

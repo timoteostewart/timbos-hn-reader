@@ -238,23 +238,23 @@ def get_image_slug(story_as_object, img_loading="lazy"):
     no_trim = False
     no_pad = False
 
-    # check if we ignore this filename
-    if story_as_object.downloaded_og_image_filename_details:
-        if story_as_object.downloaded_og_image_filename_details.filename:
-            if (
-                story_as_object.downloaded_og_image_filename_details.filename
-                in ignore_images_with_these_filenames
-            ):
-                story_as_object.has_thumb = False
-                logger.info(
-                    f"id {story_as_object.id}: ignore image based on filename {story_as_object.downloaded_og_image_filename_details.filename}"
-                )
-                return
+    # # check if we ignore this filename
+    # if story_as_object.og_image_filename_details_from_url:
+    #     if story_as_object.og_image_filename_details_from_url.filename:
+    #         if (
+    #             story_as_object.og_image_filename_details_from_url.filename
+    #             in ignore_images_with_these_filenames
+    #         ):
+    #             story_as_object.has_thumb = False
+    #             logger.info(
+    #                 f"id {story_as_object.id}: ignore og:image based on filename {story_as_object.og_image_filename_details_from_url.filename}"
+    #             )
+    #             return
 
     # check if we ignore the exact URL
     if story_as_object.linked_url_og_image_url_final in ignore_images_at_these_urls:
         story_as_object.has_thumb = False
-        logger.info(f"id {story_as_object.id}: ignore image based on exact URL")
+        logger.info(f"id {story_as_object.id}: ignore og:image based on exact URL")
         return
 
     # check if we ignore this domain
@@ -263,21 +263,21 @@ def get_image_slug(story_as_object, img_loading="lazy"):
     )
     if og_image_domains in ignore_images_from_these_domains:
         story_as_object.has_thumb = False
-        logger.info(f"id {story_as_object.id}: ignore image based on domain")
+        logger.info(f"id {story_as_object.id}: ignore og:image based on domain")
         return
 
     # check if we ignore URLs starting with specific substrings
     for x in prepared_images_roster_by_url_prefix.keys():
         if story_as_object.linked_url_og_image_url_final.startswith(x):
             story_as_object.has_thumb = False
-            logger.info(f"id {story_as_object.id}: ignore image based on URL prefix")
+            logger.info(f"id {story_as_object.id}: ignore og:image based on URL prefix")
             return
 
     # check if we ignore URLs ending with specific substrings
     for x in prepared_images_roster_by_url_suffix.keys():
         if story_as_object.linked_url_og_image_url_final.endswith(x):
             story_as_object.has_thumb = False
-            logger.info(f"id {story_as_object.id}: ignore image based on URL ending")
+            logger.info(f"id {story_as_object.id}: ignore og:image based on URL suffix")
             return
 
     # check for shortcode
@@ -303,23 +303,23 @@ def get_image_slug(story_as_object, img_loading="lazy"):
     if magic_result in ignore_images_with_these_content_types:
         story_as_object.has_thumb = False
         logger.info(
-            f"id {story_as_object.id}: ignore image based on content type {magic_result}"
+            f"id {story_as_object.id}: ignore og:image based on content type {magic_result}"
         )
         return
 
     if (
         "image" in magic_result
-        and "base_name" in story_as_object.downloaded_og_image_filename_details
+        and "base_name" in story_as_object.og_image_filename_details_from_url
     ):
         for pattern in filename_substrings_making_exempt_from_trim:
             if (
                 pattern
-                in story_as_object.downloaded_og_image_filename_details[
+                in story_as_object.og_image_filename_details_from_url[
                     "base_name"
                 ].lower()
             ):
                 logger.info(
-                    f"id {story_as_object.id}: will not trim image with base filename {story_as_object.downloaded_og_image_filename_details['base_name']}"
+                    f"id {story_as_object.id}: will not trim image with base filename {story_as_object.og_image_filename_details_from_url['base_name']}"
                 )
                 force_no_trim = True
                 no_trim = True
@@ -328,20 +328,20 @@ def get_image_slug(story_as_object, img_loading="lazy"):
         for pattern in ignore_images_whose_urls_contain_these_substrings:
             if (
                 pattern
-                in story_as_object.downloaded_og_image_filename_details[
+                in story_as_object.og_image_filename_details_from_url[
                     "base_name"
                 ].lower()
             ):
                 logger.info(
-                    f"id {story_as_object.id}: ignore image {story_as_object.downloaded_og_image_filename_details['base_name']} based on substring {pattern}"
+                    f"id {story_as_object.id}: ignore image {story_as_object.og_image_filename_details_from_url['base_name']} based on substring {pattern}"
                 )
                 story_as_object.has_thumb = False
                 return
 
     # initialize webp compression levels from settings
-    # WEBP_SMALL_THUMB_COMPRESSION_QUALITY = int(
-    #     config.settings["THUMBS"]["COMP_QUAL"]["SMALL"]
-    # )  # default value
+    WEBP_SMALL_THUMB_COMPRESSION_QUALITY = int(
+        config.settings["THUMBS"]["COMP_QUAL"]["SMALL"]
+    )  # default value
     # WEBP_MEDIUM_THUMB_COMPRESSION_QUALITY = int(
     #     config.settings["THUMBS"]["COMP_QUAL"]["MEDIUM"]
     # )  # default value
@@ -438,11 +438,11 @@ def get_image_slug(story_as_object, img_loading="lazy"):
                     no_pad = True
                 except wand.exceptions.PolicyError as exc:
                     logger.error(
-                        f"id {story_as_object.id}: wand PolicyError for {story_as_object.downloaded_og_image_filename_details['base_name']}"
+                        f"id {story_as_object.id}: wand PolicyError for {story_as_object.og_image_filename_details_from_url['base_name']}"
                     )
                 except Exception as exc:
                     logger.error(
-                        f"id {story_as_object.id}: {story_as_object.downloaded_og_image_filename_details['base_name']}, "
+                        f"id {story_as_object.id}: {story_as_object.og_image_filename_details_from_url['base_name']}, "
                         f"error with PDF: {exc}; "
                         f"traceback:\n{traceback.format_exc()}"
                     )

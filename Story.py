@@ -97,7 +97,7 @@ class Story(Item):
         #     - the og:image URL was invalid for some reason
         #     - the og:image file seemed corrupt for some reason
 
-        self.downloaded_og_image_filename_details: dict() = {}
+        self.og_image_filename_details_from_url: dict() = {}
         self.thumb_aspect_hint: str = ""
 
         # while inside thumbs.check_for_thumb()

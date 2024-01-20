@@ -114,11 +114,11 @@ source "${PYTHON_BIN_DIR}/activate"
 export PYTHONWARNINGS="ignore:Unverified HTTPS request"
 
 declare -a story_types=(
-    "top"
-    "best"
-    "new"
-    "classic"
     "active"
+    "best"
+    "classic"
+    "new"
+    "top"
 )
 
 declare -a apt_packages=(
