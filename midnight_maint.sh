@@ -53,6 +53,7 @@ loop_log_message info "${BASH_SOURCE##*/} starting"
 # delete cached stories
 loop_log_message info "${BASH_SOURCE##*/} deleting cached stories older than ${DAYS_TO_KEEP_CACHED_STORIES} days"
 find "${BASE_DIR}/cached_stories" -maxdepth 1 -name "*.pickle" -mtime "+${DAYS_TO_KEEP_CACHED_STORIES}" -exec rm {} \;
+find "${BASE_DIR}/cached_stories" -maxdepth 1 -name "*.json" -mtime "+${DAYS_TO_KEEP_CACHED_STORIES}" -exec rm {} \;
 
 # archive old logs
 if [ -d "${LOGFILE_ARCHIVE_DEST_DIR}" ]; then

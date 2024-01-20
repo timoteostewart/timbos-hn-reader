@@ -1,4 +1,5 @@
 import concurrent.futures
+import json
 import logging
 import os
 import pickle
@@ -18,6 +19,7 @@ import social_media
 import text_utils
 import thumbs
 import time_utils
+import url_utils
 from my_exceptions import *
 from PageOfStories import PageOfStories
 from Story import Story
@@ -32,6 +34,11 @@ badge_codes = {
     "best": {"letter": "B", "sigil": "Ⓑ", "tooltip": "best"},
     "active": {"letter": "A", "sigil": "Ⓐ", "tooltip": "active"},
     "classic": {"letter": "C", "sigil": "Ⓒ", "tooltip": "classic"},
+}
+
+skip_getting_content_type_via_head_request_for_domains = {
+    "twitter.com",
+    "bloomberg.com",
 }
 
 
@@ -59,9 +66,13 @@ def acquire_story_details_for_first_time(driver=None, item_id=None, pos_on_page=
         raise Exception(f"id {item_id}: failed to get story details")
 
     if story_as_object.url:
-        story_as_object.linked_url_content_type = (
-            my_scrapers.get_content_type_via_head_request(story_as_object.url)
-        )
+        _, domains = url_utils.get_domains_from_url(story_as_object.url)
+        if domains in skip_getting_content_type_via_head_request_for_domains:
+            logger.info(f"id {story_as_object.id}: skip HEAD request for {domains}")
+        else:
+            story_as_object.linked_url_content_type = (
+                my_scrapers.get_content_type_via_head_request(story_as_object.url)
+            )
         if story_as_object.linked_url_content_type:
             logger.info(
                 f"id {story_as_object.id}: content-type {story_as_object.linked_url_content_type} for url {story_as_object.url}"
@@ -178,7 +189,15 @@ def acquire_story_details_for_first_time(driver=None, item_id=None, pos_on_page=
             thumbs.get_image_slug(story_as_object, img_loading=img_loading_attr)
 
             if story_as_object.pdf_page_count > 0:
-                create_pdf_page_count_slug(story_as_object)
+                story_as_object.pdf_page_count_slug = (
+                    "<tr><td>"
+                    '<div class="reading-time-bar">'
+                    '<div class="estimated-reading-time">'
+                    f"📄 {text_utils.add_singular_plural(story_as_object.pdf_page_count, 'page', force_int=True)}"
+                    "</div>"
+                    "</div>"
+                    "</td></tr>"
+                )
 
         else:
             story_as_object.image_slug = text_utils.EMPTY_STRING
@@ -200,8 +219,8 @@ def acquire_story_details_for_first_time(driver=None, item_id=None, pos_on_page=
     else:
         # apply "[pdf]" label after title if it's not there but is probably applicable
         if (
-            story_as_object.downloaded_orig_thumb_content_type
-            and story_as_object.downloaded_orig_thumb_content_type == "application/pdf"
+            story_as_object.downloaded_og_image_magic_result
+            and story_as_object.downloaded_og_image_magic_result == "application/pdf"
         ):
             if "pdf" not in story_as_object.title[-12:].lower():
                 story_as_object.story_content_type_slug = (
@@ -271,18 +290,6 @@ def create_badges_slug(story_id, story_type, rosters):
     return badges_slug
 
 
-def create_pdf_page_count_slug(story_as_object):
-    story_as_object.pdf_page_count_slug = (
-        "<tr><td>"
-        '<div class="reading-time-bar">'
-        '<div class="estimated-reading-time">'
-        f"📄 {text_utils.add_singular_plural(story_as_object.pdf_page_count, 'page', force_int=True)}"
-        "</div>"
-        "</div>"
-        "</td></tr>"
-    )
-
-
 def create_reading_time_slug(story_as_object):
     story_as_object.reading_time_slug = (
         "<tr><td>"
@@ -296,40 +303,48 @@ def create_reading_time_slug(story_as_object):
 
 
 def create_story_card_html_from_story_object(story_as_object):
+    title_slug_string = (
+        f'<a href="{story_as_object.url}">{story_as_object.title_slug}</a>'
+    )
+    story_as_object.title_slug_string = title_slug_string
+    score_slug_string = (
+        f'<div class="story-score">{story_as_object.score_display}</div>'
+    )
+    story_as_object.score_slug_string = score_slug_string
+    descendants_slug_string = f'<div class="story-descendants"><a href="{story_as_object.hn_comments_url}">{story_as_object.descendants_display}</a></div>'
+    story_as_object.descendants_slug_string = descendants_slug_string
+
     data_separator_slug = f'<div class="data-separator">{config.settings["SYMBOLS"]["DATA_SEPARATOR"]}</div>'
     story_as_object.story_card_html = (
         f'<tr data-story-id="{story_as_object.id}"><td>'
-        ""
         '<table class="story-details"><tbody class="story-details">'
-        ""
         "<tr><td>"
         "<hr>"
-        f'<div class="thumb">{story_as_object.image_slug}</div>'
+        f"{story_as_object.image_slug}"
         "</td></tr>"
-        ""
         f"{story_as_object.github_languages_slug}"
-        ""
         "<tr><td>"
         '<div class="title-and-domain-bar">'
-        f'<div class="title-part">{story_as_object.before_title_link_slug}<a href="{story_as_object.url}">{story_as_object.title_slug}</a>{story_as_object.story_content_type_slug}</div>'
+        f'<div class="title-part">{story_as_object.before_title_link_slug}'
+        f"{title_slug_string}"
+        f"{story_as_object.story_content_type_slug}</div>"
         f'<div class="domain-part">{story_as_object.hostname["slug"]}</div>'
         "</div>"
         "</td></tr>"
-        ""
         "<tr><td>"
         '<div class="badges-points-comments-time-author-bar">'
         "<!-- badges_slug goes here -->"
-        f'<div class="story-score">{story_as_object.score_display}</div>{data_separator_slug}'
-        f'<div class="story-descendants"><a href="{story_as_object.hn_comments_url}">{story_as_object.descendants_display}</a></div>{data_separator_slug}'
-        f'<div class="story-time-ago" title="{story_as_object.publication_time_ISO_8601}"><!-- pub_time_ago_display goes here -->&nbsp;</div>'
+        f"{score_slug_string}"
+        f"{data_separator_slug}"
+        f"{descendants_slug_string}"
+        f"{data_separator_slug}"
+        f'<div class="story-time-ago" title="{story_as_object.publication_time_ISO_8601}">'
+        "<!-- pub_time_ago_display goes here -->&nbsp;</div>"
         f'<div class="story-byline">by <a href="https://news.ycombinator.com/user?id={story_as_object.by}">{story_as_object.by}</a></div>'
         "</div>"
-        ""
         "</td></tr>"
-        ""
         f"{story_as_object.reading_time_slug}"
         f"{story_as_object.pdf_page_count_slug}"
-        ""
         "</tbody></table>"
         "</td></tr>"
     )
@@ -363,17 +378,17 @@ def freshen_up(story_as_object=None):
         old_title = story_as_object.title
         new_title = updated_story_data_as_dict["title"]
 
-        if "url" in updated_story_data_as_dict:
-            old_url = story_as_object.url
-            new_url = updated_story_data_as_dict["url"]
-        else:
-            old_url = story_as_object.url
-            new_url = f'https://news.ycombinator.com/item?id={updated_story_data_as_dict["id"]}'
+        if old_title != new_title:
+            if "url" in updated_story_data_as_dict:
+                # old_url = story_as_object.url
+                new_url = updated_story_data_as_dict["url"]
+            else:
+                # old_url = story_as_object.url
+                new_url = f'https://news.ycombinator.com/item?id={updated_story_data_as_dict["id"]}'
 
-        old_title_slug_string = f'<a href="{old_url}">{text_utils.insert_possible_line_breaks(old_title)}</a>'
-        new_title_slug_string = f'<a href="{new_url}">{text_utils.insert_possible_line_breaks(new_title)}</a>'
+            old_title_slug_string = story_as_object.title_slug_string
+            new_title_slug_string = f'<a href="{new_url}">{text_utils.insert_possible_line_breaks(new_title)}</a>'
 
-        if old_title_slug_string != new_title_slug_string:
             pre = story_as_object.story_card_html
             story_as_object.story_card_html = story_as_object.story_card_html.replace(
                 old_title_slug_string, new_title_slug_string, 1
@@ -381,9 +396,15 @@ def freshen_up(story_as_object=None):
             post = story_as_object.story_card_html
             if pre == post:
                 logger.error(
-                    f"id {story_as_object.id}: failed to update title. old title slug string: {old_title_slug_string} ; new title slug string: {new_title_slug_string}"
+                    f"id {story_as_object.id}: failed to update title. old title slug string: {old_title_slug_string} ; new title slug string: {new_title_slug_string} ; old title: {old_title} ; new title: {new_title}"
                 )
+                logger.error(
+                    f"id {story_as_object.id}: story_card_html: {story_as_object.story_card_html}"
+                )
+
             else:
+                story_as_object.title_slug_string = new_title_slug_string
+                story_as_object.title = new_title
                 logger.info(
                     f"id {story_as_object.id}: updated title from '{old_title}' to '{new_title}'"
                 )
@@ -398,9 +419,10 @@ def freshen_up(story_as_object=None):
         old_score = story_as_object.score
         new_score = int(updated_story_data_as_dict["score"])
         if old_score != new_score:
-            old_score_slug_string = (
-                f'<div class="story-score">{story_as_object.score_display}</div>'
-            )
+            # old_score_slug_string = (
+            #     f'<div class="story-score">{story_as_object.score_display}</div>'
+            # )
+            old_score_slug_string = story_as_object.score_slug_string
             new_score_display = text_utils.add_singular_plural(new_score, "point")
             new_score_slug_string = (
                 f'<div class="story-score">{new_score_display}</div>'
@@ -409,6 +431,8 @@ def freshen_up(story_as_object=None):
                 old_score_slug_string, new_score_slug_string, 1
             )
 
+            story_as_object.score_slug_string = new_score_slug_string
+            story_as_object.score = new_score
             logger.info(
                 f"id {story_as_object.id}: updated score from {old_score} to {new_score}"
             )
@@ -420,10 +444,11 @@ def freshen_up(story_as_object=None):
 
     # update comment count (i.e., "descendants") if needed
     if "descendants" in updated_story_data_as_dict:
-        new_descendants = int(updated_story_data_as_dict["descendants"])
         old_descendants = story_as_object.descendants
+        new_descendants = int(updated_story_data_as_dict["descendants"])
         if old_descendants != new_descendants:
-            old_descendants_slug_string = f'<div class="story-descendants"><a href="{story_as_object.hn_comments_url}">{story_as_object.descendants_display}</a></div>'
+            # old_descendants_slug_string = f'<div class="story-descendants"><a href="{story_as_object.hn_comments_url}">{story_as_object.descendants_display}</a></div>'
+            old_descendants_slug_string = story_as_object.descendants_slug_string
 
             new_descendants_display = text_utils.add_singular_plural(
                 new_descendants, "comment"
@@ -433,6 +458,9 @@ def freshen_up(story_as_object=None):
             story_as_object.story_card_html = story_as_object.story_card_html.replace(
                 old_descendants_slug_string, new_descendants_slug_string, 1
             )
+
+            story_as_object.descendants_slug_string = new_descendants_slug_string
+            story_as_object.descendants = new_descendants
             logger.info(
                 f"id {story_as_object.id}: updated comment count from {old_descendants} to {new_descendants}"
             )
@@ -629,6 +657,18 @@ def page_package_processor(page_package):
                         "wb",
                     ),
                 )
+
+                with open(
+                    os.path.join(
+                        config.settings["CACHED_STORIES_DIR"],
+                        f"id-{story_as_object.id}.json",
+                    ),
+                    mode="w",
+                    encoding="utf-8",
+                ) as f:
+                    f.write(
+                        json.dumps(story_as_object.to_dict(), indent=4, sort_keys=True)
+                    )
 
             cur_story_card_html = story_as_object.story_card_html
 
@@ -905,12 +945,14 @@ def page_package_processor(page_package):
             f.write(stories_html_page_template_dm)
         aws_utils.upload_page_of_stories(filename_dm)
 
+    num_stories_on_page = stories_html_page_template_lm.count("data-story-id")
+
     # compute how long it took to process this page
     h, m, s, s_frac = time_utils.convert_time_duration_to_hms(
         time_utils.get_time_now_in_epoch_seconds_float() - start_processing_page_ts
     )
     logger.info(
-        f"update_stories() shipped page {page_package.page_number:>2} of {page_package.story_type} in {h:02d}:{m:02d}:{s:02d}"
+        f"update_stories() shipped page {page_package.page_number:>2} of {page_package.story_type} containing {num_stories_on_page} actual stories in {h:02d}:{m:02d}:{s:02d}"
     )
 
 
@@ -979,7 +1021,7 @@ def supervisor(cur_story_type):
     while cur_roster:
         while (
             cur_roster
-            and len(cur_story_ids) <= config.settings["PAGES"]["NUM_STORIES_PER_PAGE"]
+            and len(cur_story_ids) < config.settings["PAGES"]["NUM_STORIES_PER_PAGE"]
         ):
             cur_story_ids.append(cur_roster.pop(0))
 

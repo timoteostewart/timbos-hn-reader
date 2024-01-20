@@ -22,17 +22,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-ignored_og_image_filenames = [
-    "blank.jpg",  # WordPress sites
-    "logo-1200-630.jpg",  # imgur
-]
-
-ignored_images_roster_by_substring = [
-    "https://www.jamieonkeys.dev/img/social.jpg",
-]
-
-
-def download_og_image(story_as_object, alt_url=""):
+def download_og_image(story_as_object, alt_url=None):
     # guard
     if not story_as_object.linked_url_og_image_url_initial:
         return False
@@ -50,84 +40,82 @@ def download_og_image(story_as_object, alt_url=""):
         ) as response:
             story_as_object.linked_url_og_image_url_final = response.url
 
-            # check for reasons to disallow this thumbnail...
-            if (
-                story_as_object.linked_url_og_image_url_final
-                in ignored_images_roster_by_substring
-            ):
-                return False
+            # if story_as_object.linked_url_og_image_url_final:
+            #     while "//" in story_as_object.linked_url_og_image_url_final:
+            #         story_as_object.linked_url_og_image_url_final = (
+            #             story_as_object.linked_url_og_image_url_final.replace("//", "/")
+            #         )
 
-            # check for filenames we ignore
-            story_as_object.thumb_filename_details = (
+            story_as_object.downloaded_og_image_filename_details = (
                 url_utils.get_filename_details_from_url(
                     story_as_object.linked_url_og_image_url_final
                 )
             )
-            if (
-                story_as_object.thumb_filename_details["full_filename"]
-                in ignored_og_image_filenames
-            ):
-                logger.warning(
-                    f"id {story_as_object.id}: og:image filename {story_as_object.thumb_filename_details['full_filename']} is disallowed"
-                )
-                return False
 
-            # get content type for og:image
-            story_as_object.linked_url_og_image_url_content_type = (
-                get_content_type_via_head_request(
-                    story_as_object.linked_url_og_image_url_final
-                )
+            # get server-reported content type for og:image
+            story_as_object.og_image_content_type = get_content_type_via_head_request(
+                story_as_object.linked_url_og_image_url_final
             )
-            if not story_as_object.linked_url_og_image_url_content_type:
+            if not story_as_object.og_image_content_type:
                 logger.warning(
                     f"id {story_as_object.id}: no content-type header provided for {story_as_object.linked_url_og_image_url_final}"
                 )
 
-            # download thumbnail
-            story_as_object.downloaded_orig_thumb_filename = (
-                f"orig-{story_as_object.id}"
-            )
+            # download og:image
+            story_as_object.normalized_og_image_filename = f"orig-{story_as_object.id}"
             story_as_object.downloaded_orig_thumb_full_path = os.path.join(
                 config.settings["TEMP_DIR"],
-                story_as_object.downloaded_orig_thumb_filename,
+                story_as_object.normalized_og_image_filename,
             )
             with open(story_as_object.downloaded_orig_thumb_full_path, "wb") as fout:
                 fout.write(response.content)
-            logger.info(
-                f"id {story_as_object.id}: download_og_image(): downloaded og:image {story_as_object.downloaded_orig_thumb_filename}"
-            )
+            # logger.info(
+            #     f"id {story_as_object.id}: download_og_image(): downloaded og:image {story_as_object.normalized_og_image_filename}"
+            # )
 
-            # check for supported file types
-            magic_result = magic.from_file(
+            # determine magic type of downloaded og:image
+            story_as_object.downloaded_og_image_magic_result = magic.from_file(
                 story_as_object.downloaded_orig_thumb_full_path, mime=True
             )
-            story_as_object.downloaded_orig_thumb_content_type = magic_result
             logger.info(
-                f"id {story_as_object.id}: og:image file has magic type {magic_result} ; URL: {story_as_object.linked_url_og_image_url_final}"
+                f"id {story_as_object.id}: downloaded og:image file has magic type {story_as_object.downloaded_og_image_magic_result}"
             )
-            if "image" in magic_result:
+
+            if story_as_object.downloaded_og_image_magic_result.startswith("image/"):
+                if alt_url:
+                    logger.info(
+                        f"id {story_as_object.id}: healed og:image URL {story_as_object.linked_url_og_image_url_initial} to {story_as_object.linked_url_og_image_url_final}"
+                    )
                 return True
-            elif magic_result == "application/pdf":
+            elif story_as_object.downloaded_og_image_magic_result == "application/pdf":
+                logger.info(
+                    f"id {story_as_object.id}: healed og:image URL {story_as_object.linked_url_og_image_url_initial} to {story_as_object.linked_url_og_image_url_final}"
+                )
+
                 return True
             else:
+                logger.info(
+                    f"id {story_as_object.id}: failed to heal og:image URL {story_as_object.linked_url_og_image_url_initial}"
+                )
+
                 return False
     except requests.exceptions.MissingSchema as e:
         if (
-            story_as_object.linked_url_og_image_url_initial[0:2] == "/"
+            story_as_object.linked_url_og_image_url_initial[0:2] == "//"
             and story_as_object.linked_url_og_image_url_initial[2:3] != "/"
         ):
-            possibly_fixed_url = f"http://{story_as_object.hostname['minus_www']}/{story_as_object.linked_url_og_image_url_initial}[2:]"
+            possibly_fixed_url = f"http://{story_as_object.hostname['minus_www']}/{story_as_object.linked_url_og_image_url_initial[2:]}"
             logger.info(
-                f"id {story_as_object.id}: attempting to heal and retry schemeless og:image URL"
+                f"id {story_as_object.id}: attempting to heal and retry schemeless og:image URL {story_as_object.linked_url_og_image_url_initial} as {possibly_fixed_url}"
             )
             return download_og_image(story_as_object, alt_url=possibly_fixed_url)
         elif (
             story_as_object.linked_url_og_image_url_initial[0:1] == "/"
             and story_as_object.linked_url_og_image_url_initial[1:2] != "/"
         ):
-            possibly_fixed_url = f"http://{story_as_object.hostname['minus_www']}/{story_as_object.linked_url_og_image_url_initial}[1:]"
+            possibly_fixed_url = f"http://{story_as_object.hostname['minus_www']}/{story_as_object.linked_url_og_image_url_initial[1:]}"
             logger.info(
-                f"id {story_as_object.id}: attempting to heal and retry schemeless og:image URL"
+                f"id {story_as_object.id}: attempting to heal and retry schemeless og:image URL {story_as_object.linked_url_og_image_url_initial} as {possibly_fixed_url}"
             )
             return download_og_image(story_as_object, alt_url=possibly_fixed_url)
         else:
@@ -138,10 +126,10 @@ def download_og_image(story_as_object, alt_url=""):
     except Exception as e:
         if "No scheme supplied." in str(e):
             if (
-                story_as_object.linked_url_og_image_url_initial[0:2] == "/"
+                story_as_object.linked_url_og_image_url_initial[0:2] == "//"
                 and story_as_object.linked_url_og_image_url_initial[2:3] != "/"
             ):
-                possibly_fixed_url = f"http://{story_as_object.hostname['minus_www']}/{story_as_object.linked_url_og_image_url_initial}[2:]"
+                possibly_fixed_url = f"http://{story_as_object.hostname['minus_www']}/{story_as_object.linked_url_og_image_url_initial[2:]}"
                 logger.info(
                     f"id {story_as_object.id}: attempting to heal and retry schemeless og:image URL"
                 )
@@ -150,7 +138,7 @@ def download_og_image(story_as_object, alt_url=""):
                 story_as_object.linked_url_og_image_url_initial[0:1] == "/"
                 and story_as_object.linked_url_og_image_url_initial[1:2] != "/"
             ):
-                possibly_fixed_url = f"http://{story_as_object.hostname['minus_www']}/{story_as_object.linked_url_og_image_url_initial}[1:]"
+                possibly_fixed_url = f"http://{story_as_object.hostname['minus_www']}/{story_as_object.linked_url_og_image_url_initial[1:]}"
                 logger.info(
                     f"id {story_as_object.id}: attempting to heal and retry schemeless og:image URL"
                 )
@@ -188,9 +176,9 @@ def get_content_type_via_head_request(url: str):
         return ""
 
 
-def get_reading_time(story_as_object, page_source):
-    rt_g = get_reading_time_via_goose(story_as_object, page_source)
-    return rt_g
+# def get_reading_time(story_as_object, page_source):
+#     rt_g = get_reading_time_via_goose(story_as_object, page_source)
+#     return rt_g
 
 
 def get_reading_time_via_goose(story_as_object, page_source):
@@ -210,6 +198,9 @@ def get_reading_time_via_goose(story_as_object, page_source):
     else:
         logger.info(f"id {story_as_object.id}: goose could not determine reading time")
         return None
+
+
+get_reading_time = get_reading_time_via_goose
 
 
 def get_roster_for(driver, roster_story_type: str):

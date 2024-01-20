@@ -28,44 +28,53 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 # TODO: change these lookups to use a Bloom filter
-prepared_images_roster_by_full_url = {
+prepared_images_roster_by_exact_url = {
+    "https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png": "ar5iv-logo",
     "https://149521506.v2.pressablecdn.com/wp-content/uploads/2018/06/seth_godin_ogimages_v02_18061313.jpg": "seths-blog",
     "https://a0.awsstatic.com/libra-css/images/logos/aws_logo_smile_1200x630.png": "aws-logo-smile",
-    "https://a0.awsstatic.com/libra-css/images/logos/aws_logo_smile_1200x630.png": "aws-logo-smile",
+    "https://assets.msn.com/staticsb/statics/latest/homepage/msn-logo.svg": "msn-logo",
     "https://cdn.jamanetwork.com/images/logos/JAMA.png": "jama-network",
+    "https://crystal-lang.org/assets/icon.png": "crystal-lang",
     "https://developer.mozilla.org/mdn-social-share.cd6c4a5a.png": "mdn-web-docs",
-    "https://github.githubassets.com/images/modules/gists/gist-og-image.png": "github-gist",
     "https://github.githubassets.com/assets/gist-og-image-54fd7dc0713e.png": "github-gist",
+    "https://github.githubassets.com/images/modules/gists/gist-og-image.png": "github-gist",
+    "https://global.discourse-cdn.com/swift/original/1X/0a90dde98a223f5841eeca49d89dc9f57592e8d6.png": "swift-lang-logo",
+    "https://gwern.net/static/img/logo/logo-whitebg-large-border.png": "gwern-logo",
     "https://hacks.mozilla.org/files/2022/03/mdnplus.png": "hacks-mozilla",
-    # "https://lemire.me/img/portrait2018facebook.jpg": "lemire",
-    # "https://lethain.com/static/author.png": "lethain",
-    "https://media.npr.org/include/images/facebook-default-wide.jpg?s=1400": "npr-default",
-    "https://media.npr.org/include/images/facebook-default-wide-s1400-c100.jpg": "npr-default",
+    "https://lemire.me/img/portrait2018facebook.jpg": "lemire-portrait-2018-facebook",
+    "https://lethain.com/static/author.png": "lethain-static-author",
     "https://s1.reutersmedia.net/resources_v2/images/rcom-default.png?w=800": "reuters",
     "https://savo.rocks/assets/img/favicons/favicon.png": "savo",
-    "https://static.npmjs.com/338e4905a2684ca96e08c7780fc68412.png": "npmjs",
-    "https://static-production.npmjs.com/338e4905a2684ca96e08c7780fc68412.png": "npmjs",
-    "https://world.hey.com/dhh/avatar-20210222112907000000-293866624": "dhh",
-    "https://world.hey.com/dhh/avatar-df6405b0f7fafda980fd38b04c334bec936aef69": "dhh",
     "https://www.postgresql.org/media/img/about/press/elephant.png": "psql-press",
     "https://www.redditstatic.com/new-icon.png": "new-reddit-icon",
-    "https://www.reuters.com/pf/resources/images/reuters/reuters-default.png?d=76": "reuters",
     "https://www.science.org/pb-assets/images/blogs/pipeline/default-image-1644619966880.png": "pipeline",
+    "https://media.npr.org/include/images/facebook-default-wide.jpg": "npr-default",
+    "https://static.npmjs.com/338e4905a2684ca96e08c7780fc68412.png": "npmjs",
+    "https://static.arxiv.org/static/browse/0.3.4/images/arxiv-logo-fb.png": "arxiv-logo-fb",
+    # "https://world.hey.com/dhh/avatar-20210222112907000000-293866624": "dhh",
+    # "https://world.hey.com/dhh/avatar-df6405b0f7fafda980fd38b04c334bec936aef69": "dhh",
 }
 
-prepared_images_roster_by_substring = {
-    "hey.com/dhh/avatar": "dhh",
-    "logo_chromium.png": "chromium-logo",
-    "media.npr.org/include/images/facebook-default-wide": "npr-default",
-    "reuters-default.png": "reuters",
-    "reutersmedia.net/resources_v2/images/rcom-default.png": "reuters",
-    "seth_godin_ogimages": "seths-blog",
-    "hey.com/dhh/avatar": "dhh",
+
+prepared_images_roster_by_url_prefix = {
+    "https://world.hey.com/dhh/avatar-": "dhh",
+    "https://149521506.v2.pressablecdn.com/wp-content/uploads/2018/06/seth_godin_ogimages_v02_": "seths-blog",
+    "https://www.reuters.com/pf/resources/images/reuters/reuters-default.png": "reuters",
+    "https://s1.reutersmedia.net/resources_v2/images/rcom-default.png": "reuters",
+    "http://1.bp.blogspot.com/-vkF7AFJOwBk/VkQxeAGi1mI/AAAAAAAARYo/57denvsQ8zA/s1600-r/logo_chromium.png": "chromium-logo",
 }
 
-domains_exempt_from_trim = ["opengraph.githubassets.com"]
+prepared_images_roster_by_url_suffix = {}
 
-domains_with_higher_quality_resizing = ["opengraph.githubassets.com"]
+prepared_images_roster_by_url_substring = set()
+
+domains_exempt_from_trim = [
+    "opengraph.githubassets.com",
+]
+
+domains_with_higher_quality_resizing = [
+    "opengraph.githubassets.com",
+]
 
 filename_substrings_making_exempt_from_trim = [
     "flag",
@@ -78,10 +87,20 @@ ignore_images_whose_urls_contain_these_substrings = [
 ignore_images_at_these_urls = [
     "https://pastebin.com/i/facebook.png",
     "https://s0.wp.com/i/blank.jpg",
-    "https://assets.msn.com/staticsb/statics/latest/homepage/msn-logo.svg",
 ]
 
-ignore_images_from_these_domains = []
+ignore_images_from_these_domains = set()
+
+ignore_images_with_these_content_types = {
+    "image/vnd.microsoft.icon",
+    "image/avif",
+    "image/svg+xml",
+}
+
+ignore_images_with_these_filenames = {
+    "blank.jpg",
+    "logo-1200-630.jpg",
+}
 
 
 def sanitize(s: str):
@@ -96,9 +115,9 @@ def sanitize(s: str):
 
 
 def shortcode_if_og_image_url_contains_certain_substring(og_image_url: str):
-    for each_substring in prepared_images_roster_by_substring:
+    for each_substring in prepared_images_roster_by_url_substring:
         if each_substring in og_image_url:
-            return prepared_images_roster_by_substring[each_substring]
+            return prepared_images_roster_by_url_substring[each_substring]
     return None
 
 
@@ -120,11 +139,11 @@ def can_find_a_shortcode(story_as_object, img_loading):
 
     if (
         story_as_object.linked_url_og_image_url_final
-        in prepared_images_roster_by_full_url
+        in prepared_images_roster_by_exact_url
         or story_as_object.linked_url_og_image_url_initial
-        in prepared_images_roster_by_full_url
+        in prepared_images_roster_by_exact_url
     ):
-        prepared_image_shortcode = prepared_images_roster_by_full_url[
+        prepared_image_shortcode = prepared_images_roster_by_exact_url[
             story_as_object.linked_url_og_image_url_final
         ]
 
@@ -178,13 +197,13 @@ def create_img_slug_html(story_as_object, img_loading="lazy"):
         '<div class="thumb">'
         f'<a href="{story_as_object.url}">'
         "<img "
-        "srcset="
-        f'"{config.settings["THUMBS_URL"]}{get_webp_filename(story_as_object, "extralarge")} 4x, '
-        f'{config.settings["THUMBS_URL"]}{get_webp_filename(story_as_object, "extralarge")} 3x, '
-        f'{config.settings["THUMBS_URL"]}{get_webp_filename(story_as_object, "extralarge")} 2x, '
-        f'{config.settings["THUMBS_URL"]}{get_webp_filename(story_as_object, "medium")} 1x" '
-        'sizes="(min-width: 1440px) 350px, (min-width: 1080px) 350px, (min-width: 768px) 350px, 350px" '
-        f'src="{config.settings["THUMBS_URL"]}{get_webp_filename(story_as_object, "medium")}" '
+        # "srcset="
+        # f'"{config.settings["THUMBS_URL"]}{get_webp_filename(story_as_object, "extralarge")} 4x, '
+        # f'{config.settings["THUMBS_URL"]}{get_webp_filename(story_as_object, "extralarge")} 3x, '
+        # f'{config.settings["THUMBS_URL"]}{get_webp_filename(story_as_object, "extralarge")} 2x, '
+        # f'{config.settings["THUMBS_URL"]}{get_webp_filename(story_as_object, "medium")} 1x" '
+        # 'sizes="(min-width: 1440px) 350px, (min-width: 1080px) 350px, (min-width: 768px) 350px, 350px" '
+        f'src="{config.settings["THUMBS_URL"]}{get_webp_filename(story_as_object, "extralarge")}" '
         f'alt="{sanitize(story_as_object.title)}" '
         'class="thumb" '
         f'loading="{img_loading}" />'
@@ -205,7 +224,7 @@ def save_thumb_where_it_should_go(webp_image, story_as_object, size):
             f"failed to upload thumb to S3: {exc}"
         )
         raise exc
-    else:
+    finally:
         file_utils.delete_file(
             os.path.join(config.settings["TEMP_DIR"], thumb_filename)
         )
@@ -219,19 +238,49 @@ def get_image_slug(story_as_object, img_loading="lazy"):
     no_trim = False
     no_pad = False
 
+    # check if we ignore this filename
+    if story_as_object.downloaded_og_image_filename_details:
+        if story_as_object.downloaded_og_image_filename_details.filename:
+            if (
+                story_as_object.downloaded_og_image_filename_details.filename
+                in ignore_images_with_these_filenames
+            ):
+                story_as_object.has_thumb = False
+                logger.info(
+                    f"id {story_as_object.id}: ignore image based on filename {story_as_object.downloaded_og_image_filename_details.filename}"
+                )
+                return
+
     # check if we ignore the exact URL
     if story_as_object.linked_url_og_image_url_final in ignore_images_at_these_urls:
         story_as_object.has_thumb = False
+        logger.info(f"id {story_as_object.id}: ignore image based on exact URL")
         return
 
-    # check if we ignore the exact domain
+    # check if we ignore this domain
     _, og_image_domains = url_utils.get_domains_from_url(
         story_as_object.linked_url_og_image_url_final
     )
     if og_image_domains in ignore_images_from_these_domains:
         story_as_object.has_thumb = False
+        logger.info(f"id {story_as_object.id}: ignore image based on domain")
         return
 
+    # check if we ignore URLs starting with specific substrings
+    for x in prepared_images_roster_by_url_prefix.keys():
+        if story_as_object.linked_url_og_image_url_final.startswith(x):
+            story_as_object.has_thumb = False
+            logger.info(f"id {story_as_object.id}: ignore image based on URL prefix")
+            return
+
+    # check if we ignore URLs ending with specific substrings
+    for x in prepared_images_roster_by_url_suffix.keys():
+        if story_as_object.linked_url_og_image_url_final.endswith(x):
+            story_as_object.has_thumb = False
+            logger.info(f"id {story_as_object.id}: ignore image based on URL ending")
+            return
+
+    # check for shortcode
     if can_find_a_shortcode(story_as_object, img_loading):
         return
 
@@ -250,34 +299,52 @@ def get_image_slug(story_as_object, img_loading="lazy"):
     magic_result = magic.from_file(
         story_as_object.downloaded_orig_thumb_full_path, mime=True
     )
+
+    if magic_result in ignore_images_with_these_content_types:
+        story_as_object.has_thumb = False
+        logger.info(
+            f"id {story_as_object.id}: ignore image based on content type {magic_result}"
+        )
+        return
+
     if (
         "image" in magic_result
-        and "base_name" in story_as_object.thumb_filename_details
+        and "base_name" in story_as_object.downloaded_og_image_filename_details
     ):
         for pattern in filename_substrings_making_exempt_from_trim:
-            if pattern in story_as_object.thumb_filename_details["base_name"].lower():
+            if (
+                pattern
+                in story_as_object.downloaded_og_image_filename_details[
+                    "base_name"
+                ].lower()
+            ):
                 logger.info(
-                    f"id {story_as_object.id}: will not trim image with base filename {story_as_object.thumb_filename_details['base_name']}"
+                    f"id {story_as_object.id}: will not trim image with base filename {story_as_object.downloaded_og_image_filename_details['base_name']}"
                 )
                 force_no_trim = True
                 no_trim = True
                 break
 
         for pattern in ignore_images_whose_urls_contain_these_substrings:
-            if pattern in story_as_object.thumb_filename_details["base_name"].lower():
+            if (
+                pattern
+                in story_as_object.downloaded_og_image_filename_details[
+                    "base_name"
+                ].lower()
+            ):
                 logger.info(
-                    f"id {story_as_object.id}: will skip image with base filename {story_as_object.thumb_filename_details['base_name']} since it constains substring {pattern}"
+                    f"id {story_as_object.id}: ignore image {story_as_object.downloaded_og_image_filename_details['base_name']} based on substring {pattern}"
                 )
                 story_as_object.has_thumb = False
                 return
 
     # initialize webp compression levels from settings
-    WEBP_SMALL_THUMB_COMPRESSION_QUALITY = int(
-        config.settings["THUMBS"]["COMP_QUAL"]["SMALL"]
-    )  # default value
-    WEBP_MEDIUM_THUMB_COMPRESSION_QUALITY = int(
-        config.settings["THUMBS"]["COMP_QUAL"]["MEDIUM"]
-    )  # default value
+    # WEBP_SMALL_THUMB_COMPRESSION_QUALITY = int(
+    #     config.settings["THUMBS"]["COMP_QUAL"]["SMALL"]
+    # )  # default value
+    # WEBP_MEDIUM_THUMB_COMPRESSION_QUALITY = int(
+    #     config.settings["THUMBS"]["COMP_QUAL"]["MEDIUM"]
+    # )  # default value
     # WEBP_LARGE_THUMB_COMPRESSION_QUALITY = int(
     #     config.settings["THUMBS"]["COMP_QUAL"]["LARGE"]
     # )  # default value
@@ -287,12 +354,12 @@ def get_image_slug(story_as_object, img_loading="lazy"):
 
     # preferentially render thumbs from certain domains with better quality
     if og_image_domains in domains_with_higher_quality_resizing:
-        # WEBP_SMALL_THUMB_COMPRESSION_QUALITY = min(
-        #     100, WEBP_SMALL_THUMB_COMPRESSION_QUALITY + 5
-        # )
-        WEBP_MEDIUM_THUMB_COMPRESSION_QUALITY = min(
-            100, WEBP_SMALL_THUMB_COMPRESSION_QUALITY + 10
+        WEBP_SMALL_THUMB_COMPRESSION_QUALITY = min(
+            100, WEBP_SMALL_THUMB_COMPRESSION_QUALITY + 5
         )
+        # WEBP_MEDIUM_THUMB_COMPRESSION_QUALITY = min(
+        #     100, WEBP_SMALL_THUMB_COMPRESSION_QUALITY + 10
+        # )
         # WEBP_LARGE_THUMB_COMPRESSION_QUALITY = min(
         #     100, WEBP_SMALL_THUMB_COMPRESSION_QUALITY + 15
         # )
@@ -330,7 +397,7 @@ def get_image_slug(story_as_object, img_loading="lazy"):
                     logger.info(
                         f"{sys._getframe(  ).f_code.co_name}: "
                         f"id {story_as_object.id}: "
-                        f"used first frame of animation in {story_as_object.downloaded_orig_thumb_filename}"
+                        f"used first frame of animation in {story_as_object.normalized_og_image_filename}"
                     )
                     downloaded_img = Image(image=first_frame)
 
@@ -371,11 +438,11 @@ def get_image_slug(story_as_object, img_loading="lazy"):
                     no_pad = True
                 except wand.exceptions.PolicyError as exc:
                     logger.error(
-                        f"id {story_as_object.id}: wand PolicyError for {story_as_object.thumb_filename_details['base_name']}"
+                        f"id {story_as_object.id}: wand PolicyError for {story_as_object.downloaded_og_image_filename_details['base_name']}"
                     )
                 except Exception as exc:
                     logger.error(
-                        f"id {story_as_object.id}: {story_as_object.thumb_filename_details['base_name']}, "
+                        f"id {story_as_object.id}: {story_as_object.downloaded_og_image_filename_details['base_name']}, "
                         f"error with PDF: {exc}; "
                         f"traceback:\n{traceback.format_exc()}"
                     )
@@ -423,21 +490,21 @@ def get_image_slug(story_as_object, img_loading="lazy"):
             #             story_as_object.has_thumb = False
             #             return
 
-            with Image(image=image_to_use) as medium_thumb:
-                with medium_thumb.convert("webp") as webp_image:
-                    webp_image.compression_quality = (
-                        WEBP_MEDIUM_THUMB_COMPRESSION_QUALITY
-                    )
-                    webp_image.transform(
-                        resize=f"{config.settings['THUMBS']['WIDTH_PX']['MEDIUM']}x"
-                    )
-                    try:
-                        save_thumb_where_it_should_go(
-                            webp_image, story_as_object, "medium"
-                        )
-                    except Exception as exc:
-                        story_as_object.has_thumb = False
-                        return
+            # with Image(image=image_to_use) as medium_thumb:
+            #     with medium_thumb.convert("webp") as webp_image:
+            #         webp_image.compression_quality = (
+            #             WEBP_MEDIUM_THUMB_COMPRESSION_QUALITY
+            #         )
+            #         webp_image.transform(
+            #             resize=f"{config.settings['THUMBS']['WIDTH_PX']['MEDIUM']}x"
+            #         )
+            #         try:
+            #             save_thumb_where_it_should_go(
+            #                 webp_image, story_as_object, "medium"
+            #             )
+            #         except Exception as exc:
+            #             story_as_object.has_thumb = False
+            #             return
 
             # with Image(image=image_to_use) as large_thumb:
             #     with large_thumb.convert("webp") as webp_image:
@@ -555,7 +622,7 @@ def fix_multipage_pdf(story_as_object):
     )
     story_as_object.thumb_aspect_hint = "PDF page"
     logger.info(
-        f"id {story_as_object.id}: success while discarding all but first page of PDF"
+        f"id {story_as_object.id}: success discarding all but first page of PDF"
     )
     return True
 

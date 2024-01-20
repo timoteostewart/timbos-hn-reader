@@ -57,7 +57,7 @@ def convert_seconds_ago_to_human_readable(seconds_ago: int, force_int=False):
 
 
 def convert_time_duration_to_human_readable_v1(new_page_ts):
-    dt_str = str(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
+    dt_str = str(datetime.datetime.now(tz=datetime.timezone.utc).isoformat())
     dt_str = dt_str[slice(0, dt_str.find("."))]
     dt_str += "Z"
     page_gen_elapsed = get_time_now_in_epoch_seconds_float() - new_page_ts

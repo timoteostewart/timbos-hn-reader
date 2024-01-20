@@ -80,10 +80,10 @@ class Story(Item):
         # while inside url_utils.get_data_via_requests()
         #   and promote_initial_og_image_url_to_final()
         self.linked_url_og_image_url_final: str = ""
-        self.linked_url_og_image_url_content_type: str = ""
-        self.downloaded_orig_thumb_filename: str = ""
+        self.og_image_content_type: str = ""
+        self.normalized_og_image_filename: str = ""
         self.downloaded_orig_thumb_full_path: str = ""
-        self.downloaded_orig_thumb_content_type: str = ""
+        self.downloaded_og_image_magic_result: str = ""
 
         self.has_thumb: bool = True
         # We set `has_thumb` False in these cases:
@@ -97,7 +97,7 @@ class Story(Item):
         #     - the og:image URL was invalid for some reason
         #     - the og:image file seemed corrupt for some reason
 
-        self.thumb_filename_details: dict() = {}
+        self.downloaded_og_image_filename_details: dict() = {}
         self.thumb_aspect_hint: str = ""
 
         # while inside thumbs.check_for_thumb()
@@ -115,6 +115,10 @@ class Story(Item):
         # various things that will have to be computed anew periodically
         self.story_card_html: str = ""
 
+        self.title_slug_string = ""
+        self.score_slug_string = ""
+        self.descendants_slug_string = ""
+
         super().__init__(id, "story", text, by, time, kids)
 
     def __str__(self):
@@ -126,3 +130,6 @@ class Story(Item):
             res += str(d[ea_d])
             res += ", "
         return res
+
+    def to_dict(self):
+        return {key: value for key, value in self.__dict__.items()}

@@ -187,6 +187,16 @@ def get_filename_details_from_url(full_url):
     if end_index != -1:
         full_url = full_url[0:end_index]
 
+    # # delete rightmost open square bracket and everything after it
+    # end_index = full_url.rfind("[")
+    # if end_index != -1:
+    #     full_url = full_url[0:end_index]
+
+    # # delete rightmost percent-encoded open square bracket and everything after it
+    # end_index = full_url.rfind("%5B")
+    # if end_index != -1:
+    #     full_url = full_url[0:end_index]
+
     # delete leftmost forward slash and everything before it
     start_index = full_url.rfind("/")
     if start_index != -1:
@@ -198,22 +208,22 @@ def get_filename_details_from_url(full_url):
         full_url = full_url[(start_index + 1) :]
 
     # filename is whatever is left of the original URL after the preceding deletions
-    full_filename = full_url
+    filename = full_url
 
     # try to determine file extension
-    last_dot_index = full_filename.rfind(".")
+    last_dot_index = filename.rfind(".")
     if last_dot_index == -1:
-        filename_wo_ext = full_filename
-        file_extension = ""
+        basename = filename
+        extension = ""
     else:
-        filename_wo_ext = full_filename[:last_dot_index]
-        file_extension = full_filename[(last_dot_index + 1) :]
+        basename = filename[:last_dot_index]
+        extension = filename[(last_dot_index + 1) :]
 
     # bundle up our results
     filename_details = {
-        "full_filename": full_filename,
-        "base_name": filename_wo_ext,
-        "file_extension": file_extension,
+        "filename": filename,
+        "base_name": basename,
+        "file_extension": extension,
     }
 
     return filename_details

@@ -203,6 +203,8 @@ do
         # remove any leftover chromedriver binaries
         cleanup_uc_temp_files
 
+        exit 0
+
     done
 
     # longer pause between cycles
