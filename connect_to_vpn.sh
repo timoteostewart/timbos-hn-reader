@@ -46,6 +46,7 @@ for i in 1 2 3 4; do
         login_to_vpn_client
     fi
     sleep "${seconds_delay_between_attempts}"
+    (( seconds_delay_between_attempts *= 2 ))
 done
 
 # check whether we're logged into the vpn.
@@ -67,6 +68,8 @@ if vpn_is_connected; then
     exit 0
 fi
 
+seconds_delay_between_attempts=10
+
 # try a few times to connect
 for i in 1 2 3 4; do
     try_to_connect_to_vpn
@@ -74,6 +77,7 @@ for i in 1 2 3 4; do
         exit 0
     fi
     sleep "${seconds_delay_between_attempts}"
+    (( seconds_delay_between_attempts *= 2 ))
 done
 
 #
@@ -81,6 +85,7 @@ done
 #
 
 # try restarting the vpn service
+seconds_delay_between_attempts=10
 systemctl restart nordvpn
 sleep "${seconds_delay_between_attempts}"
 
@@ -91,6 +96,7 @@ for i in 1 2 3 4; do
         exit 0
     fi
     sleep "${seconds_delay_between_attempts}"
+    (( seconds_delay_between_attempts *= 2 ))
 done
 
 # we've tried just about everything. let's reboot.
@@ -99,4 +105,3 @@ if am-root; then
 else
     exit 1
 fi
-

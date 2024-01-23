@@ -219,25 +219,25 @@ def get_roster_for(driver, roster_story_type: str):
 
 
 def get_roster_via_endpoint(story_type: str):
-    url = f"https://hacker-news.firebaseio.com/v0/{story_type}stories.json"
+    query = f"/v0/{story_type}stories.json"
+    return retrieve_by_url.firebaseio_endpoint_query(query=query)
+
+    url = "https://hacker-news.firebaseio.com" + query
 
     try:
         resp_as_json = retrieve_by_url.endpoint_query_via_requests(url)
     except requests.exceptions.ConnectionError as exc:
-        logger.error(
-            f"firebaseio.com actively refused query /v0/{story_type}stories.json: {exc}"
-        )
-        raise exc
+        logger.error(f"firebaseio.com actively refused query {query}: {exc}")
+        raise 
     except requests.exceptions.RequestException as exc:
-        logger.warning(
-            f"firebaseio.com get request failed for /v0/{story_type}stories.json: {exc}"
-        )
-        raise exc
+        logger.warning(f"GET request failed for firebaseio.com query {query}: {exc}")
+        time.sleep(
+            int(config.settings["SCRAPING"]["FIREBASEIO_RETRY_DELAY"])
+        )  # in case it's a transient error, such as a DNS issue, wait for some seconds
+        raise
     except Exception as exc:
-        logger.error(
-            f"firebaseio.com somehow failed for /v0/{story_type}stories.json: {exc}"
-        )
-        raise exc
+        logger.error(f"firebaseio.com somehow failed for query {query}: {exc}")
+        raise
 
     return resp_as_json
 

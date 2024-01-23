@@ -213,6 +213,11 @@ def acquire_story_details_for_first_time(driver=None, item_id=None, pos_on_page=
     ## add informative labels before and after the story card title, if possible
     ##
 
+    if not story_as_object.image_slug or story_as_object.has_thumb == False:
+        logger.info(f"id {story_as_object.id} will not have a thumbnail")
+    else:
+        logger.info(f"id {story_as_object.id} will have a thumbnail")
+
     # if we have no thumbnail, then make sure we don't include a `story_content_type_slug`
     if story_as_object.image_slug == text_utils.EMPTY_STRING:
         story_as_object.story_content_type_slug = text_utils.EMPTY_STRING
@@ -957,28 +962,33 @@ def page_package_processor(page_package):
 
 
 def query_firebaseio_for_story_data(driver=None, item_id=None):
-    url = f"https://hacker-news.firebaseio.com/v0/item/{item_id}.json"
+    query = f"/v0/item/{item_id}.json"
+    return retrieve_by_url.firebaseio_endpoint_query(
+        query=query, log_prefix=f"id {item_id}: "
+    )
+
+    url = "https://hacker-news.firebaseio.com" + query
 
     try:
         resp_as_json = retrieve_by_url.endpoint_query_via_requests(url)
     except requests.exceptions.ConnectionError as exc:
         logger.error(
-            f"id {item_id}: firebaseio.com actively refused query /v0/item/{item_id}.json: {exc}"
+            f"id {item_id}: firebaseio.com actively refused query {query}: {exc}"
         )
-        raise exc
+        raise
     except requests.exceptions.RequestException as exc:
         logger.warning(
-            f"id {item_id}: get request failed for firebaseio.com/v0/item/{item_id}.json: {exc}"
+            f"id {item_id}: GET request failed for firebaseio.com query {query}: {exc}"
         )
         time.sleep(
             int(config.settings["SCRAPING"]["FIREBASEIO_RETRY_DELAY"])
         )  # in case it's a transient error, such as a DNS issue, wait for some seconds
-        raise exc
+        raise
     except Exception as exc:
         logger.error(
-            f"id {item_id}: query to firebaseio.com failed for /v0/item/{item_id}.json: {exc}"
+            f"id {item_id}: query to firebaseio.com failed for query {query}: {exc}"
         )
-        raise exc
+        raise
 
     return resp_as_json
 
@@ -993,15 +1003,22 @@ def supervisor(cur_story_type):
     rosters = {}
     driver = my_drivers.get_chromedriver(requestor=f"supervisor({cur_story_type})")
     for roster_story_type in config.settings["SCRAPING"]["STORY_ROSTERS"]:
-        rosters[roster_story_type] = my_scrapers.get_roster_for(
-            driver, roster_story_type
-        )
-        if rosters[roster_story_type]:
-            logger.info(
-                f"ingested roster for {roster_story_type} stories; length: {len(rosters[roster_story_type])}"
+        try:
+            rosters[roster_story_type] = my_scrapers.get_roster_for(
+                driver, roster_story_type
             )
-        else:
-            logger.error(f"failed to ingest roster for {roster_story_type} stories")
+            if rosters[roster_story_type]:
+                logger.info(
+                    f"ingested roster for {roster_story_type} stories; length: {len(rosters[roster_story_type])}"
+                )
+            else:
+                logger.error(f"failed to ingest roster for {roster_story_type} stories")
+        except Exception as exc:
+            logger.error(
+                f"supervisor({cur_story_type}) with unique id {uniq} failed to ingest roster for {roster_story_type} stories: {exc}"
+            )
+            raise exc
+
     driver.close()
     driver.quit()
 

@@ -63,11 +63,10 @@ def main():
     check_for_required_dirs()
     try:
         update_chromedriver.check_for_updated_chromedriver()
+        return hn.supervisor(cur_story_type=story_type)
     except Exception as exc:
         main.logger.error(f"Error: {exc}. Exiting.")
         exit(1)
-
-    return hn.supervisor(cur_story_type=story_type)
 
 
 if __name__ == "__main__":

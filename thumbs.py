@@ -94,7 +94,7 @@ ignore_images_from_these_domains = set()
 ignore_images_with_these_content_types = {
     "image/vnd.microsoft.icon",
     "image/avif",
-    "image/svg+xml",
+    # "image/svg+xml",
 }
 
 ignore_images_with_these_filenames = {
@@ -553,6 +553,9 @@ def get_image_slug(story_as_object, img_loading="lazy"):
         elif "no decode delegate for this image format" in str(
             exc
         ):  # probably an html file
+            logger.error(
+                f"{sys._getframe(  ).f_code.co_name}: id {story_as_object.id}: no decode delegate for image type {image_format}"
+            )
             story_as_object.has_thumb = False
         elif "Not a JPEG file: starts with 0x3c 0x21" in str(
             exc

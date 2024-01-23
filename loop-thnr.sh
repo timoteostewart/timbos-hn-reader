@@ -26,6 +26,8 @@ if ! am-root; then
     die "Please run as root."
 fi
 
+ONCE_FLAG=$1
+
 # handle of the server THNR is running on
 SERVER_NAME=thnr
 
@@ -157,7 +159,7 @@ do
 
     # update pip packages
     for cur_package in ${pip_packages[@]}; do
-        "${PYTHON_BIN_DIR}/pip" install "${cur_package}" --upgrade
+        "${PYTHON_BIN_DIR}/pip" install --upgrade "${cur_package}"
     done
 
     # "${PYTHON_BIN_DIR}/pip-review"
@@ -204,6 +206,10 @@ do
         cleanup_uc_temp_files
 
     done
+
+    if [[ ${ONCE_FLAG} == "once" ]]; then
+        exit 0
+    fi
 
     # longer pause between cycles
     loop_log_message info "Starting pause for ${PAUSE_BETWEEN_CYCLES_IN_MINUTES} minutes"

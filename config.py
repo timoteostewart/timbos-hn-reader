@@ -74,7 +74,7 @@ s3_thumbs_path = "thumbs/"
 s3_stories_path = ""
 
 # concurrent futures
-max_workers = 4
+max_workers = 8
 
 # connections settings
 delay_for_page_to_load_seconds = 4
