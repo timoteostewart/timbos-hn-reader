@@ -203,9 +203,11 @@ def get_reading_time_via_goose(story_as_object, page_source):
 get_reading_time = get_reading_time_via_goose
 
 
-def get_roster_for(driver, roster_story_type: str):
+def get_roster_for(roster_story_type: str = None):
     if roster_story_type in ["active", "classic"]:
-        roster = get_roster_via_screen_scraping(driver, roster_story_type)
+        roster = get_roster_via_screen_scraping(
+            roster_story_type=roster_story_type,
+        )
     elif roster_story_type in ["best", "new", "top"]:
         try:
             roster = get_roster_via_endpoint(roster_story_type)
@@ -228,7 +230,7 @@ def get_roster_via_endpoint(story_type: str):
         resp_as_json = retrieve_by_url.endpoint_query_via_requests(url)
     except requests.exceptions.ConnectionError as exc:
         logger.error(f"firebaseio.com actively refused query {query}: {exc}")
-        raise 
+        raise
     except requests.exceptions.RequestException as exc:
         logger.warning(f"GET request failed for firebaseio.com query {query}: {exc}")
         time.sleep(
@@ -242,7 +244,7 @@ def get_roster_via_endpoint(story_type: str):
     return resp_as_json
 
 
-def get_roster_via_screen_scraping(driver, roster_story_type: str):
+def get_roster_via_screen_scraping(driver=None, roster_story_type: str = None):
     if roster_story_type not in ["active", "classic"]:
         raise Exception(
             f"{sys._getframe(  ).f_code.co_name}: cannot create a roster for unrecognized story type '{roster_story_type}'"
@@ -286,7 +288,9 @@ def get_roster_via_screen_scraping(driver, roster_story_type: str):
 
         try:
             page_source = retrieve_by_url.get_page_source_noproxy(
-                driver=driver, url=url
+                # driver=driver,
+                url=url,
+                log_prefix="",
             )
         except FailedAfterRetrying as exc:
             break

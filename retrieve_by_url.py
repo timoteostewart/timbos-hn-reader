@@ -1,14 +1,52 @@
 import logging
+import os
 import sys
 import time
 
+import hrequests
 import requests
 
 import config
+import utils_random
 from my_exceptions import *
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+
+
+def get_page_source_hrequests(
+    url=None,
+    browser="chrome",
+    inter_scrape_delay=1.1,
+    log_prefix="",
+    **kwargs,
+):
+    if not url:
+        return None
+
+    try:
+        with hrequests.Session(
+            browser=browser, os=os.getenv("CUR_OS", default="lin")
+        ) as session:
+            resp = session.get(url)
+            with resp.render(headless=True, mock_human=True) as page:
+                time.sleep(utils_random.random_real(0, 1))
+                page.goto(url)
+                time.sleep(utils_random.random_real(0, 1))
+                page_source = page.html.find("html").html
+
+        if not page_source:
+            logger.error(log_prefix + "failed to get page source")
+            raise RuntimeError("Failed to get page source.")
+        elif page_source == "<html><head></head><body></body></html>":
+            raise ServerReturnedEmptyDocumentError(
+                "server returned empty document error"
+            )
+        else:
+            logger.info(log_prefix + f"got page source for {url}")
+            return page_source
+    except:
+        return None
 
 
 def firebaseio_endpoint_query(query=None, log_prefix=""):
@@ -61,8 +99,10 @@ def endpoint_query_via_requests(url=None, retries=3, delay=60, log_prefix=""):
 
 
 def get_page_source_noproxy(
-    driver=None, url=None, tries_left=config.num_tries_for_page_retrieval
+    driver=None, url=None, tries_left=config.num_tries_for_page_retrieval, log_prefix=""
 ):
+    return get_page_source_hrequests(url=url, log_prefix=log_prefix)
+
     try:
         return get_page_source_noproxy_helper(driver=driver, url=url)
     except ServerReturnedEmptyDocumentError as exc:

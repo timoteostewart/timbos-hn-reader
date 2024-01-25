@@ -50,7 +50,7 @@ def acquire_story_details_for_first_time(driver=None, item_id=None, pos_on_page=
 
     if not story_as_dict:
         logger.warning(
-            f"id {item_id}: failed to receive story details from firebase.io"
+            f"id {item_id}: failed to receive story details from firebaseio.com"
         )
         raise Exception()
     elif story_as_dict["type"] not in ["story", "job", "comment"]:
@@ -88,7 +88,9 @@ def acquire_story_details_for_first_time(driver=None, item_id=None, pos_on_page=
         ):
             try:
                 page_source = retrieve_by_url.get_page_source_noproxy(
-                    driver=driver, url=story_as_object.url
+                    # driver=driver,
+                    url=story_as_object.url,
+                    log_prefix=f"id {item_id}: ",
                 )
             except Exception as exc:
                 logger.warning(
@@ -121,13 +123,14 @@ def acquire_story_details_for_first_time(driver=None, item_id=None, pos_on_page=
                     time_utils.how_long_ago_human_readable(story_as_object.time),
                 )
 
-            try:
-                soup = BeautifulSoup(page_source, "html.parser")
-            except Exception as exc:
-                logger.error(
-                    f"id {story_as_object.id}: problem making soup from {story_as_object.url}: {exc}"
-                )
-                raise exc
+            if page_source:
+                try:
+                    soup = BeautifulSoup(page_source, "html.parser")
+                except Exception as exc:
+                    logger.error(
+                        f"id {story_as_object.id}: problem making soup from {story_as_object.url}: {exc}"
+                    )
+                    raise exc
 
             # og:image
             og_image_url_result = soup.find("meta", {"property": "og:image"})
@@ -160,7 +163,7 @@ def acquire_story_details_for_first_time(driver=None, item_id=None, pos_on_page=
 
             try:
                 social_media.check_for_social_media_details(
-                    driver=driver,
+                    # driver=driver,
                     story_as_object=story_as_object,
                     page_source_soup=soup,
                 )
@@ -214,9 +217,9 @@ def acquire_story_details_for_first_time(driver=None, item_id=None, pos_on_page=
     ##
 
     if not story_as_object.image_slug or story_as_object.has_thumb == False:
-        logger.info(f"id {story_as_object.id} will not have a thumbnail")
+        logger.info(f"id {story_as_object.id}: story card will not have a thumbnail")
     else:
-        logger.info(f"id {story_as_object.id} will have a thumbnail")
+        logger.info(f"id {story_as_object.id}: story card will have a thumbnail")
 
     # if we have no thumbnail, then make sure we don't include a `story_content_type_slug`
     if story_as_object.image_slug == text_utils.EMPTY_STRING:
@@ -625,7 +628,7 @@ def page_package_processor(page_package):
                 > config.settings["MINUTES_BEFORE_REFRESHING_STORY_METADATA"]
             ):
                 logger.info(
-                    f"id {story_as_object.id}: try to freshen cached story (last update from firebaseio {time_ago_since_last_firebaseio_update_display})"
+                    f"id {story_as_object.id}: try to freshen cached story (last update from firebaseio.com {time_ago_since_last_firebaseio_update_display})"
                 )
 
                 # attempt to update title, score, comment count
@@ -638,7 +641,7 @@ def page_package_processor(page_package):
 
             else:
                 logger.info(
-                    f"id {each_id}: re-using cached story (last updated from firebaseio {time_ago_since_last_firebaseio_update_display})"
+                    f"id {each_id}: re-using cached story (last updated from firebaseio.com {time_ago_since_last_firebaseio_update_display})"
                 )
                 # even if we re-use the cached story, we'll still update the
                 # publication time ago and badges, since we have this info on hand
@@ -678,22 +681,22 @@ def page_package_processor(page_package):
             cur_story_card_html = story_as_object.story_card_html
 
         else:
-            logger.info(
-                f"page {page_package.page_number}, id {each_id}: no cached story found"
-            )
+            logger.info(f"id {each_id}: no cached story found")
 
             try:
-                driver = my_drivers.get_chromedriver(
-                    requestor=f"id {each_id}, page_package_processor({page_package.story_type}), page {page_package.page_number}"
-                )
+                # driver = my_drivers.get_chromedriver(
+                #     log_prefix=f"id {each_id}: {page_package.story_type} page {page_package.page_number}: "
+                # )
                 (
                     cur_story_card_html,
                     pub_time_ago_display,
                 ) = acquire_story_details_for_first_time(
-                    driver=driver, item_id=each_id, pos_on_page=rank
+                    # driver=driver,
+                    item_id=each_id,
+                    pos_on_page=rank,
                 )
-                driver.close()
-                driver.quit()
+                # driver.close()
+                # driver.quit()
             except UnsupportedStoryType as exc:
                 logger.info(f"id {each_id}: {exc}")
                 continue  # to next each_id
@@ -957,7 +960,7 @@ def page_package_processor(page_package):
         time_utils.get_time_now_in_epoch_seconds_float() - start_processing_page_ts
     )
     logger.info(
-        f"update_stories() shipped page {page_package.page_number} of {page_package.story_type} containing {num_stories_on_page} actual stories in {h:02d}:{m:02d}:{s:02d}"
+        f"shipped page {page_package.page_number} of {page_package.story_type} containing {num_stories_on_page} actual stories in {h:02d}:{m:02d}:{s:02d}"
     )
 
 
@@ -1001,11 +1004,11 @@ def supervisor(cur_story_type):
     )
 
     rosters = {}
-    driver = my_drivers.get_chromedriver(requestor=f"supervisor({cur_story_type})")
+    # driver = my_drivers.get_chromedriver(log_prefix=f"supervisor({cur_story_type}): ")
     for roster_story_type in config.settings["SCRAPING"]["STORY_ROSTERS"]:
         try:
             rosters[roster_story_type] = my_scrapers.get_roster_for(
-                driver, roster_story_type
+                roster_story_type=roster_story_type,
             )
             if rosters[roster_story_type]:
                 logger.info(
@@ -1019,8 +1022,8 @@ def supervisor(cur_story_type):
             )
             raise exc
 
-    driver.close()
-    driver.quit()
+    # driver.close()
+    # driver.quit()
 
     if len(rosters[cur_story_type]) == 0:
         logger.error(

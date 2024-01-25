@@ -89,7 +89,9 @@ def check_for_social_media_details(
             repo_url_path = a_data_pjax_repo["href"]
             repo_url = f"https://github.com{repo_url_path}"
             gh_repo_lang_stats = get_github_repo_languages(
-                driver=driver, repo_url=repo_url
+                driver=driver,
+                repo_url=repo_url,
+                story_id=story_as_object.id,
             )
             if gh_repo_lang_stats:
                 story_as_object.gh_repo_lang_stats = gh_repo_lang_stats
@@ -461,8 +463,14 @@ def create_github_languages_slug(story_as_object):
     )
 
 
-def get_github_repo_languages(driver=None, repo_url=None):
-    page_source = retrieve_by_url.get_page_source_noproxy(driver=driver, url=repo_url)
+def get_github_repo_languages(driver=None, repo_url=None, story_id=None):
+    log_prefix = f"id {story_id}: " if story_id else "n/a"
+
+    page_source = retrieve_by_url.get_page_source_noproxy(
+        # driver=driver,
+        url=repo_url,
+        log_prefix=log_prefix,
+    )
 
     soup = BeautifulSoup(page_source, "html.parser")
     h2_languages = soup.find("h2", text="Languages")
@@ -470,9 +478,7 @@ def get_github_repo_languages(driver=None, repo_url=None):
     if h2_languages:
         ul_languages = h2_languages.find_next_sibling("ul")
         if not ul_languages:
-            logger.info(
-                f"{sys._getframe(  ).f_code.co_name}: couldn't get GH repo lang stats from {repo_url}"
-            )
+            logger.info(log_prefix + f"couldn't get GH repo lang stats from {repo_url}")
             return None
         gh_repo_lang_stats = []
         li_els = ul_languages.find_all("li")
@@ -493,12 +499,10 @@ def get_github_repo_languages(driver=None, repo_url=None):
                     lang_percent = each_span.text
             lang_color = each_li.find("svg")["style"][6:-1].upper()
             gh_repo_lang_stats.append((lang_name, lang_percent, lang_color))
-        logger.info(
-            f"{sys._getframe(  ).f_code.co_name}: got GH repo lang stats from {repo_url}"
-        )
+        logger.info(log_prefix + f"got GH repo lang stats from {repo_url}")
         return gh_repo_lang_stats
     else:
-        logger.warning(f"couldn't find h2_languages on url {repo_url}")
+        logger.warning(log_prefix + f"couldn't find h2_languages on url {repo_url}")
 
 
 def get_theguardian_account_slug(

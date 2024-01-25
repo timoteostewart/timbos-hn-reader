@@ -15,7 +15,7 @@ import config
 logger = logging.getLogger(__name__)
 
 
-def get_chromedriver(user_agent=None, requestor=""):
+def get_chromedriver(user_agent=None,  log_prefix=""):
     chrome_options = uc.ChromeOptions()
     # chrome_options.add_argument("--disable-gpu")  # note: no longer required for dockerized Chrome
     chrome_options.add_argument("--disable-dev-shm-usage")
@@ -88,14 +88,12 @@ def get_chromedriver(user_agent=None, requestor=""):
             service=chrome_service,
         )
     except Exception as exc:
-        logger.error(
-            f"{sys._getframe(  ).f_code.co_name}: {requestor} failed to get a driver: {exc}"
-        )
+        logger.error(log_prefix + f"failed to get a driver: {exc}")
         traceback.print_exc()
         raise exc
 
     driver.set_page_load_timeout(180)
     driver.implicitly_wait(180)
 
-    logger.info(f"{sys._getframe(  ).f_code.co_name}: {requestor} got a driver")
+    logger.info(log_prefix + f"got a driver")
     return driver

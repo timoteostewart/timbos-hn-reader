@@ -30,7 +30,7 @@ Major features:
 # Additional implementation details
 
 - Extracting information from linked stories and generating pages of HTML is performed multithreaded with a configurable number of workers (`config.max_workers`)
-- Story metadata is cached locally to avoid repeated trips to firebase.io endpoints or linked stories.
+- Story metadata is cached locally to avoid repeated trips to firebaseio.com endpoints or linked stories.
 - Some websites show up on HN a lot and usually have the same og:image, so THNR can be configured to use a substitute (what I call a prepared thumbnail) for a website's og:image. This saves the time that would have been spent retrieving and processing the same og:image repeatedly over time. These prepared thumbnails are in `./prepared_thumbs`.
 - Where possible, only the HTTP headers for Web content are retrieved to cut down on THNR's bandwidth usage.
 - Reliability is built in several places, from multiple retries when making HTTP requests, to falling back to a minimal story card when the linked article can't be accessed at all, to use of `try/except` in many situations.
@@ -216,6 +216,3 @@ At this time I'm far more likely to accept a friendly and small bug PR than a si
 # License
 
 Timbo's Hacker News Reader is MIT licensed, as found in the LICENSE file.
-
-
-

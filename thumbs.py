@@ -133,7 +133,9 @@ def get_webp_full_save_path(story_as_object, size):
 
 
 def can_find_a_shortcode(story_as_object, img_loading):
-    logger.info(f"id {story_as_object.id}: checking for a shortcode...")
+    log_prefix = f"id {story_as_object.id}: "
+
+    # logger.info(log_prefix+f"checking for a shortcode...")
     # check if thumb is already available as prepared image
     prepared_image_shortcode = ""
 
@@ -154,7 +156,7 @@ def can_find_a_shortcode(story_as_object, img_loading):
 
     if prepared_image_shortcode:
         logger.info(
-            f"id {story_as_object.id}: using prepared image shortcode {prepared_image_shortcode}"
+            log_prefix + f"using prepared image shortcode {prepared_image_shortcode}"
         )
 
         # load prepared image for certain size as image
@@ -171,9 +173,7 @@ def can_find_a_shortcode(story_as_object, img_loading):
                 aws_utils.upload_thumb(thumb_filename=thumb_filename)
             except Exception as exc:
                 logger.error(
-                    f"{sys._getframe(  ).f_code.co_name}: "
-                    f"id {story_as_object.id}: "
-                    f"failed to upload thumb (prepared image) to S3: {exc}"
+                    log_prefix + f"failed to upload thumb (prepared image) to S3: {exc}"
                 )
                 return False
 
@@ -183,9 +183,8 @@ def can_find_a_shortcode(story_as_object, img_loading):
 
         story_as_object.image_slug = create_img_slug_html(story_as_object, img_loading)
         logger.info(
-            f"{sys._getframe(  ).f_code.co_name}: "
-            f"id {story_as_object.id}: "
-            f"using prepared image for image {story_as_object.linked_url_og_image_url_final}"
+            log_prefix
+            + f"using prepared image for image {story_as_object.linked_url_og_image_url_final}"
         )
         return True
     else:
