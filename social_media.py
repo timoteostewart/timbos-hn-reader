@@ -7,7 +7,8 @@ import urllib3
 from bs4 import BeautifulSoup
 
 import config
-import my_drivers
+
+# import my_drivers
 import my_secrets
 import retrieve_by_url
 import text_utils
@@ -299,8 +300,8 @@ def get_arstechnica_account_slug(
                             break
 
     if not author_display_name:
-        logger.warning(
-            f"id {story_as_object.id}: could not find arstechnica author name"
+        logger.info(
+            f"id {story_as_object.id}: failed to find arstechnica author name"
         )
         return text_utils.EMPTY_STRING
 
@@ -347,7 +348,7 @@ def get_bloomberg_account_slug(
                 break
 
     if not author_display_name:
-        logger.warning(f"id {story_as_object.id}: could not find bloomberg author name")
+        logger.info(f"id {story_as_object.id}: failed to find bloomberg author name")
         return text_utils.EMPTY_STRING
 
     logger.info(f"id {story_as_object.id}: bloomberg author is {author_display_name}")
@@ -421,8 +422,8 @@ def get_github_gist_account_slug(
                 author_link = f'https://gist.github.com/{each_a["href"]}'
 
     if not author_handle:
-        logger.warning(
-            f"id {story_as_object.id}: could not find github gist author name"
+        logger.info(
+            f"id {story_as_object.id}: failed to find github gist author name"
         )
         return text_utils.EMPTY_STRING
 
@@ -466,19 +467,19 @@ def create_github_languages_slug(story_as_object):
 def get_github_repo_languages(driver=None, repo_url=None, story_id=None):
     log_prefix = f"id {story_id}: " if story_id else "n/a"
 
-    page_source = retrieve_by_url.get_page_source_noproxy(
+    page_source = retrieve_by_url.get_page_source(
         # driver=driver,
         url=repo_url,
         log_prefix=log_prefix,
     )
 
     soup = BeautifulSoup(page_source, "html.parser")
-    h2_languages = soup.find("h2", text="Languages")
+    h2_languages = soup.find("h2", string="Languages")
 
     if h2_languages:
         ul_languages = h2_languages.find_next_sibling("ul")
         if not ul_languages:
-            logger.info(log_prefix + f"couldn't get GH repo lang stats from {repo_url}")
+            logger.info(log_prefix + f"failed to get GH repo lang stats from {repo_url}")
             return None
         gh_repo_lang_stats = []
         li_els = ul_languages.find_all("li")
@@ -502,7 +503,7 @@ def get_github_repo_languages(driver=None, repo_url=None, story_id=None):
         logger.info(log_prefix + f"got GH repo lang stats from {repo_url}")
         return gh_repo_lang_stats
     else:
-        logger.warning(log_prefix + f"couldn't find h2_languages on url {repo_url}")
+        logger.info(log_prefix + f"failed to find h2_languages on url {repo_url}")
 
 
 def get_theguardian_account_slug(
@@ -527,8 +528,8 @@ def get_theguardian_account_slug(
                 break
 
     if not author_display_name:
-        logger.warning(
-            f"id {story_as_object.id}: could not find theguardian author name"
+        logger.info(
+            f"id {story_as_object.id}: failed to find theguardian author name"
         )
         return text_utils.EMPTY_STRING
 
@@ -622,7 +623,7 @@ def get_nytimes_article_slug(
                     )
     if not author_accumulator:
         logger.info(
-            f"id {story_as_object.id}: could not determine nytimes article authors"
+            f"id {story_as_object.id}: failed to determine nytimes article authors"
         )
         return text_utils.EMPTY_STRING
 
@@ -718,8 +719,8 @@ def get_techcrunch_account_slug(
                 break
 
     if not author_display_name:
-        logger.warning(
-            f"id {story_as_object.id}: could not find techcrunch author name"
+        logger.info(
+            f"id {story_as_object.id}: failed to find techcrunch author name"
         )
         return text_utils.EMPTY_STRING
 
@@ -793,8 +794,8 @@ def get_wikipedia_article_slug(
         logger.info(f"id {story_as_object.id}: found wikipedia article title")
         article_title = article_title_el[0].text
     else:
-        logger.warning(
-            f"id {story_as_object.id}: could not find wikipedia article title"
+        logger.info(
+            f"id {story_as_object.id}: failed to find wikipedia article title"
         )
         return text_utils.EMPTY_STRING
 
@@ -836,14 +837,14 @@ def get_youtube_channel_slug(youtube_url: str, story_as_object=None):
                 account_name = json["items"][0]["snippet"]["channelTitle"]
                 channel_id = json["items"][0]["snippet"]["channelId"]
                 account_url = f"https://www.youtube.com/channel/{channel_id}"
-        except Exception as e:
+        except Exception as exc:
             if story_as_object:
                 logger.warning(
-                    f"id {story_as_object.id}: error getting video details for YouTube URL {youtube_url}: {e}"
+                    f"id {story_as_object.id}: failed to get video details for YouTube URL {youtube_url}: {exc}"
                 )
             else:
                 logger.warning(
-                    f"error getting video details for YouTube URL {youtube_url}: {e}"
+                    f"failed to get video details for YouTube URL {youtube_url}: {exc}"
                 )
 
             return text_utils.EMPTY_STRING
@@ -868,14 +869,14 @@ def get_youtube_channel_slug(youtube_url: str, story_as_object=None):
                 account_name = json["items"][0]["snippet"]["title"]
                 channel_id = json["items"][0]["snippet"]["channelId"]
                 account_url = f"https://www.youtube.com/channel/{channel_id}"
-        except Exception as e:
+        except Exception as exc:
             if story_as_object:
                 logger.warning(
-                    f"id {story_as_object.id}: error getting channel details for YouTube URL {youtube_url}: {e}"
+                    f"id {story_as_object.id}: failed to get channel details for YouTube URL {youtube_url}: {exc}"
                 )
             else:
                 logger.warning(
-                    f"error getting channel details for YouTube URL {youtube_url}: {e}"
+                    f"failed to get channel details for YouTube URL {youtube_url}: {exc}"
                 )
 
             return text_utils.EMPTY_STRING
@@ -897,14 +898,14 @@ def get_youtube_channel_slug(youtube_url: str, story_as_object=None):
                 account_name = json["items"][0]["snippet"]["title"]
                 channel_id = json["items"][0]["snippet"]["channelId"]
                 account_url = f"https://www.youtube.com/channel/{channel_id}"
-        except Exception as e:
+        except Exception as exc:
             if story_as_object:
                 logger.warning(
-                    f"id {story_as_object.id}: error getting playlist details for YouTube URL {youtube_url}: {e}"
+                    f"id {story_as_object.id}: failed to get playlist details for YouTube URL {youtube_url}: {exc}"
                 )
             else:
                 logger.warning(
-                    f"error getting playlist details for YouTube URL {youtube_url}: {e}"
+                    f"failed to get playlist details for YouTube URL {youtube_url}: {exc}"
                 )
             return text_utils.EMPTY_STRING
     else:

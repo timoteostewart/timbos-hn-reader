@@ -229,7 +229,12 @@ def get_filename_details_from_url(full_url):
     return filename_details
 
 
-def get_response_headers(url):
+def get_response_headers(url=None, log_prefix=""):
+    log_prefix += "get_response_headers(): "
+    if not url:
+        # logger.error(log_prefix + f"no URL provided")
+        raise Exception("no URL provided")
+
     try:
         resp = requests.head(
             url,
@@ -237,9 +242,11 @@ def get_response_headers(url):
             timeout=config.settings["SCRAPING"]["REQUESTS_GET_TIMEOUT_S"],
             headers={"User-Agent": config.settings["SCRAPING"]["UA_STR"]},
         )
+
     except Exception as exc:
-        logger.error(f"{sys._getframe(  ).f_code.co_name}: {url}: {exc}")
-        raise exc
+        msg = f"requests.head() failed to complete HEAD request to {url} {exc}"
+        # logger.error(log_prefix + msg)
+        raise Exception(msg)
 
     return resp.headers
 

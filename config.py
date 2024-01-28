@@ -73,8 +73,8 @@ def load_settings(cur_host, settings_file):
 s3_thumbs_path = "thumbs/"
 s3_stories_path = ""
 
-# concurrent futures
-max_workers = 8
+# number of threads
+max_workers = 14
 
 # connections settings
 delay_for_page_to_load_seconds = 4
@@ -84,3 +84,10 @@ num_tries_for_page_retrieval = 3
 reading_speed_words_per_minute = (
     250  # this is used to divide word count of article to get reading time
 )
+
+# environment details
+my_wan_ip = ""
+
+# debug flags
+DEBUG_FLAG_DISABLE_CONCURRENT_PAGE_PROCESSING = False
+DEBUG_TIMES_IN_UPLOAD_PAGE_OF_STORIES_TO_S3 = 0

@@ -144,12 +144,15 @@ def upload_file_to_s3(
     return True
 
 
-def upload_page_of_stories(page_filename):
+def upload_page_of_stories(page_filename=None, log_prefix=""):
     extra_args = {
         "ContentLanguage": "en",
         "ContentType": "text/html",
         "Tagging": "Activity=UploadPageOfStories",
     }
+
+    # config.DEBUG_TIMES_IN_UPLOAD_PAGE_OF_STORIES_TO_S3 += 1
+    # logger.info(f"{config.DEBUG_TIMES_IN_UPLOAD_PAGE_OF_STORIES_TO_S3=}")
 
     try:
         upload_file_to_s3(
@@ -160,10 +163,9 @@ def upload_page_of_stories(page_filename):
             extra_args=extra_args,
             bucket=bucket_html,
         )
+        logger.info(log_prefix + f"uploaded {page_filename} to S3")
     except Exception as exc:
-        logger.error(
-            f"{sys._getframe(  ).f_code.co_name}: failed to upload {page_filename} to S3"
-        )
+        logger.error(log_prefix + f"failed to upload {page_filename} to S3")
         raise exc
 
 

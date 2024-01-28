@@ -85,7 +85,7 @@ class Story(Item):
         self.downloaded_orig_thumb_full_path: str = ""
         self.downloaded_og_image_magic_result: str = ""
 
-        self.has_thumb: bool = True
+        self.has_thumb: bool = False
         # We set `has_thumb` False in these cases:
         #     - the og:image filename is one we ignore
         #     - the thumbnail's magic number isn't an image file or PDF

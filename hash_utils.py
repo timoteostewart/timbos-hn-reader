@@ -7,4 +7,4 @@ def get_sha1_of_current_time():
     t = time.time()
     t_bytes = str(t).encode("utf-8")
     hf.update(t_bytes)
-    return hf.hexdigest()
+    return str(hf.hexdigest())[:12]

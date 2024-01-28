@@ -1,5 +1,34 @@
 #!/usr/bin/env bash
 
+# TODO: also output these VPN logs to thnr-vpn...log as well as thnr-combined...log
+
+CUR_YEAR=$(printf '%(%Y)T' -1)
+CUR_DOY=$(printf '%(%j)T' -1)
+CUR_DOY_ZEROS="00${CUR_DOY}"
+CUR_DOY_PADDED="${CUR_DOY_ZEROS: -3}"
+CUR_YEAR_AND_DOY="${CUR_YEAR}-${CUR_DOY_PADDED}"
+
+
+SERVER_NAME=thnr
+UTILITY_ACCOUNT_USERNAME=tim
+BASE_DIR=/srv/timbos-hn-reader/
+LOG_FILES_PATH="${BASE_DIR}/logs/"
+VPN_LOG_FILE="${LOG_FILES_PATH}${SERVER_NAME}-vpn-${CUR_YEAR_AND_DOY}.log"
+
+vpn_log_message() {
+	LEVEL="$1"
+	MESSAGE="$2"
+	CUR_DATETIME=$(printf '%(%Y-%m-%d %H:%M:%S %Z)T' -1)
+	LOG_LINE="${CUR_DATETIME} ${LEVEL^^} ${MESSAGE}"
+    # LOG_FILE="${LOOP_LOG_PATH}${SERVER_NAME}-vpn-${CUR_YEAR_AND_DOY}.log"
+
+    if (( ${EUID:-$(id -u)} == 0 )); then
+        sudo -u ${UTILITY_ACCOUNT_USERNAME} printf -- "${LOG_LINE}\n" >> "${VPN_LOG_FILE}"
+    else
+        printf -- "${LOG_LINE}\n" >> "${VPN_LOG_FILE}"
+    fi
+}
+
 am-root() {
     if (( ${EUID:-$(id -u)} != 0 )); then
         return 1
@@ -25,8 +54,10 @@ login_to_vpn_client() {
 vpn_is_connected() {
     vpn_status=$(nordvpn status)
     if [[ "${vpn_status}" == *"Status: Disconnected"* ]]; then
+        vpn_log_message info "VPN is not connected."
         return 1
     else
+        vpn_log_message info "VPN is connected."
         return 0
     fi
 }
@@ -53,6 +84,7 @@ done
 # if we're not, reboot if we're sudo, exit with error otherwise
 if ! am_logged_into_vpn_client; then
     if am-root; then
+        vpn_log_message info "Shutting down now."
         shutdown -r now
     else
         exit 1
@@ -65,6 +97,7 @@ fi
 #
 
 if vpn_is_connected; then
+    vpn_log_message info "VPN is connected."
     exit 0
 fi
 

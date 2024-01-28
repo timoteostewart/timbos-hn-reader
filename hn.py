@@ -12,7 +12,8 @@ from bs4 import BeautifulSoup
 import aws_utils
 import config
 import hash_utils
-import my_drivers
+
+# import my_drivers
 import my_scrapers
 import retrieve_by_url
 import social_media
@@ -43,6 +44,8 @@ skip_getting_content_type_via_head_request_for_domains = {
 
 
 def acquire_story_details_for_first_time(driver=None, item_id=None, pos_on_page=None):
+    log_prefix = f"id {item_id}: "
+
     try:
         story_as_dict = query_firebaseio_for_story_data(item_id=item_id)
     except Exception as exc:
@@ -50,87 +53,92 @@ def acquire_story_details_for_first_time(driver=None, item_id=None, pos_on_page=
 
     if not story_as_dict:
         logger.warning(
-            f"id {item_id}: failed to receive story details from firebaseio.com"
+            log_prefix + f"failed to receive story details from firebaseio.com"
         )
         raise Exception()
     elif story_as_dict["type"] not in ["story", "job", "comment"]:
         # TODO: eventually handle poll, job, etc. other types
         logger.info(
-            f"id {item_id}: not processing item of item type {story_as_dict['type']}"
+            log_prefix + f"not processing item of item type {story_as_dict['type']}"
         )
         raise UnsupportedStoryType(story_as_dict["type"])
 
     story_as_object = item_factory(story_as_dict)
 
     if not story_as_object:
-        raise Exception(f"id {item_id}: failed to get story details")
+        raise Exception(log_prefix + f"failed to get story details")
 
     if story_as_object.url:
         _, domains = url_utils.get_domains_from_url(story_as_object.url)
         if domains in skip_getting_content_type_via_head_request_for_domains:
-            logger.info(f"id {story_as_object.id}: skip HEAD request for {domains}")
+            logger.info(log_prefix + f"skip HEAD request for {domains}")
         else:
             story_as_object.linked_url_content_type = (
-                my_scrapers.get_content_type_via_head_request(story_as_object.url)
+                my_scrapers.get_content_type_via_head_request(url=story_as_object.url, log_prefix=log_prefix)
             )
-        if story_as_object.linked_url_content_type:
-            logger.info(
-                f"id {story_as_object.id}: content-type {story_as_object.linked_url_content_type} for url {story_as_object.url}"
-            )
-        else:
-            logger.info(
-                f"id {story_as_object.id}: content-type could not be determined for url {story_as_object.url}"
-            )
+        # if story_as_object.linked_url_content_type:
+        #     logger.info(
+        #         log_prefix
+        #         + f"content-type is {story_as_object.linked_url_content_type} for url {story_as_object.url}"
+        #     )
+        # else:
+        #     logger.info(
+        #         log_prefix
+        #         + f"content-type could not be determined for url {story_as_object.url}"
+        #     )
 
         if (
             story_as_object.linked_url_content_type == "text/html"
             or not story_as_object.linked_url_content_type
         ):
+            page_source = None
+            soup = None
             try:
-                page_source = retrieve_by_url.get_page_source_noproxy(
-                    # driver=driver,
+                page_source = retrieve_by_url.get_page_source(
                     url=story_as_object.url,
-                    log_prefix=f"id {item_id}: ",
+                    log_prefix=log_prefix,
                 )
             except Exception as exc:
                 logger.warning(
-                    f"id {story_as_object.id}: problem getting page source from {story_as_object.url}: {exc}"
+                    log_prefix
+                    + f"problem getting page source from {story_as_object.url}: {exc}"
                 )
+
+            if page_source:
+                try:
+                    soup = BeautifulSoup(page_source, "lxml")
+                except Exception as exc:
+                    logger.warning(
+                        log_prefix
+                        + f"problem making soup from {story_as_object.url}: {exc}"
+                    )
+
+            if not page_source or not soup:
                 logger.info(
-                    f"id {story_as_object.id}: creating minimal story card for story '{story_as_object.title}' at url {story_as_object.url}"
+                    log_prefix
+                    + f"creating minimal story card for story '{story_as_object.title}' at url {story_as_object.url}"
                 )
 
                 # create super minimal story card to have at least something to return
                 create_story_card_html_from_story_object(story_as_object)
 
                 # pickle `story_as_object` as json to a file
-                logger.info(
-                    f"id {story_as_object.id}: pickling item for the first time"
-                )
-                pickle.dump(
-                    story_as_object,
-                    open(
-                        os.path.join(
-                            config.settings["CACHED_STORIES_DIR"],
-                            get_pickle_filename(story_as_object.id),
-                        ),
-                        "wb",
+                logger.info(log_prefix + f"pickling item for the first time")
+                with open(
+                    os.path.join(
+                        config.settings["CACHED_STORIES_DIR"],
+                        get_pickle_filename(story_as_object.id),
                     ),
-                )
+                    mode="wb",
+                ) as file:
+                    pickle.dump(story_as_object, file)
 
                 return (
                     story_as_object.story_card_html,
                     time_utils.how_long_ago_human_readable(story_as_object.time),
                 )
 
-            if page_source:
-                try:
-                    soup = BeautifulSoup(page_source, "html.parser")
-                except Exception as exc:
-                    logger.error(
-                        f"id {story_as_object.id}: problem making soup from {story_as_object.url}: {exc}"
-                    )
-                    raise exc
+            # invariant now: we have page_source and soup
 
             # og:image
             og_image_url_result = soup.find("meta", {"property": "og:image"})
@@ -139,28 +147,35 @@ def acquire_story_details_for_first_time(driver=None, item_id=None, pos_on_page=
                     og_image_url = og_image_url_result["content"]
                     story_as_object.linked_url_og_image_url_initial = og_image_url
                     logger.info(
-                        f"id {story_as_object.id}: found og:image url {story_as_object.linked_url_og_image_url_initial}"
+                        log_prefix
+                        + f"found og:image url {story_as_object.linked_url_og_image_url_initial}"
                     )
             else:
-                logger.info(f"id {story_as_object.id}: did not find og:image url")
+                logger.info(log_prefix + f"did not find og:image url")
 
+            # logger.info(log_prefix + f"after '# og:image'")
+
+            # get reading time
             try:
+                # logger.info(log_prefix + f"before my_scrapers.get_reading_time")
                 reading_time = my_scrapers.get_reading_time(
-                    story_as_object, page_source
+                    page_source=page_source, log_prefix=log_prefix
                 )
+                # logger.info(log_prefix + f"after my_scrapers.get_reading_time")
                 if reading_time:
                     story_as_object.reading_time = reading_time
+                # logger.info(log_prefix + f"reading time: {reading_time}")
             except Exception as exc:
                 logger.error(
-                    f"id {story_as_object.id}: get_reading_time: {exc}; "
-                    f"traceback:\n{traceback.format_exc(exc)}"
+                    log_prefix
+                    + f"failed to get reading time: {str(exc)}; {traceback.format_exc(exc)}"
                 )
-                raise exc
+
+            # logger.info(log_prefix + f"after '# get reading time'")
 
             ## create a slug for the linked URL's social-media website channel, if necessary.
             ## use details encoded in the url or the html page source
             ## https://hackernews-insight.vercel.app/domain-analysis
-
             try:
                 social_media.check_for_social_media_details(
                     # driver=driver,
@@ -168,13 +183,12 @@ def acquire_story_details_for_first_time(driver=None, item_id=None, pos_on_page=
                     page_source_soup=soup,
                 )
             except Exception as exc:
-                logger.error(
-                    f"id {story_as_object.id}: check_for_social_media_details: {exc}"
-                )
+                logger.error(log_prefix + f"check_for_social_media_details: {exc}")
                 raise exc
 
-            if story_as_object.reading_time > 0:
-                create_reading_time_slug(story_as_object)
+            if story_as_object.reading_time:
+                if story_as_object.reading_time > 0:
+                    create_reading_time_slug(story_as_object)
 
         # if story links to PDF, we'll use 1st page of PDF as thumb instead of og:image (if any)
         elif (
@@ -207,7 +221,7 @@ def acquire_story_details_for_first_time(driver=None, item_id=None, pos_on_page=
             story_as_object.has_thumb = False
 
     else:
-        logger.info(f"id {story_as_object.id} has no url (probably an Ask HN, etc.)")
+        logger.info(log_prefix + f"story has no url (probably an Ask HN, etc.)")
         story_as_object.url = story_as_object.hn_comments_url
         story_as_object.image_slug = text_utils.EMPTY_STRING
         story_as_object.has_thumb = False
@@ -217,9 +231,9 @@ def acquire_story_details_for_first_time(driver=None, item_id=None, pos_on_page=
     ##
 
     if not story_as_object.image_slug or story_as_object.has_thumb == False:
-        logger.info(f"id {story_as_object.id}: story card will not have a thumbnail")
+        logger.info(log_prefix + f"story card will not have a thumbnail")
     else:
-        logger.info(f"id {story_as_object.id}: story card will have a thumbnail")
+        logger.info(log_prefix + f"story card will have a thumbnail")
 
     # if we have no thumbnail, then make sure we don't include a `story_content_type_slug`
     if story_as_object.image_slug == text_utils.EMPTY_STRING:
@@ -243,17 +257,15 @@ def acquire_story_details_for_first_time(driver=None, item_id=None, pos_on_page=
     create_story_card_html_from_story_object(story_as_object)
 
     # pickle `story_as_object` as json to a file
-    logger.info(f"id {story_as_object.id}: pickling item for the first time")
-    pickle.dump(
-        story_as_object,
-        open(
-            os.path.join(
-                config.settings["CACHED_STORIES_DIR"],
-                get_pickle_filename(story_as_object.id),
-            ),
-            "wb",
+    logger.info(log_prefix + f"pickling item for the first time")
+    with open(
+        os.path.join(
+            config.settings["CACHED_STORIES_DIR"],
+            get_pickle_filename(story_as_object.id),
         ),
-    )
+        mode="wb",
+    ) as file:
+        pickle.dump(story_as_object, file)
 
     return story_as_object.story_card_html, time_utils.how_long_ago_human_readable(
         story_as_object.time
@@ -567,11 +579,15 @@ def item_factory(story_as_dict):
 
 
 def page_package_processor(page_package):
-    logger.info(
-        f"entering page_package_processor with {page_package.story_type} page {page_package.page_number}"
-    )
+    ppp_log_prefix = f"page_package_processor(): page {page_package.page_number} of {page_package.story_type}: "
 
-    start_processing_page_ts = time_utils.get_time_now_in_epoch_seconds_float()
+    logger.info(ppp_log_prefix + f"starting")
+
+    # logger.info(
+    #     ppp_log_prefix + f"len(page_package.story_ids)={len(page_package.story_ids)}"
+    # )
+
+    page_processor_start_ts = time_utils.get_time_now_in_epoch_seconds_float()
 
     # customize links and labels
     # light mode
@@ -591,26 +607,31 @@ def page_package_processor(page_package):
 
     page_html = ""
 
+    num_stories_on_page = None
+
     for rank, each_id in enumerate(page_package.story_ids):
+        id_log_prefix = f"id {each_id}: "
+
+        # logger.info(id_log_prefix + f"page:rank={page_package.page_number}:{rank}")
+
         if os.path.exists(
             os.path.join(
                 config.settings["CACHED_STORIES_DIR"], get_pickle_filename(each_id)
             )
         ):
-            logger.info(f"id {each_id}: cached story found")
-            story_as_object = pickle.load(
-                open(
-                    os.path.join(
-                        config.settings["CACHED_STORIES_DIR"],
-                        get_pickle_filename(each_id),
-                    ),
-                    "rb",
-                )
-            )
+            logger.info(id_log_prefix + f"cached story found")
+
+            with open(
+                os.path.join(
+                    config.settings["CACHED_STORIES_DIR"], get_pickle_filename(each_id)
+                ),
+                mode="rb",
+            ) as file:
+                story_as_object = pickle.load(file)
 
             minutes_ago_since_last_firebaseio_update = int(
                 (
-                    time_utils.get_time_now_in_epoch_seconds_int()
+                    time_utils.get_time_now_in_epoch_seconds_float()
                     - story_as_object.time_of_last_firebaseio_query
                 )
                 / 60
@@ -628,7 +649,8 @@ def page_package_processor(page_package):
                 > config.settings["MINUTES_BEFORE_REFRESHING_STORY_METADATA"]
             ):
                 logger.info(
-                    f"id {story_as_object.id}: try to freshen cached story (last update from firebaseio.com {time_ago_since_last_firebaseio_update_display})"
+                    id_log_prefix
+                    + f"try to freshen cached story (last update from firebaseio.com {time_ago_since_last_firebaseio_update_display})"
                 )
 
                 # attempt to update title, score, comment count
@@ -641,7 +663,8 @@ def page_package_processor(page_package):
 
             else:
                 logger.info(
-                    f"id {each_id}: re-using cached story (last updated from firebaseio.com {time_ago_since_last_firebaseio_update_display})"
+                    id_log_prefix
+                    + f"re-using cached story (last updated from firebaseio.com {time_ago_since_last_firebaseio_update_display})"
                 )
                 # even if we re-use the cached story, we'll still update the
                 # publication time ago and badges, since we have this info on hand
@@ -652,19 +675,17 @@ def page_package_processor(page_package):
                 story_as_object.time
             )
 
-            logger.info(f"id {story_as_object.id}: {repickling_log_detail}")
+            logger.info(id_log_prefix + f"{repickling_log_detail}")
 
             if repickling_log_detail.startswith("re-pickling"):
-                pickle.dump(
-                    story_as_object,
-                    open(
-                        os.path.join(
-                            config.settings["CACHED_STORIES_DIR"],
-                            get_pickle_filename(story_as_object.id),
-                        ),
-                        "wb",
+                with open(
+                    os.path.join(
+                        config.settings["CACHED_STORIES_DIR"],
+                        get_pickle_filename(story_as_object.id),
                     ),
-                )
+                    mode="wb",
+                ) as file:
+                    pickle.dump(story_as_object, file)
 
                 with open(
                     os.path.join(
@@ -681,34 +702,28 @@ def page_package_processor(page_package):
             cur_story_card_html = story_as_object.story_card_html
 
         else:
-            logger.info(f"id {each_id}: no cached story found")
+            logger.info(id_log_prefix + f"no cached story found")
 
             try:
-                # driver = my_drivers.get_chromedriver(
-                #     log_prefix=f"id {each_id}: {page_package.story_type} page {page_package.page_number}: "
-                # )
                 (
                     cur_story_card_html,
                     pub_time_ago_display,
                 ) = acquire_story_details_for_first_time(
-                    # driver=driver,
                     item_id=each_id,
                     pos_on_page=rank,
                 )
-                # driver.close()
-                # driver.quit()
             except UnsupportedStoryType as exc:
-                logger.info(f"id {each_id}: {exc}")
+                logger.info(id_log_prefix + f"{str(exc)}")
                 continue  # to next each_id
             except Exception as exc:
                 logger.error(
-                    f"id {each_id}: acquire_story_details_for_first_time: {exc}; "
-                    f"traceback:\n{traceback.format_exc(exc)}"
+                    id_log_prefix
+                    + f"acquire_story_details_for_first_time: {str(exc)} ; traceback: {traceback.format_exc(exc)}"
                 )
                 continue  # to next each_id
 
         if not cur_story_card_html:
-            logger.error(f"id {each_id}: couldn't get story details for some reason")
+            logger.error(id_log_prefix + f"couldn't get story details for some reason")
             continue  # to next each_id
 
         # populate pub_time_ago_display
@@ -727,241 +742,248 @@ def page_package_processor(page_package):
         page_html += cur_story_card_html
         page_html += "\n"  # so html source looks pretty
 
-        label_next_page = f"page {page_package.page_number + 1}"
-        if page_package.is_first_page:
-            more_button_lm = (
-                '<hr class="before-more-buttons"/>'
-                '<div class="more-buttons">'
-                '<div class="next-page-link-tray">'
-                f'<a href="{get_story_page_url(page_package.story_type, 2, light_mode=True)}">{label_next_page}</a>'
-                "</div>"  # next-page-link-tray
-                f'<div class="other-stories-tray">{other_stories_links_lm}</div>'
-                "</div>\n"  # more-buttons
-            )
-            more_button_dm = (
-                '<hr class="before-more-buttons"/>'
-                '<div class="more-buttons">'
-                '<div class="next-page-link-tray">'
-                f'<a href="{get_story_page_url(page_package.story_type, 2, light_mode=False)}">{label_next_page}</a>'
-                "</div>"  # next-page-link-tray
-                f'<div class="other-stories-tray">{other_stories_links_dm}</div>'
-                "</div>\n"  # more-buttons
-            )
-        elif page_package.is_last_page:
-            more_button_lm = (
-                '<hr class="before-more-buttons"/>'
-                '<div class="more-buttons">'
-                '<div class="next-page-link-tray">'
-                f"no more pages of {page_package.story_type}. "
-                f'<a href="{get_story_page_url(page_package.story_type, 1, light_mode=True)}">'
-                f"page 1 of {page_package.story_type}"
-                "</a>"
-                "</div>"  # next-page-link-tray
-                f'<div class="other-stories-tray">{other_stories_links_lm}</div>'
-                "</div>"  # more-buttons
-            )
-            more_button_dm = (
-                '<hr class="before-more-buttons"/>'
-                '<div class="more-buttons">'
-                '<div class="next-page-link-tray">'
-                f"no more pages of {page_package.story_type}. "
-                f'<a href="{get_story_page_url(page_package.story_type, 1, light_mode=False)}">'
-                f"page 1 of {page_package.story_type}"
-                "</a>"
-                "</div>"  # next-page-link-tray
-                f'<div class="other-stories-tray">{other_stories_links_dm}</div>'
-                "</div>"  # more-buttons
-            )
-        else:  # not first page, not last page
-            more_button_lm = (
-                '<hr class="before-more-buttons"/>'
-                '<div class="more-buttons">'
-                '<div class="next-page-link-tray">'
-                '<a href="'
-                f"{get_story_page_url(page_package.story_type, page_package.page_number + 1, light_mode=True)}"
-                '">'
-                f"{label_next_page}"
-                "</a>"
-                "</div>"  # next-page-link-tray
-                f'<div class="other-stories-tray">{other_stories_links_lm}</div>'
-                "</div>\n"  # more-buttons
-            )
-            more_button_dm = (
-                '<hr class="before-more-buttons"/>'
-                '<div class="more-buttons">'
-                '<div class="next-page-link-tray">'
-                '<a href="'
-                f"{get_story_page_url(page_package.story_type, page_package.page_number + 1, light_mode=False)}"
-                '">'
-                f"{label_next_page}"
-                "</a>"
-                "</div>"  # next-page-link-tray
-                f'<div class="other-stories-tray">{other_stories_links_dm}</div>'
-                "</div>\n"  # more-buttons
-            )
-
-        stories_channel_contents_top_section = (
-            f'<div class="stories-section" data-page-num="{page_package.page_number}">\n'
-            ""
-            '<div class="page-header-and-switch-bar">'
-            '<div class="page-header-tray">'
-            f'<div class="page-header-label">page {page_package.page_number} of {page_package.story_type}</div>'
-            "</div>"
-            "</div>"
-            ""
-            '<div class="which-mode"><a href="{{ which_mode_url }}">{{ which_mode_label }}</a></div>'
-            ""
-            "<table>"
+    label_next_page = f"page {page_package.page_number + 1}"
+    if page_package.is_first_page:
+        more_button_lm = (
+            '<hr class="before-more-buttons"/>'
+            '<div class="more-buttons">'
+            '<div class="next-page-link-tray">'
+            f'<a href="{get_story_page_url(page_package.story_type, 2, light_mode=True)}">{label_next_page}</a>'
+            "</div>"  # next-page-link-tray
+            f'<div class="other-stories-tray">{other_stories_links_lm}</div>'
+            "</div>\n"  # more-buttons
+        )
+        more_button_dm = (
+            '<hr class="before-more-buttons"/>'
+            '<div class="more-buttons">'
+            '<div class="next-page-link-tray">'
+            f'<a href="{get_story_page_url(page_package.story_type, 2, light_mode=False)}">{label_next_page}</a>'
+            "</div>"  # next-page-link-tray
+            f'<div class="other-stories-tray">{other_stories_links_dm}</div>'
+            "</div>\n"  # more-buttons
+        )
+    elif page_package.is_last_page:
+        more_button_lm = (
+            '<hr class="before-more-buttons"/>'
+            '<div class="more-buttons">'
+            '<div class="next-page-link-tray">'
+            f"no more pages of {page_package.story_type}. "
+            f'<a href="{get_story_page_url(page_package.story_type, 1, light_mode=True)}">'
+            f"page 1 of {page_package.story_type}"
+            "</a>"
+            "</div>"  # next-page-link-tray
+            f'<div class="other-stories-tray">{other_stories_links_lm}</div>'
+            "</div>"  # more-buttons
+        )
+        more_button_dm = (
+            '<hr class="before-more-buttons"/>'
+            '<div class="more-buttons">'
+            '<div class="next-page-link-tray">'
+            f"no more pages of {page_package.story_type}. "
+            f'<a href="{get_story_page_url(page_package.story_type, 1, light_mode=False)}">'
+            f"page 1 of {page_package.story_type}"
+            "</a>"
+            "</div>"  # next-page-link-tray
+            f'<div class="other-stories-tray">{other_stories_links_dm}</div>'
+            "</div>"  # more-buttons
+        )
+    else:  # not first page, not last page
+        more_button_lm = (
+            '<hr class="before-more-buttons"/>'
+            '<div class="more-buttons">'
+            '<div class="next-page-link-tray">'
+            '<a href="'
+            f"{get_story_page_url(page_package.story_type, page_package.page_number + 1, light_mode=True)}"
+            '">'
+            f"{label_next_page}"
+            "</a>"
+            "</div>"  # next-page-link-tray
+            f'<div class="other-stories-tray">{other_stories_links_lm}</div>'
+            "</div>\n"  # more-buttons
+        )
+        more_button_dm = (
+            '<hr class="before-more-buttons"/>'
+            '<div class="more-buttons">'
+            '<div class="next-page-link-tray">'
+            '<a href="'
+            f"{get_story_page_url(page_package.story_type, page_package.page_number + 1, light_mode=False)}"
+            '">'
+            f"{label_next_page}"
+            "</a>"
+            "</div>"  # next-page-link-tray
+            f'<div class="other-stories-tray">{other_stories_links_dm}</div>'
+            "</div>\n"  # more-buttons
         )
 
-        stories_channel_contents_bottom_section = "</table>\n</div>\n"
+    stories_channel_contents_top_section = (
+        f'<div class="stories-section" data-page-num="{page_package.page_number}">\n'
+        ""
+        '<div class="page-header-and-switch-bar">'
+        '<div class="page-header-tray">'
+        f'<div class="page-header-label">page {page_package.page_number} of {page_package.story_type}</div>'
+        "</div>"
+        "</div>"
+        ""
+        '<div class="which-mode"><a href="{{ which_mode_url }}">{{ which_mode_label }}</a></div>'
+        ""
+        "<table>"
+    )
 
-        now_in_epoch_seconds = time_utils.get_time_now_in_epoch_seconds_int()
-        now_in_utc_readable = time_utils.convert_epoch_seconds_to_utc(
-            now_in_epoch_seconds
-        )
+    stories_channel_contents_bottom_section = "</table>\n</div>\n"
 
-        how_long_to_generate_page_html = (
-            time_utils.convert_time_duration_to_human_readable(
-                time_utils.get_time_now_in_epoch_seconds_float()
-                - start_processing_page_ts
-            )
-        )
-        html_generation_time_slug = f'<div class="html-generation-time" data-html-generation-time-in-epoch-seconds="{now_in_epoch_seconds}">This page was generated in {how_long_to_generate_page_html} at {now_in_utc_readable}.</div>\n'
+    html_generation_end_ts = time_utils.get_time_now_in_epoch_seconds_float()
 
-        # prepare light mode page
-        stories_channel_contents_top_plus_page_html_plus_bottom = (
-            stories_channel_contents_top_section
-            + page_html
-            + stories_channel_contents_bottom_section
-        )
+    now_in_epoch_seconds = int(html_generation_end_ts)
+    now_in_utc_readable = time_utils.convert_epoch_seconds_to_utc(now_in_epoch_seconds)
 
-        stories_channel_contents_lm = (
-            stories_channel_contents_top_plus_page_html_plus_bottom
-            + more_button_lm
-            + html_generation_time_slug
-        )
+    how_long_to_generate_page_html = time_utils.convert_time_duration_to_human_readable(
+        html_generation_end_ts - page_processor_start_ts
+    )
+    html_generation_time_slug = f'<div class="html-generation-time" data-html-generation-time-in-epoch-seconds="{now_in_epoch_seconds}">This page was generated in {how_long_to_generate_page_html} at {now_in_utc_readable}.</div>\n'
 
-        with open(
-            os.path.join(config.settings["TEMPLATES_SERVICE_DIR"], "stories.html"),
-            "r",
-            encoding="utf-8",
-        ) as f:
-            stories_html_page_template_lm = f.read()
+    # prepare light mode page
+    stories_channel_contents_top_plus_page_html_plus_bottom = (
+        stories_channel_contents_top_section
+        + page_html
+        + stories_channel_contents_bottom_section
+    )
 
-        stories_html_page_template_lm = stories_html_page_template_lm.replace(
-            "{{ canonical_url }}", config.settings["CANONICAL_URL"]["LM"]
-        )
-        stories_html_page_template_lm = stories_html_page_template_lm.replace(
-            "{{ header_hyperlink }}", config.settings["HEADER_HYPERLINK"]["LM"]
-        )
-        stories_html_page_template_lm = stories_html_page_template_lm.replace(
-            "{{ short_url_display }}", config.settings["SHORT_URL_DISPLAY"]
-        )
-        stories_html_page_template_lm = stories_html_page_template_lm.replace(
-            "{{ static_css_url }}", f"{config.settings['CSS_URL']}styles.css"
-        )
-        stories_html_page_template_lm = stories_html_page_template_lm.replace(
-            "{{ stories }}", stories_channel_contents_lm
-        )
-        stories_html_page_template_lm = stories_html_page_template_lm.replace(
-            "{{ about_url }}", config.settings["ABOUT_HTML_URL"]["LM"]
-        )
-        stories_html_page_template_lm = stories_html_page_template_lm.replace(
-            "{{ which_mode_url }}",
-            get_story_page_url(
-                page_package.story_type,
-                page_package.page_number,
-                light_mode=False,
-                from_other_mode=True,
-            ),
-        )
-        stories_html_page_template_lm = stories_html_page_template_lm.replace(
-            "{{ which_mode_label }}", "dark mode"
-        )
+    stories_channel_contents_lm = (
+        stories_channel_contents_top_plus_page_html_plus_bottom
+        + more_button_lm
+        + html_generation_time_slug
+    )
 
-        filename_lm = get_html_page_filename(
-            page_package.story_type, page_package.page_number, light_mode=True
-        )
-        full_path_lm = os.path.join(config.settings["COMPLETED_PAGES_DIR"], filename_lm)
-        try:
-            with open(full_path_lm, "w", encoding="utf-8") as f:
-                f.write(stories_html_page_template_lm)
-                f.close()
-        except Exception as e:
-            logger.error(f"{e}")
-        aws_utils.upload_page_of_stories(filename_lm)
+    with open(
+        os.path.join(config.settings["TEMPLATES_SERVICE_DIR"], "stories.html"),
+        "r",
+        encoding="utf-8",
+    ) as f:
+        stories_html_page_template_lm = f.read()
 
-        # prepare dark mode page
-        stories_channel_contents_dm = (
-            stories_channel_contents_top_plus_page_html_plus_bottom
-            + more_button_dm
-            + html_generation_time_slug
-        )
+    stories_html_page_template_lm = stories_html_page_template_lm.replace(
+        "{{ canonical_url }}", config.settings["CANONICAL_URL"]["LM"]
+    )
+    stories_html_page_template_lm = stories_html_page_template_lm.replace(
+        "{{ header_hyperlink }}", config.settings["HEADER_HYPERLINK"]["LM"]
+    )
+    stories_html_page_template_lm = stories_html_page_template_lm.replace(
+        "{{ short_url_display }}", config.settings["SHORT_URL_DISPLAY"]
+    )
+    stories_html_page_template_lm = stories_html_page_template_lm.replace(
+        "{{ static_css_url }}", f"{config.settings['CSS_URL']}styles.css"
+    )
+    stories_html_page_template_lm = stories_html_page_template_lm.replace(
+        "{{ stories }}", stories_channel_contents_lm
+    )
+    stories_html_page_template_lm = stories_html_page_template_lm.replace(
+        "{{ about_url }}", config.settings["ABOUT_HTML_URL"]["LM"]
+    )
+    stories_html_page_template_lm = stories_html_page_template_lm.replace(
+        "{{ which_mode_url }}",
+        get_story_page_url(
+            page_package.story_type,
+            page_package.page_number,
+            light_mode=False,
+            from_other_mode=True,
+        ),
+    )
+    stories_html_page_template_lm = stories_html_page_template_lm.replace(
+        "{{ which_mode_label }}", "dark mode"
+    )
 
-        with open(
-            os.path.join(config.settings["TEMPLATES_SERVICE_DIR"], "stories.html"),
-            "r",
-            encoding="utf-8",
-        ) as f:
-            stories_html_page_template_dm = f.read()
-
-        stories_html_page_template_dm = stories_html_page_template_dm.replace(
-            "{{ canonical_url }}",
-            config.settings["CANONICAL_URL"]["DM"],
-        )
-        stories_html_page_template_dm = stories_html_page_template_dm.replace(
-            "{{ header_hyperlink }}",
-            config.settings["HEADER_HYPERLINK"]["DM"],
-        )
-        stories_html_page_template_dm = stories_html_page_template_dm.replace(
-            "{{ short_url_display }}",
-            config.settings["SHORT_URL_DISPLAY"],
-        )
-        stories_html_page_template_dm = stories_html_page_template_dm.replace(
-            "{{ static_css_url }}",
-            f"{config.settings['CSS_URL']}styles-dm.css",
-        )
-        stories_html_page_template_dm = stories_html_page_template_dm.replace(
-            "{{ about_url }}", config.settings["ABOUT_HTML_URL"]["DM"]
-        )
-        stories_html_page_template_dm = stories_html_page_template_dm.replace(
-            "{{ stories }}", stories_channel_contents_dm
-        )
-        stories_html_page_template_dm = stories_html_page_template_dm.replace(
-            "{{ about_url }}", config.settings["ABOUT_HTML_URL"]["DM"]
-        )
-        stories_html_page_template_dm = stories_html_page_template_dm.replace(
-            "{{ which_mode_url }}",
-            get_story_page_url(
-                page_package.story_type,
-                page_package.page_number,
-                light_mode=True,
-                from_other_mode=True,
-            ),
-        )
-        stories_html_page_template_dm = stories_html_page_template_dm.replace(
-            "{{ which_mode_label }}", "light mode"
-        )
-
-        filename_dm = get_html_page_filename(
-            page_package.story_type, page_package.page_number, light_mode=False
-        )
-        full_path_dm = os.path.join(config.settings["COMPLETED_PAGES_DIR"], filename_dm)
-
-        with open(full_path_dm, "w", encoding="utf-8") as f:
-            f.write(stories_html_page_template_dm)
-        aws_utils.upload_page_of_stories(filename_dm)
+    filename_lm = get_html_page_filename(
+        page_package.story_type, page_package.page_number, light_mode=True
+    )
+    full_path_lm = os.path.join(config.settings["COMPLETED_PAGES_DIR"], filename_lm)
+    try:
+        with open(full_path_lm, mode="w", encoding="utf-8") as f:
+            f.write(stories_html_page_template_lm)
+            f.close()
+    except Exception as exc:
+        logger.error(ppp_log_prefix + f"{str(exc)}")
+    aws_utils.upload_page_of_stories(
+        page_filename=filename_lm, log_prefix=ppp_log_prefix
+    )
 
     num_stories_on_page = stories_html_page_template_lm.count("data-story-id")
 
-    # compute how long it took to process this page
+    # prepare dark mode page
+    stories_channel_contents_dm = (
+        stories_channel_contents_top_plus_page_html_plus_bottom
+        + more_button_dm
+        + html_generation_time_slug
+    )
+
+    with open(
+        os.path.join(config.settings["TEMPLATES_SERVICE_DIR"], "stories.html"),
+        mode="r",
+        encoding="utf-8",
+    ) as f:
+        stories_html_page_template_dm = f.read()
+
+    stories_html_page_template_dm = stories_html_page_template_dm.replace(
+        "{{ canonical_url }}",
+        config.settings["CANONICAL_URL"]["DM"],
+    )
+    stories_html_page_template_dm = stories_html_page_template_dm.replace(
+        "{{ header_hyperlink }}",
+        config.settings["HEADER_HYPERLINK"]["DM"],
+    )
+    stories_html_page_template_dm = stories_html_page_template_dm.replace(
+        "{{ short_url_display }}",
+        config.settings["SHORT_URL_DISPLAY"],
+    )
+    stories_html_page_template_dm = stories_html_page_template_dm.replace(
+        "{{ static_css_url }}",
+        f"{config.settings['CSS_URL']}styles-dm.css",
+    )
+    stories_html_page_template_dm = stories_html_page_template_dm.replace(
+        "{{ about_url }}", config.settings["ABOUT_HTML_URL"]["DM"]
+    )
+    stories_html_page_template_dm = stories_html_page_template_dm.replace(
+        "{{ stories }}", stories_channel_contents_dm
+    )
+    stories_html_page_template_dm = stories_html_page_template_dm.replace(
+        "{{ about_url }}", config.settings["ABOUT_HTML_URL"]["DM"]
+    )
+    stories_html_page_template_dm = stories_html_page_template_dm.replace(
+        "{{ which_mode_url }}",
+        get_story_page_url(
+            page_package.story_type,
+            page_package.page_number,
+            light_mode=True,
+            from_other_mode=True,
+        ),
+    )
+    stories_html_page_template_dm = stories_html_page_template_dm.replace(
+        "{{ which_mode_label }}", "light mode"
+    )
+
+    filename_dm = get_html_page_filename(
+        page_package.story_type, page_package.page_number, light_mode=False
+    )
+    full_path_dm = os.path.join(config.settings["COMPLETED_PAGES_DIR"], filename_dm)
+
+    with open(full_path_dm, mode="w", encoding="utf-8") as f:
+        f.write(stories_html_page_template_dm)
+    aws_utils.upload_page_of_stories(
+        page_filename=filename_dm, log_prefix=ppp_log_prefix
+    )
+
+    # compute how long it took to ship this page
+
+    page_processor_end_ts = time_utils.get_time_now_in_epoch_seconds_float()
+
     h, m, s, s_frac = time_utils.convert_time_duration_to_hms(
-        time_utils.get_time_now_in_epoch_seconds_float() - start_processing_page_ts
+        page_processor_end_ts - page_processor_start_ts
     )
+
     logger.info(
-        f"shipped page {page_package.page_number} of {page_package.story_type} containing {num_stories_on_page} actual stories in {h:02d}:{m:02d}:{s:02d}"
+        ppp_log_prefix
+        + f"shipped {num_stories_on_page} actual stories in {h:02d}:{m:02d}:{s:02d}"
     )
+    return page_package.page_number
 
 
 def query_firebaseio_for_story_data(driver=None, item_id=None):
@@ -970,64 +992,44 @@ def query_firebaseio_for_story_data(driver=None, item_id=None):
         query=query, log_prefix=f"id {item_id}: "
     )
 
-    url = "https://hacker-news.firebaseio.com" + query
-
-    try:
-        resp_as_json = retrieve_by_url.endpoint_query_via_requests(url)
-    except requests.exceptions.ConnectionError as exc:
-        logger.error(
-            f"id {item_id}: firebaseio.com actively refused query {query}: {exc}"
-        )
-        raise
-    except requests.exceptions.RequestException as exc:
-        logger.warning(
-            f"id {item_id}: GET request failed for firebaseio.com query {query}: {exc}"
-        )
-        time.sleep(
-            int(config.settings["SCRAPING"]["FIREBASEIO_RETRY_DELAY"])
-        )  # in case it's a transient error, such as a DNS issue, wait for some seconds
-        raise
-    except Exception as exc:
-        logger.error(
-            f"id {item_id}: query to firebaseio.com failed for query {query}: {exc}"
-        )
-        raise
-
-    return resp_as_json
-
 
 def supervisor(cur_story_type):
-    supervisor_start_ts = time_utils.get_time_now_in_epoch_seconds_float()
     uniq = hash_utils.get_sha1_of_current_time()
+    supervisor_start_ts = time_utils.get_time_now_in_epoch_seconds_float()
+    log_prefix = f"supervisor({cur_story_type}) with unique id {uniq}: "
+
     logger.info(
-        f"supervisor({cur_story_type}) with unique id {uniq} started at {time_utils.convert_epoch_seconds_to_utc(time_utils.get_time_now_in_epoch_seconds_int())}"
+        log_prefix
+        + f"started at {time_utils.convert_epoch_seconds_to_utc(int(supervisor_start_ts))}"
     )
 
     rosters = {}
-    # driver = my_drivers.get_chromedriver(log_prefix=f"supervisor({cur_story_type}): ")
     for roster_story_type in config.settings["SCRAPING"]["STORY_ROSTERS"]:
         try:
             rosters[roster_story_type] = my_scrapers.get_roster_for(
-                roster_story_type=roster_story_type,
+                roster_story_type=roster_story_type, log_prefix=log_prefix
             )
             if rosters[roster_story_type]:
                 logger.info(
-                    f"ingested roster for {roster_story_type} stories; length: {len(rosters[roster_story_type])}"
+                    log_prefix
+                    + f"ingested roster for {roster_story_type} stories; length: {len(rosters[roster_story_type])}"
                 )
             else:
-                logger.error(f"failed to ingest roster for {roster_story_type} stories")
+                logger.error(
+                    log_prefix
+                    + f"failed to ingest roster for {roster_story_type} stories"
+                )
         except Exception as exc:
             logger.error(
-                f"supervisor({cur_story_type}) with unique id {uniq} failed to ingest roster for {roster_story_type} stories: {exc}"
+                log_prefix
+                + f"failed to ingest roster for {roster_story_type} stories: {exc}"
             )
             raise exc
 
-    # driver.close()
-    # driver.quit()
-
     if len(rosters[cur_story_type]) == 0:
         logger.error(
-            f"supervisor({cur_story_type}) with unique id {uniq} failed to ingest roster '{cur_story_type}' after {config.settings['SCRAPING']['NUM_RETRIES_FOR_HN_FEEDS']} tries. See errors"
+            log_prefix
+            + f"failed to ingest roster '{cur_story_type}' after {config.settings['SCRAPING']['NUM_RETRIES_FOR_HN_FEEDS']} tries. See errors."
         )
         return 1
 
@@ -1037,6 +1039,8 @@ def supervisor(cur_story_type):
     cur_roster = list(rosters[cur_story_type])
     is_first_page = True
     is_last_page = False
+
+    pages_in_progress = set()
 
     while cur_roster:
         while (
@@ -1048,43 +1052,63 @@ def supervisor(cur_story_type):
             if len(cur_roster) == 0:
                 is_last_page = True
 
-        cur_page = PageOfStories(
+        cur_page_package = PageOfStories(
             cur_story_type,
-            int(cur_page_number),
+            cur_page_number,
             list(cur_story_ids),
             dict(rosters),
             is_first_page,
             is_last_page,
         )
-        page_packages.append(cur_page)
+
+        pages_in_progress.add(cur_page_number)
+
+        page_packages.append(cur_page_package)
         cur_page_number += 1
         cur_story_ids.clear()
         is_first_page = False
 
-    # for each_page in page_packages:
-    #     page_package_processor(each_page)
+    # logger.info(log_prefix + f"len(page_packages)={len(page_packages)}")
 
-    page_processing_job_futures = []
-    with concurrent.futures.ThreadPoolExecutor(
-        max_workers=config.max_workers
-    ) as executor:
-        for each_page_package in page_packages:
-            page_processing_job_futures.append(
-                executor.submit(page_package_processor, each_page_package)
-            )
-        # futures_dict = {
-        #     executor.submit(page_package_processor, each_page): each_page
-        #     for each_page in page_packages
-        # }
-        # for future in concurrent.futures.as_completed(futures_dict):
-        #     pp = futures_dict[future]
-        #     res = future.result()
-    concurrent.futures.wait(page_processing_job_futures)
+    if config.DEBUG_FLAG_DISABLE_CONCURRENT_PAGE_PROCESSING:
+        for each_page in page_packages:
+            res = page_package_processor(each_page)
+            pages_in_progress.remove(res)
+    else:
+        page_processing_job_futures = []
+
+        with concurrent.futures.ThreadPoolExecutor(
+            max_workers=config.max_workers
+        ) as executor:
+            for each_page_package in page_packages:
+                page_processing_job_futures.append(
+                    executor.submit(page_package_processor, each_page_package)
+                )
+
+        # logger.info(
+        #     log_prefix
+        #     + f"awaiting {len(page_processing_job_futures)} page processing job futures"
+        # )
+
+        concurrent.futures.wait(page_processing_job_futures)
+
+        # logger.info(log_prefix + f"awaiting done!")
+
+        for future in page_processing_job_futures:
+            pages_in_progress.remove(int(future.result()))
+
+    if pages_in_progress:
+        logger.warning(log_prefix + f"shipped some pages: missing {pages_in_progress}")
+    else:
+        logger.info(log_prefix + f"shipped all pages")
+
+    supervisor_end_ts = time_utils.get_time_now_in_epoch_seconds_float()
 
     h, m, s, s_frac = time_utils.convert_time_duration_to_hms(
-        time_utils.get_time_now_in_epoch_seconds_float() - supervisor_start_ts
+        supervisor_end_ts - supervisor_start_ts
     )
     logger.info(
-        f"supervisor({cur_story_type}) with unique id {uniq} completed in {h:02d}:{m:02d}:{s:02d}{s_frac} at {time_utils.convert_epoch_seconds_to_utc(time_utils.get_time_now_in_epoch_seconds_int())}"
+        log_prefix
+        + f"completed in {h:02d}:{m:02d}:{s:02d}{s_frac} at {time_utils.convert_epoch_seconds_to_utc(int(supervisor_end_ts))}"
     )
     return 0
