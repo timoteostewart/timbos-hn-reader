@@ -135,7 +135,7 @@ def get_webp_full_save_path(story_as_object, size):
 def can_find_a_shortcode(story_as_object, img_loading):
     log_prefix = f"id {story_as_object.id}: "
 
-    # logger.info(log_prefix+f"checking for a shortcode...")
+    # logger.info(log_prefix+"checking for a shortcode...")
     # check if thumb is already available as prepared image
     prepared_image_shortcode = ""
 
@@ -212,16 +212,13 @@ def create_img_slug_html(story_as_object, img_loading="lazy"):
 
 
 def save_thumb_where_it_should_go(webp_image, story_as_object, size):
-    log_prefix = f"id {story_as_object.id}: "
+    log_prefix = f"id {story_as_object.id}: save_thumb_where_it_should_go(): "
     thumb_filename = get_webp_filename(story_as_object, size)
     webp_image.save(filename=os.path.join(config.settings["TEMP_DIR"], thumb_filename))
     try:
         aws_utils.upload_thumb(thumb_filename=thumb_filename)
     except Exception as exc:
-        logger.error(
-            log_prefix + f"{sys._getframe(  ).f_code.co_name}: "
-            f"failed to upload thumb to S3: {exc}"
-        )
+        logger.error(log_prefix + f"failed to upload thumb to S3: {str(exc)}")
         raise exc
     finally:
         file_utils.delete_file(
@@ -231,13 +228,12 @@ def save_thumb_where_it_should_go(webp_image, story_as_object, size):
 
 def get_image_slug(story_as_object, img_loading="lazy"):
     log_prefix = f"id {story_as_object.id}: "
-    # initialize image slug as an empty string
+    log_prefix += "get_image_slug(): "
     story_as_object.image_slug = text_utils.EMPTY_STRING
     # bgcolor_as_Color = (None,)
     force_aspect = None
     no_trim = False
     no_pad = False
-    story_as_object.has_thumb = False  # default
 
     # # check if we ignore this filename
     # if story_as_object.og_image_filename_details_from_url:
@@ -253,7 +249,13 @@ def get_image_slug(story_as_object, img_loading="lazy"):
 
     # check if we ignore the exact URL
     if story_as_object.linked_url_og_image_url_final in ignore_images_at_these_urls:
-        logger.info(log_prefix + f"ignore og:image based on exact URL")
+        make_has_thumb_false(
+            reason="ignore og:image based on exact URL",
+            story_object=story_as_object,
+            log_prefix=log_prefix,
+            exc=None,
+            log_tb=False,
+        )
         return
 
     # check if we ignore this domain
@@ -261,23 +263,42 @@ def get_image_slug(story_as_object, img_loading="lazy"):
         story_as_object.linked_url_og_image_url_final
     )
     if og_image_domains in ignore_images_from_these_domains:
-        logger.info(log_prefix + f"ignore og:image based on domain")
+        make_has_thumb_false(
+            reason="ignore og:image based on domain",
+            story_object=story_as_object,
+            log_prefix=log_prefix,
+            exc=None,
+            log_tb=False,
+        )
         return
 
-    # check if we ignore URLs starting with specific substrings
+    # check if we ignore URLs starting with specific prefixes
     for x in prepared_images_roster_by_url_prefix.keys():
         if story_as_object.linked_url_og_image_url_final.startswith(x):
-            logger.info(log_prefix + f"ignore og:image based on URL prefix")
+            make_has_thumb_false(
+                reason="ignore og:image based on URL prefix",
+                story_object=story_as_object,
+                log_prefix=log_prefix,
+                exc=None,
+                log_tb=False,
+            )
             return
 
-    # check if we ignore URLs ending with specific substrings
+    # check if we ignore URLs ending with specific suffixes
     for x in prepared_images_roster_by_url_suffix.keys():
         if story_as_object.linked_url_og_image_url_final.endswith(x):
-            logger.info(log_prefix + f"ignore og:image based on URL suffix")
+            make_has_thumb_false(
+                reason="ignore og:image based on URL suffix",
+                story_object=story_as_object,
+                log_prefix=log_prefix,
+                exc=None,
+                log_tb=False,
+            )
             return
 
     # check for shortcode
     if can_find_a_shortcode(story_as_object, img_loading):
+        story_as_object.has_thumb = True
         return
 
     ##
@@ -297,8 +318,12 @@ def get_image_slug(story_as_object, img_loading="lazy"):
     )
 
     if magic_result in ignore_images_with_these_content_types:
-        logger.info(
-            log_prefix + f"ignore og:image based on content type {magic_result}"
+        make_has_thumb_false(
+            reason=f"ignore og:image based on content type {magic_result}",
+            story_object=story_as_object,
+            log_prefix=log_prefix,
+            exc=None,
+            log_tb=True,
         )
         return
 
@@ -328,9 +353,12 @@ def get_image_slug(story_as_object, img_loading="lazy"):
                     "base_name"
                 ].lower()
             ):
-                logger.info(
-                    log_prefix
-                    + f"ignore image {story_as_object.og_image_filename_details_from_url['base_name']} based on substring {pattern}"
+                make_has_thumb_false(
+                    reason=f"ignore image {story_as_object.og_image_filename_details_from_url['base_name']} based on substring {pattern}",
+                    story_object=story_as_object,
+                    log_prefix=log_prefix,
+                    exc=None,
+                    log_tb=True,
                 )
                 return
 
@@ -367,13 +395,16 @@ def get_image_slug(story_as_object, img_loading="lazy"):
     if magic_result == "application/pdf":
         try:
             fix_multipage_pdf(story_as_object)
+            no_pad = True
         except Exception as exc:
-            logger.info(
-                log_prefix + f"{sys._getframe(  ).f_code.co_name}: "
-                f"problem with pdf; won't use a thumbnail"
+            make_has_thumb_false(
+                reason="could not extract single page from PDF",
+                story_object=story_as_object,
+                log_prefix=log_prefix,
+                exc=exc,
+                log_tb=True,
             )
             return
-        no_pad = True
 
     try:
         with Image(
@@ -386,13 +417,23 @@ def get_image_slug(story_as_object, img_loading="lazy"):
                 # TODO: try decomposing the animation to a temp dir using wand/magick's convert -coalesce and grab the first image file (i.e., first frame)
                 # reason for the above todo is that Wand keeps choking on 3MB gif animations.
                 # or possibly via system call: `convert 'animation.gif[0]' first_frame.png`
-                if len(downloaded_img.sequence) > 1:
-                    first_frame = downloaded_img.sequence[0]
-                    logger.info(
-                        log_prefix + f"{sys._getframe(  ).f_code.co_name}: "
-                        f"used first frame of animation in {story_as_object.normalized_og_image_filename}"
+                try:
+                    if len(downloaded_img.sequence) > 1:
+                        first_frame = downloaded_img.sequence[0]
+                        logger.info(
+                            log_prefix + f"{sys._getframe(  ).f_code.co_name}: "
+                            f"used first frame of animation in {story_as_object.normalized_og_image_filename}"
+                        )
+                        downloaded_img = Image(image=first_frame)
+                except Exception as exc:
+                    make_has_thumb_false(
+                        reason="failed to get first frame of animation",
+                        story_object=story_as_object,
+                        log_prefix=log_prefix,
+                        exc=exc,
+                        log_tb=True,
                     )
-                    downloaded_img = Image(image=first_frame)
+                    return
 
             # if SVG format, rasterize using Wand
             elif image_format in ["SVG"]:
@@ -402,19 +443,19 @@ def get_image_slug(story_as_object, img_loading="lazy"):
                         resolution=600.0,  # 1000.0 might have caused error
                     )
                 except Exception as exc:
-                    logger.error(
-                        (
-                            f"{sys._getframe(  ).f_code.co_name}: "
-                            f"id {story_as_object.id};"
-                            f"SVG filename {story_as_object.downloaded_orig_thumb_full_path};"
-                            f"{exc}"
-                        )
+                    make_has_thumb_false(
+                        reason=f"problem converting svg file {story_as_object.downloaded_orig_thumb_full_path}",
+                        story_object=story_as_object,
+                        log_prefix=log_prefix,
+                        exc=exc,
+                        log_tb=True,
                     )
-                    raise exc
+                    return
+
                 vec_img.background_color = Color("white")
                 vec_img.alpha_channel = "off"
                 vec_img.convert("png")
-                vec_img.transform(resize=f"3000x")
+                vec_img.transform(resize="3000x")
                 downloaded_img = Image(image=vec_img)
 
             # if PDF format, rasterize using Ghostscript
@@ -430,16 +471,21 @@ def get_image_slug(story_as_object, img_loading="lazy"):
                     downloaded_img = Image(filename=png2pdf_filename_full_path)
                     no_pad = True
                 except wand.exceptions.PolicyError as exc:
-                    logger.error(
-                        log_prefix
-                        + f"wand PolicyError for {story_as_object.og_image_filename_details_from_url['base_name']}"
+                    make_has_thumb_false(
+                        reason=f"wand PolicyError for {story_as_object.og_image_filename_details_from_url['base_name']}",
+                        story_object=story_as_object,
+                        log_prefix=log_prefix,
+                        exc=exc,
+                        log_tb=True,
                     )
+                    return
                 except Exception as exc:
-                    logger.error(
-                        log_prefix
-                        + f"{story_as_object.og_image_filename_details_from_url['base_name']}, "
-                        f"error with PDF: {exc}; "
-                        f"traceback:\n{traceback.format_exc()}"
+                    make_has_thumb_false(
+                        reason=f"error with PDF {story_as_object.og_image_filename_details_from_url['base_name']}",
+                        story_object=story_as_object,
+                        log_prefix=log_prefix,
+                        exc=exc,
+                        log_tb=True,
                     )
                     return
 
@@ -448,68 +494,51 @@ def get_image_slug(story_as_object, img_loading="lazy"):
                 min(downloaded_img.width, downloaded_img.height)
                 < config.settings["OG_IMAGE"]["MIN_DIM_PX"]
             ):
+                make_has_thumb_false(
+                    reason=f"image too small: {story_as_object.og_image_filename_details_from_url['base_name']}",
+                    story_object=story_as_object,
+                    log_prefix=log_prefix,
+                    exc=None,
+                    log_tb=False,
+                )
                 return
 
             # remove metadata
-            downloaded_img.strip()
+            try:
+                downloaded_img.strip()
+            except Exception as exc:
+                make_has_thumb_false(
+                    reason="error while stripping metadata from image",
+                    story_object=story_as_object,
+                    log_prefix=log_prefix,
+                    exc=None,
+                    log_tb=False,
+                )
+                return
 
             # remove transparency, add border, crop and adjust aspect ratio,
-            image_to_use = get_image_to_use(
-                story_as_object,
-                downloaded_img,
-                force_aspect=force_aspect,
-                no_trim=no_trim,
-                no_pad=no_pad,
-            )
+            image_to_use = None
+            try:
+                image_to_use = get_image_to_use(
+                    story_as_object,
+                    downloaded_img,
+                    force_aspect=force_aspect,
+                    no_trim=no_trim,
+                    no_pad=no_pad,
+                )
+            except Exception as exc:
+                make_has_thumb_false(
+                    reason="problem in get_image_to_use()",
+                    story_object=story_as_object,
+                    log_prefix=log_prefix,
+                    exc=None,
+                    log_tb=True,
+                )
+
+                return
 
             if not image_to_use:
                 return
-
-            # standard resizing
-            # with Image(image=image_to_use) as small_thumb:
-            #     with small_thumb.convert("webp") as webp_image:
-            #         webp_image.compression_quality = (
-            #             WEBP_SMALL_THUMB_COMPRESSION_QUALITY
-            #         )
-            #         webp_image.transform(
-            #             resize=f"{config.settings['THUMBS']['WIDTH_PX']['SMALL']}x"
-            #         )
-            #         try:
-            #             save_thumb_where_it_should_go(
-            #                 webp_image, story_as_object, "small"
-            #             )
-            #         except Exception as exc:
-            #             return
-
-            # with Image(image=image_to_use) as medium_thumb:
-            #     with medium_thumb.convert("webp") as webp_image:
-            #         webp_image.compression_quality = (
-            #             WEBP_MEDIUM_THUMB_COMPRESSION_QUALITY
-            #         )
-            #         webp_image.transform(
-            #             resize=f"{config.settings['THUMBS']['WIDTH_PX']['MEDIUM']}x"
-            #         )
-            #         try:
-            #             save_thumb_where_it_should_go(
-            #                 webp_image, story_as_object, "medium"
-            #             )
-            #         except Exception as exc:
-            #             return
-
-            # with Image(image=image_to_use) as large_thumb:
-            #     with large_thumb.convert("webp") as webp_image:
-            #         webp_image.compression_quality = (
-            #             WEBP_LARGE_THUMB_COMPRESSION_QUALITY
-            #         )
-            #         webp_image.transform(
-            #             resize=f"{config.settings['THUMBS']['WIDTH_PX']['LARGE']}x"
-            #         )
-            #         try:
-            #             save_thumb_where_it_should_go(
-            #                 webp_image, story_as_object, "large"
-            #             )
-            #         except Exception as exc:
-            #             return
 
             with Image(image=image_to_use) as extralarge_thumb:
                 with extralarge_thumb.convert("webp") as webp_image:
@@ -531,57 +560,78 @@ def get_image_slug(story_as_object, img_loading="lazy"):
             story_as_object.image_slug = create_img_slug_html(
                 story_as_object, img_loading
             )
-            story_as_object.has_thumb = True
+            if story_as_object.image_slug:
+                story_as_object.has_thumb = True
 
     except Exception as exc:
-        logger.error(
-            f"{sys._getframe(  ).f_code.co_name}: id {story_as_object.id}: {exc}"
-        )
-        if "Invalid URL" in str(exc):
+        exc_name = str(exc.__class__.__name__)
+        msg = str(exc)
+
+        logger.error(log_prefix + f"{exc_name} {msg}")
+        if "Invalid URL" in msg:
             pass
-        elif "no decode delegate for this image format" in str(
-            exc
-        ):  # probably an html file
+        elif "no decode delegate for this image format" in msg:  # probably an html file
             logger.error(
-                f"{sys._getframe(  ).f_code.co_name}: id {story_as_object.id}: no decode delegate for image type {image_format}"
+                log_prefix + f"no decode delegate for image type {image_format}"
             )
             pass
-        elif "Not a JPEG file: starts with 0x3c 0x21" in str(
-            exc
-        ):  # probably an html file
+        elif "Not a JPEG file: starts with 0x3c 0x21" in msg:  # probably an html file
             pass
-        elif "Not a JPEG file" in str(exc):
+        elif "Not a JPEG file" in msg:
             pass
-        elif "improper image header" in str(exc):
+        elif "improper image header" in msg:
             pass
-        elif "orig_image's height or width is less than" in str(exc):
+        elif "orig_image's height or width is less than" in msg:
             pass
-        elif "nrecognized color" in str(exc):  # i.e., "[Uu]nrecognized color"
+        elif "nrecognized color" in msg:  # i.e., "[Uu]nrecognized color"
             pass
-        elif "OptionWarning: geometry does not contain image" in str(exc):
+        elif "OptionWarning: geometry does not contain image" in msg:
             pass
-        elif "must specify image size" in str(exc):
+        elif "must specify image size" in msg:
             pass
-        elif "corrupt image" in str(exc):
+        elif "corrupt image" in msg:
             pass
-        elif "xmlParseStartTag: invalid element name" in str(exc):
+        elif "xmlParseStartTag: invalid element name" in msg:
             pass
-        elif "insufficient image data in file" in str(exc):
+        elif "insufficient image data in file" in msg:
             pass
-        elif "No scheme supplied." in str(exc):
-            # TODO: this might be able to be fixed
+        elif "No scheme supplied." in msg:
             pass
-        elif "invalid colormap index" in str(exc):
+        elif "invalid colormap index" in msg:
             pass
-        elif "unable to open file `/tmp/magick" in str(exc):
-            # in case this is a transient error, don't write placeholder
+        elif "unable to open file `/tmp/magick" in msg:
             pass
         logger.error(log_prefix + f"story_as_object dump: {story_as_object}")
-        logger.error(log_prefix + f"traceback: {print(traceback.format_exc())}")
+        tb_str = traceback.format_exc()
+        logger.error(log_prefix + tb_str)
+
+
+def make_has_thumb_false(
+    reason=None, story_object=None, log_prefix="", exc=None, log_tb=False
+):
+    if not reason:
+        raise Exception("must supply reason for no thumb")
+    if exc:
+        exc_name = exc.__class__.__name__
+        exc_msg = str(exc)
+        exc_slug = f"{exc_name} {exc_msg}"
+    else:
+        exc_slug = ""
+        log_tb = False
+
+    log_prefix += "make_has_thumb_false(): "
+
+    story_object.has_thumb = False
+    story_object.reason_for_no_thumb = f"{reason}: {exc_slug}"
+    logger.info(log_prefix + story_object.reason_for_no_thumb)
+    if log_tb:
+        tb_str = traceback.format_exc(exception=exc)
+        logger.info(log_prefix + tb_str)
 
 
 def fix_multipage_pdf(story_as_object):
     log_prefix = f"id {story_as_object.id}: "
+    log_prefix += "fix_multipage_pdf(): "
     try:
         with open(
             story_as_object.downloaded_orig_thumb_full_path, "rb"
@@ -599,16 +649,17 @@ def fix_multipage_pdf(story_as_object):
                     outfile.write(output_stream)
     except Exception as exc:
         logger.error(
-            f"{sys._getframe(  ).f_code.co_name}: id {story_as_object.id}: error while discarding all but first page of PDF: {exc}"
+            log_prefix + f"error while discarding all but first page of PDF: {str(exc)}"
         )
         raise exc
 
     shutil.copyfile(temp_pdf_full_path, story_as_object.downloaded_orig_thumb_full_path)
     logger.info(
-        f"fix_multipage_pdf(): story_as_object.downloaded_orig_thumb_full_path: {story_as_object.downloaded_orig_thumb_full_path}"
+        log_prefix
+        + f"story_as_object.downloaded_orig_thumb_full_path: {story_as_object.downloaded_orig_thumb_full_path}"
     )
     story_as_object.thumb_aspect_hint = "PDF page"
-    logger.info(log_prefix + f"success discarding all but first page of PDF")
+    logger.info(log_prefix + "success discarding all but first page of PDF")
     return True
 
 
@@ -645,7 +696,7 @@ def rasterize_pdf_using_ghostscript(story_as_object):
             + f"subprocess had non-zero return code {p.returncode} ; cmd={cmd}"
         )
     # else:
-    #     logger.info(log_prefix + f"subprocess returned successfully")
+    #     logger.info(log_prefix + "subprocess returned successfully")
 
     # add page outline and dogear
     try:
@@ -805,7 +856,7 @@ def get_image_to_use(
         downloaded_img.merge_layers("flatten")
         logger.info(
             log_prefix
-            + f"og:image with transparency was flattened ; URL: {story_as_object.linked_url_og_image_url_final}"
+            + f"flattened transparency for og:image {story_as_object.linked_url_og_image_url_final}"
         )
 
     cropped_img = get_cropped_image(downloaded_img, 4)
@@ -823,6 +874,7 @@ def get_image_to_use(
         min(trimmed_img.width, trimmed_img.height)
         < config.settings["OG_IMAGE"]["MIN_DIM_PX"]
     ):
+        logger.info(log_prefix + "trimmed image too small")
         return None
 
     # check for ineffective trim
@@ -848,7 +900,7 @@ def get_image_to_use(
 
     # check if it's a PDF page
     elif story_as_object.thumb_aspect_hint == "PDF page":
-        logger.info(log_prefix + f"won't alter aspect ratio of PDF page-based thumb")
+        logger.info(log_prefix + "won't alter aspect ratio of PDF page-based thumb")
         image_to_use = Image(image=bordered_img)
 
     # check if it's too tall to use
@@ -883,11 +935,12 @@ def get_image_to_use(
         )
         image_to_use = Image(image=altered_img)
 
+    logger.info(log_prefix + "successfully trimmed og:image")
     return image_to_use
 
 
 def draw_dogear(pdf_page_img, log_prefix=""):
-    # logger.info(log_prefix + f"entering draw_dogear()")
+    # logger.info(log_prefix + "entering draw_dogear()")
 
     # pdf_page_img = Image(filename="prepared-image-small.webp")
     width = pdf_page_img.width
@@ -953,6 +1006,6 @@ def draw_dogear(pdf_page_img, log_prefix=""):
         draw.draw(pdf_page_img)
         # pdf_page_img.save(filename="out2.png")
 
-        logger.info(log_prefix + f"successfully added a dogear")
+        logger.info(log_prefix + "successfully added a dogear")
 
         return pdf_page_img

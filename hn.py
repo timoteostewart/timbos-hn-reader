@@ -12,8 +12,6 @@ from bs4 import BeautifulSoup
 import aws_utils
 import config
 import hash_utils
-
-# import my_drivers
 import my_scrapers
 import retrieve_by_url
 import social_media
@@ -53,7 +51,7 @@ def acquire_story_details_for_first_time(driver=None, item_id=None, pos_on_page=
 
     if not story_as_dict:
         logger.warning(
-            log_prefix + f"failed to receive story details from firebaseio.com"
+            log_prefix + "failed to receive story details from firebaseio.com"
         )
         raise Exception()
     elif story_as_dict["type"] not in ["story", "job", "comment"]:
@@ -66,7 +64,7 @@ def acquire_story_details_for_first_time(driver=None, item_id=None, pos_on_page=
     story_as_object = item_factory(story_as_dict)
 
     if not story_as_object:
-        raise Exception(log_prefix + f"failed to get story details")
+        raise Exception(log_prefix + "failed to get story details")
 
     if story_as_object.url:
         _, domains = url_utils.get_domains_from_url(story_as_object.url)
@@ -74,7 +72,9 @@ def acquire_story_details_for_first_time(driver=None, item_id=None, pos_on_page=
             logger.info(log_prefix + f"skip HEAD request for {domains}")
         else:
             story_as_object.linked_url_content_type = (
-                my_scrapers.get_content_type_via_head_request(url=story_as_object.url, log_prefix=log_prefix)
+                my_scrapers.get_content_type_via_head_request(
+                    url=story_as_object.url, log_prefix=log_prefix
+                )
             )
         # if story_as_object.linked_url_content_type:
         #     logger.info(
@@ -123,7 +123,7 @@ def acquire_story_details_for_first_time(driver=None, item_id=None, pos_on_page=
                 create_story_card_html_from_story_object(story_as_object)
 
                 # pickle `story_as_object` as json to a file
-                logger.info(log_prefix + f"pickling item for the first time")
+                logger.info(log_prefix + "pickling item for the first time")
                 with open(
                     os.path.join(
                         config.settings["CACHED_STORIES_DIR"],
@@ -151,27 +151,33 @@ def acquire_story_details_for_first_time(driver=None, item_id=None, pos_on_page=
                         + f"found og:image url {story_as_object.linked_url_og_image_url_initial}"
                     )
             else:
-                logger.info(log_prefix + f"did not find og:image url")
+                thumbs.make_has_thumb_false(
+                    reason="did not find og:image url",
+                    story_object=story_as_object,
+                    log_prefix=log_prefix,
+                    exc=None,
+                    log_tb=False,
+                )
 
-            # logger.info(log_prefix + f"after '# og:image'")
+            # logger.info(log_prefix + "after '# og:image'")
 
             # get reading time
             try:
-                # logger.info(log_prefix + f"before my_scrapers.get_reading_time")
+                # logger.info(log_prefix + "before my_scrapers.get_reading_time")
                 reading_time = my_scrapers.get_reading_time(
                     page_source=page_source, log_prefix=log_prefix
                 )
-                # logger.info(log_prefix + f"after my_scrapers.get_reading_time")
+                # logger.info(log_prefix + "after my_scrapers.get_reading_time")
                 if reading_time:
                     story_as_object.reading_time = reading_time
                 # logger.info(log_prefix + f"reading time: {reading_time}")
             except Exception as exc:
                 logger.error(
                     log_prefix
-                    + f"failed to get reading time: {str(exc)}; {traceback.format_exc(exc)}"
+                    + f"failed to get reading time: {str(exc)}: {traceback.format_exc(exc)}"
                 )
 
-            # logger.info(log_prefix + f"after '# get reading time'")
+            # logger.info(log_prefix + "after '# get reading time'")
 
             ## create a slug for the linked URL's social-media website channel, if necessary.
             ## use details encoded in the url or the html page source
@@ -217,26 +223,43 @@ def acquire_story_details_for_first_time(driver=None, item_id=None, pos_on_page=
                 )
 
         else:
-            story_as_object.image_slug = text_utils.EMPTY_STRING
-            story_as_object.has_thumb = False
+            thumbs.make_has_thumb_false(
+                reason="couldn't download og:image",
+                story_object=story_as_object,
+                log_prefix=log_prefix,
+                exc=None,
+                log_tb=False,
+            )
 
     else:
-        logger.info(log_prefix + f"story has no url (probably an Ask HN, etc.)")
-        story_as_object.url = story_as_object.hn_comments_url
-        story_as_object.image_slug = text_utils.EMPTY_STRING
-        story_as_object.has_thumb = False
+        thumbs.make_has_thumb_false(
+            reason="story has no url (probably an Ask HN, etc.)",
+            story_object=story_as_object,
+            log_prefix=log_prefix,
+            exc=None,
+            log_tb=False,
+        )
 
     ##
     ## add informative labels before and after the story card title, if possible
     ##
 
-    if not story_as_object.image_slug or story_as_object.has_thumb == False:
-        logger.info(log_prefix + f"story card will not have a thumbnail")
+    if story_as_object.has_thumb:
+        if story_as_object.image_slug:
+            logger.info(log_prefix + "story card will have a thumbnail")
+        else:
+            logger.error(
+                log_prefix
+                + "has_thumb is True, but there's no image_slug, so setting has_thumb to False"
+            )
+            story_as_object.has_thumb = False
     else:
-        logger.info(log_prefix + f"story card will have a thumbnail")
+        if not story_as_object.reason_for_no_thumb:
+            logger.error(log_prefix + "has_thumb is False, but there's no reason why")
+        logger.info(log_prefix + "story card will not have a thumbnail")
 
     # if we have no thumbnail, then make sure we don't include a `story_content_type_slug`
-    if story_as_object.image_slug == text_utils.EMPTY_STRING:
+    if not story_as_object.has_thumb:
         story_as_object.story_content_type_slug = text_utils.EMPTY_STRING
     else:
         # apply "[pdf]" label after title if it's not there but is probably applicable
@@ -257,7 +280,7 @@ def acquire_story_details_for_first_time(driver=None, item_id=None, pos_on_page=
     create_story_card_html_from_story_object(story_as_object)
 
     # pickle `story_as_object` as json to a file
-    logger.info(log_prefix + f"pickling item for the first time")
+    logger.info(log_prefix + "pickling item for the first time")
     with open(
         os.path.join(
             config.settings["CACHED_STORIES_DIR"],
@@ -581,7 +604,7 @@ def item_factory(story_as_dict):
 def page_package_processor(page_package):
     ppp_log_prefix = f"page_package_processor(): page {page_package.page_number} of {page_package.story_type}: "
 
-    logger.info(ppp_log_prefix + f"starting")
+    logger.info(ppp_log_prefix + "starting")
 
     # logger.info(
     #     ppp_log_prefix + f"len(page_package.story_ids)={len(page_package.story_ids)}"
@@ -619,7 +642,7 @@ def page_package_processor(page_package):
                 config.settings["CACHED_STORIES_DIR"], get_pickle_filename(each_id)
             )
         ):
-            logger.info(id_log_prefix + f"cached story found")
+            logger.info(id_log_prefix + "cached story found")
 
             with open(
                 os.path.join(
@@ -702,7 +725,7 @@ def page_package_processor(page_package):
             cur_story_card_html = story_as_object.story_card_html
 
         else:
-            logger.info(id_log_prefix + f"no cached story found")
+            logger.info(id_log_prefix + "no cached story found")
 
             try:
                 (
@@ -723,7 +746,7 @@ def page_package_processor(page_package):
                 continue  # to next each_id
 
         if not cur_story_card_html:
-            logger.error(id_log_prefix + f"couldn't get story details for some reason")
+            logger.error(id_log_prefix + "couldn't get story details for some reason")
             continue  # to next each_id
 
         # populate pub_time_ago_display
@@ -1092,7 +1115,7 @@ def supervisor(cur_story_type):
 
         concurrent.futures.wait(page_processing_job_futures)
 
-        # logger.info(log_prefix + f"awaiting done!")
+        # logger.info(log_prefix + "awaiting done!")
 
         for future in page_processing_job_futures:
             pages_in_progress.remove(int(future.result()))
@@ -1100,7 +1123,7 @@ def supervisor(cur_story_type):
     if pages_in_progress:
         logger.warning(log_prefix + f"shipped some pages: missing {pages_in_progress}")
     else:
-        logger.info(log_prefix + f"shipped all pages")
+        logger.info(log_prefix + "shipped all pages")
 
     supervisor_end_ts = time_utils.get_time_now_in_epoch_seconds_float()
 

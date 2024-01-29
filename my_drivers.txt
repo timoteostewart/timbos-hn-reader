@@ -6,9 +6,9 @@ import tempfile
 import traceback
 import zipfile
 
-import undetected_chromedriver as uc
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
+# import undetected_chromedriver as uc
+# from selenium import webdriver
+# from selenium.webdriver.chrome.service import Service
 
 import config
 
@@ -95,5 +95,5 @@ def get_chromedriver(user_agent=None,  log_prefix=""):
     driver.set_page_load_timeout(180)
     driver.implicitly_wait(180)
 
-    logger.info(log_prefix + f"got a driver")
+    logger.info(log_prefix + "got a driver")
     return driver

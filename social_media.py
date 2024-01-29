@@ -7,8 +7,6 @@ import urllib3
 from bs4 import BeautifulSoup
 
 import config
-
-# import my_drivers
 import my_secrets
 import retrieve_by_url
 import text_utils

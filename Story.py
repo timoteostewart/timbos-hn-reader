@@ -85,7 +85,7 @@ class Story(Item):
         self.downloaded_orig_thumb_full_path: str = ""
         self.downloaded_og_image_magic_result: str = ""
 
-        self.has_thumb: bool = False
+        self.has_thumb: bool = True
         # We set `has_thumb` False in these cases:
         #     - the og:image filename is one we ignore
         #     - the thumbnail's magic number isn't an image file or PDF
@@ -96,6 +96,7 @@ class Story(Item):
         #     - the og:image couldn't be bordered, cropped, or adjusted for some reason
         #     - the og:image URL was invalid for some reason
         #     - the og:image file seemed corrupt for some reason
+        self.reason_for_no_thumb: str = ""
 
         self.og_image_filename_details_from_url: dict() = {}
         self.thumb_aspect_hint: str = ""

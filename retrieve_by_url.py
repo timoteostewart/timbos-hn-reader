@@ -133,6 +133,9 @@ def get_page_source_hrequests(
 
     logger.info(log_prefix + f"getting {url}")
 
+    page_source1 = None
+    page_source2 = None
+
     try:
         with hrequests.Session(
             browser=browser,
@@ -144,10 +147,6 @@ def get_page_source_hrequests(
                 timeout=8,
             )
             page_source1 = resp.text
-            # TODO: try to save page source from the resp object;
-            # that way, in case the resp.render doesn't work, we might come
-            # away with at least something.
-            # see https://daijro.gitbook.io/hrequests/simple-usage/attributes
 
             try:
                 with resp.render(headless=True, mock_human=True) as page:
@@ -160,91 +159,106 @@ def get_page_source_hrequests(
                         if (page.html and page.html.find("html"))
                         else ""
                     )
+
             except hrequests.exceptions.BrowserTimeoutException as exc:
-                logger.error(
-                    log_prefix
-                    + f"in hrequests.Session().get().render(): {exc.__class__.__name__} {str(exc)} (expected hrequests.exceptions.BrowserTimeoutException)"
-                )
-                raise
-            except hrequests.exceptions.BrowserException as exc:
-                tb_str = traceback.format_exc()
-                exceptions, comments = get_list_of_hrequests_exceptions(tb_str)
-                if exceptions == [
-                    "hrequests.exceptions.BrowserTimeoutException",
-                    "hrequests.exceptions.BrowserException",
-                ]:
+                exc_name = str(exc.__class__.__name__)
+                msg = str(exc)
+
+                pattern = r"Timeout (\d+)ms exceeded."
+                match = re.search(pattern, msg)
+                if match:
+                    pass
+                else:
+                    tb_str = traceback.format_exc()
                     logger.error(
-                        log_prefix
-                        + f"in hrequests.Session().get().render(): BrowserTimeoutException ({comments[0]}) followed by BrowserException ({comments[0]})"
+                        log_prefix + f"{exc_name} during hrequests.Session(): {msg}"
                     )
-                raise
+                    logger.error(log_prefix + tb_str)
+
+            except hrequests.exceptions.BrowserException as exc:
+                exc_name = str(exc.__class__.__name__)
+                msg = str(exc)
+
+                if "Browser was closed. Attribute call failed: close" in msg:
+                    pass
+                elif "cookies" in msg:
+                    pattern = r"cookies\[(\d+)\].value: expected string, got undefined"
+                    match = re.search(pattern, msg)
+                    if match:
+                        pass
+                else:
+                    tb_str = traceback.format_exc()
+                    logger.error(
+                        log_prefix + f"{exc_name} during hrequests.Session(): {msg}"
+                    )
+                    logger.error(log_prefix + tb_str)
+
+            except hrequests.exceptions.ClientException as exc:
+                exc_name = str(exc.__class__.__name__)
+                msg = str(exc)
+
+                if "x509: certificate signed by unknown authority" in msg:
+                    pass
+                elif "Connection error" in msg:
+                    tb_str = traceback.format_exc()
+
+                    pattern = r"^hrequests.exceptions.ClientException:(.*)$"
+                    match = re.search(pattern, tb_str)
+                    if match:
+                        detailed_msg = match.group(1)
+                        logger.error(log_prefix + f"from traceback: {detailed_msg}")
+
+                else:
+                    tb_str = traceback.format_exc()
+                    logger.error(
+                        log_prefix + f"{exc_name} during hrequests.Session(): {msg}"
+                    )
+                    logger.error(log_prefix + tb_str)
+
             except Exception as exc:
+                tb_str = traceback.format_exc()
                 logger.error(
-                    log_prefix
-                    + f"in hrequests.Session().get().render(): {exc.__class__.__name__} {str(exc)} (expected unspecified Exception)"
+                    log_prefix + f"{exc_name} during hrequests.Session(): {msg}"
                 )
-                raise
-
-    except hrequests.exceptions.BrowserTimeoutException as exc:
-        # TODO: save the traceback to a string and check which exceptions were raised upstream (e.g., timeout)
-        logger.error(
-            log_prefix
-            + f"timeout exception during hrequests.Session(): {str(exc)} (expected hrequests.exceptions.BrowserTimeoutException)"
-        )
-        tb_str = traceback.format_exc()
-        logger.error(log_prefix + tb_str)
-        return None
-
-    # TODO: also catch hrequests.exceptions.BrowserException: Browser was closed
-
-    except hrequests.exceptions.BrowserException as exc:
-        logger.error(
-            log_prefix
-            + f"{exc.__class__.__name__} during hrequests.Session(): {str(exc)} (expected hrequests.exceptions.BrowserException)"
-        )
-        tb_str = traceback.format_exc()
-
-        if "Browser was closed. Attribute call failed: close" in tb_str:
-            return None
-        else:
-            logger.error(log_prefix + tb_str)
-        return None
-
-    except hrequests.exceptions.ClientException as exc:
-        logger.error(
-            log_prefix
-            + f"{exc.__class__.__name__} during hrequests.Session(): {str(exc)} (expected hrequests.exceptions.ClientException)"
-        )
-        tb_str = traceback.format_exc()
-        logger.error(log_prefix + tb_str)
-        return None
+                logger.error(log_prefix + tb_str)
 
     except Exception as exc:
-        logger.error(
-            log_prefix
-            + f"{exc.__class__.__name__} during hrequests.Session(): {str(exc)} (expected unspecified Exception)"
-        )
+        exc_name = str(exc.__class__.__name__)
+        msg = str(exc)
+
         tb_str = traceback.format_exc()
+        logger.error(log_prefix + f"{exc_name} during hrequests.Session(): {msg}")
         logger.error(log_prefix + tb_str)
-        return None
 
-    if page_source2 and page_source2 != empty_page_source:
-        page_source = page_source2
-    else:
-        if page_source1:
-            page_source = page_source1
+    if page_source1:
+        if page_source1 == empty_page_source:
+            len_page_source1 = 0
         else:
-            page_source = ""
+            len_page_source1 = len(page_source1)
+    else:
+        len_page_source1 = 0
 
-    if not page_source:
+    if page_source2:
+        if page_source2 == empty_page_source:
+            len_page_source2 = 0
+        else:
+            len_page_source2 = len(page_source2)
+    else:
+        len_page_source2 = 0
+
+    if len_page_source1 + len_page_source2 == 0:
+        page_source = None
         logger.info(log_prefix + f"failed to get page source for {url}")
-        return None
+    else:
+        if len_page_source2 >= len_page_source1:
+            page_source = page_source2
+            logger.info(log_prefix + f"using page_source2 (rendered) for {url}")
+        else:
+            page_source = page_source1
+            logger.info(log_prefix + f"using page_source1 (GET) for {url}")
 
-    if page_source == empty_page_source:
-        logger.info(log_prefix + f"web server returned empty document error for {url}")
-        return None
+        logger.info(log_prefix + f"got page source for {url}")
 
-    logger.info(log_prefix + f"got page source for {url}")
     return page_source
 
 

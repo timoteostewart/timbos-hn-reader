@@ -232,7 +232,7 @@ def get_filename_details_from_url(full_url):
 def get_response_headers(url=None, log_prefix=""):
     log_prefix += "get_response_headers(): "
     if not url:
-        # logger.error(log_prefix + f"no URL provided")
+        # logger.error(log_prefix + "no URL provided")
         raise Exception("no URL provided")
 
     try:

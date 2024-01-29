@@ -7,6 +7,8 @@
 # set -o xtrace    # show commands being executed; same as set -x
 # set -o verbose   # verbose mode; same as set -v
 
+TZ=UTC
+
 source ./functions.sh
 
 if ! am-root; then
@@ -48,18 +50,25 @@ LOOP_LOG_PREFIX="loop-thnr.sh:"
 COMBINED_LOG_IDENTIFIER="combined"
 
 get_cur_year_and_doy() {
-    local CUR_YEAR=$(printf '%(%Y)T' -1)
-    local CUR_DOY=$(printf '%(%j)T' -1)
+    TZ=UTC
+    local CUR_YEAR=$(date -u +"%Y")
+    local CUR_DOY=$(date -u +"%d")
     local CUR_DOY_ZEROS="00${CUR_DOY}"
     local CUR_DOY_PADDED="${CUR_DOY_ZEROS: -3}"
     local CUR_YEAR_AND_DOY="${CUR_YEAR}-${CUR_DOY_PADDED}"
     echo "${CUR_YEAR_AND_DOY}"
 }
 
-get_cur_datetime() {
-    local CUR_DATETIME=$(printf '%(%Y-%m-%d %H:%M:%S %Z)T' -1)
-    echo "${CUR_DATETIME}"
+get_cur_datetime_local() {
+    TZ=UTC
+    echo $(date -u +"%Y-%m-%d %H:%M:%S %Z")
 }
+
+get_cur_datetime_iso_8601() {
+    TZ=UTC
+    printf $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+}
+
 
 ensure_correct_file_owner() {
     # usage: ensure_correct_file_owner $FILE
@@ -87,7 +96,7 @@ write_log_message() {
 
     local LEVEL="$2"
     local MESSAGE="$3"
-    local LOG_LINE=$(printf "%s           %-8s %s" "$(get_cur_datetime)" "${LEVEL^^}" "${MESSAGE}")
+    local LOG_LINE=$(printf "%s           %-8s %s" "$(get_cur_datetime_iso_8601)" "${LEVEL^^}" "${MESSAGE}")
 
     if (( ${EUID:-$(id -u)} == 0 )); then
         sudo -u ${UTILITY_ACCOUNT_USERNAME} printf -- "${LOG_LINE}\n" >> "${LOG_FILE}"
@@ -117,7 +126,8 @@ cleanup_venv_temp_files() {
     # fi
 }
 
-write_log_message loop info "${LOOP_LOG_PREFIX} Starting ${BASH_SOURCE##*/}"
+CMD_INVOCATION="$0 $@"
+write_log_message loop info "${LOOP_LOG_PREFIX} Starting ${BASH_SOURCE##*/} with this invocation: ${CMD_INVOCATION}"
 
 cd-or-die "${BASE_DIR}"
 source "${PYTHON_BIN_DIR}activate"
@@ -181,6 +191,8 @@ do
 
     for cur_story_type in ${story_types[@]}; do
 
+        MAIN_PY_START_TS=$(get-time-in-unix-seconds)
+
         if [[ ${ONCE_FLAG} == "once" ]]; then
             if [[ "${ONCE_STORY_TYPE}" == "all" ]]; then
                 write_log_message loop info "${LOOP_LOG_PREFIX} ONCE_STORY_TYPE is ${ONCE_STORY_TYPE}"
@@ -193,7 +205,6 @@ do
             fi
         fi
 
-        MAIN_PY_START_TS=$(get-time-in-unix-seconds)
         MAIN_PY_CMD="sudo -u \"${UTILITY_ACCOUNT_USERNAME}\" \"${PYTHON_BIN_DIR}python\" \"${BASE_DIR}main.py\" \"${cur_story_type}\" \"${SERVER_NAME}\" \"${SETTINGS_FILE}\""
 
         write_log_message loop info "${LOOP_LOG_PREFIX} Starting main.py for \"${cur_story_type}\" (loop number ${LOOP_NUMBER})..."
@@ -202,6 +213,8 @@ do
         CUR_YEAR_AND_DOY=$(get_cur_year_and_doy)
         COMBINED_LOG_FILE="${ALL_LOGS_PATH}${SERVER_NAME}-${COMBINED_LOG_IDENTIFIER}-${CUR_YEAR_AND_DOY}.log"
         MAIN_PY_LOG_FILE="${ALL_LOGS_PATH}${SERVER_NAME}-main-py-${CUR_YEAR_AND_DOY}.log"
+        ensure_correct_file_owner "${COMBINED_LOG_FILE}"
+        ensure_correct_file_owner "${MAIN_PY_LOG_FILE}"
 
         if (( ${EUID:-$(id -u)} == 0 )); then
             # sudo -u "${UTILITY_ACCOUNT_USERNAME}" "${PYTHON_BIN_DIR}python" main.py "${cur_story_type}" "${SERVER_NAME}" "${SETTINGS_FILE}" 2>&1 | tee -a "${MAIN_PY_LOG_FILE}" >> "${COMBINED_LOG_FILE}"
@@ -220,6 +233,9 @@ do
         MAIN_PY_END_TS=$(get-time-in-unix-seconds)
         SECONDS_SPENT=$((MAIN_PY_END_TS - MAIN_PY_START_TS))
         DURATION=$(date -d@${SECONDS_SPENT} -u +"%Hh:%Mm:%Ss")
+
+        write_log_message loop info "${LOOP_LOG_PREFIX} MAIN_PY_START_TS=${MAIN_PY_START_TS}, MAIN_PY_END_TS=${MAIN_PY_END_TS}, SECONDS_SPENT=${SECONDS_SPENT}, DURATION=${DURATION}"
+
         if (( ${MAIN_PY_ERROR_CODE} == 0 )); then
             write_log_message loop info "${LOOP_LOG_PREFIX} Exited main.py \"${cur_story_type}\" after ${DURATION}"
         else

@@ -77,10 +77,15 @@ ensure-dir-or-die() {
     mkdir -p "$dir" || die "Could not create directory ${dir}."
 }
 
+# usage: get-iso8601-date
+get-iso8601-date() {
+    TZ=UTC
+    printf $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+}
+
 # usage: get-time-in-unix-seconds
 get-time-in-unix-seconds() {
-    local CUR_TIME=$(printf '%(%s)T' -1)
-    echo "${CUR_TIME}"
+    printf '%(%s)T\n' -1
 }
 
 # usage: make-beep

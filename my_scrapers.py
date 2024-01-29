@@ -153,7 +153,7 @@ def download_og_image(story_as_object, alt_url=None):
             )
             return download_og_image(story_as_object, alt_url=possibly_fixed_url)
         else:
-            logger.info(log_prefix + f"failed to get og:image")
+            logger.info(log_prefix + "failed to get og:image")
             story_as_object.linked_url_og_image_url_initial = ""
             story_as_object.linked_url_og_image_url_final = ""
             return False
@@ -165,7 +165,7 @@ def download_og_image(story_as_object, alt_url=None):
             ):
                 possibly_fixed_url = f"http://{story_as_object.hostname['minus_www']}/{story_as_object.linked_url_og_image_url_initial[2:]}"
                 logger.info(
-                    log_prefix + f"attempting to heal and retry schemeless og:image URL"
+                    log_prefix + "attempting to heal and retry schemeless og:image URL"
                 )
                 return download_og_image(story_as_object, alt_url=possibly_fixed_url)
             elif (
@@ -174,16 +174,16 @@ def download_og_image(story_as_object, alt_url=None):
             ):
                 possibly_fixed_url = f"http://{story_as_object.hostname['minus_www']}/{story_as_object.linked_url_og_image_url_initial[1:]}"
                 logger.info(
-                    log_prefix + f"attempting to heal and retry schemeless og:image URL"
+                    log_prefix + "attempting to heal and retry schemeless og:image URL"
                 )
                 return download_og_image(story_as_object, alt_url=possibly_fixed_url)
             else:
-                logger.info(log_prefix + f"failed to get og:image")
+                logger.info(log_prefix + "failed to get og:image")
                 story_as_object.linked_url_og_image_url_initial = ""
                 story_as_object.linked_url_og_image_url_final = ""
                 return False
         else:
-            logger.info(log_prefix + f"failed to get og:image")
+            logger.info(log_prefix + "failed to get og:image")
             story_as_object.linked_url_og_image_url_initial = ""
             story_as_object.linked_url_og_image_url_final = ""
             return False
@@ -219,7 +219,7 @@ def get_content_type_via_head_request(url: str = None, log_prefix=""):
                     content_type = each_ct_val
                     break
         else:
-            logger.warning(log_prefix + f"content-type is absent from headers")
+            logger.warning(log_prefix + "content-type is absent from headers")
     except Exception as exc:
         logger.warning(
             log_prefix
@@ -235,7 +235,7 @@ def get_content_type_via_head_request(url: str = None, log_prefix=""):
 
 
 def get_reading_time_via_goose(page_source=None, log_prefix=""):
-    log_prefix += f"get_reading_time_via_goose(): "
+    log_prefix += "get_reading_time_via_goose(): "
 
     try:
         if not page_source:
@@ -250,10 +250,13 @@ def get_reading_time_via_goose(page_source=None, log_prefix=""):
             )
         if reading_time:
             reading_time = max(reading_time, 1)
-            logger.info(log_prefix + f"{reading_time} minutes")
+            logger.info(
+                log_prefix
+                + f"{text_utils.add_singular_plural(reading_time, 'minute', force_int=True)}"
+            )
             return reading_time
         else:
-            logger.info(log_prefix + f"could not determine reading time")
+            logger.info(log_prefix + "could not determine reading time")
             return None
     except Exception as exc:
         logger.error(
