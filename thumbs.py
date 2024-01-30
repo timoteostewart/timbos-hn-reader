@@ -93,7 +93,8 @@ ignore_images_from_these_domains = set()
 
 ignore_images_with_these_content_types = {
     "image/vnd.microsoft.icon",
-    "image/avif",
+    "image/avif",  # TODO: support avif and jpeg XL
+    "text/html"
     # "image/svg+xml",
 }
 
@@ -184,7 +185,7 @@ def can_find_a_shortcode(story_as_object, img_loading):
         story_as_object.image_slug = create_img_slug_html(story_as_object, img_loading)
         logger.info(
             log_prefix
-            + f"using prepared image for image {story_as_object.linked_url_og_image_url_final}"
+            + f"using prepared image instead of {story_as_object.linked_url_og_image_url_final}"
         )
         return True
     else:
@@ -227,8 +228,8 @@ def save_thumb_where_it_should_go(webp_image, story_as_object, size):
 
 
 def get_image_slug(story_as_object, img_loading="lazy"):
-    log_prefix = f"id {story_as_object.id}: "
-    log_prefix += "get_image_slug(): "
+    log_prefix_id = f"id {story_as_object.id}: "
+    log_prefix = log_prefix_id + "get_image_slug(): "
     story_as_object.image_slug = text_utils.EMPTY_STRING
     # bgcolor_as_Color = (None,)
     force_aspect = None
@@ -319,7 +320,7 @@ def get_image_slug(story_as_object, img_loading="lazy"):
 
     if magic_result in ignore_images_with_these_content_types:
         make_has_thumb_false(
-            reason=f"ignore og:image based on content type {magic_result}",
+            reason=f"ignore og:image with content type {magic_result}",
             story_object=story_as_object,
             log_prefix=log_prefix,
             exc=None,
@@ -339,7 +340,7 @@ def get_image_slug(story_as_object, img_loading="lazy"):
                 ].lower()
             ):
                 logger.info(
-                    log_prefix
+                    log_prefix_id
                     + f"will not trim image with base filename {story_as_object.og_image_filename_details_from_url['base_name']}"
                 )
                 force_no_trim = True
@@ -406,6 +407,8 @@ def get_image_slug(story_as_object, img_loading="lazy"):
             )
             return
 
+    image_format = None
+
     try:
         with Image(
             filename=story_as_object.downloaded_orig_thumb_full_path
@@ -421,8 +424,8 @@ def get_image_slug(story_as_object, img_loading="lazy"):
                     if len(downloaded_img.sequence) > 1:
                         first_frame = downloaded_img.sequence[0]
                         logger.info(
-                            log_prefix + f"{sys._getframe(  ).f_code.co_name}: "
-                            f"used first frame of animation in {story_as_object.normalized_og_image_filename}"
+                            log_prefix
+                            + f"used first frame of animation in {story_as_object.normalized_og_image_filename}"
                         )
                         downloaded_img = Image(image=first_frame)
                 except Exception as exc:
@@ -495,7 +498,7 @@ def get_image_slug(story_as_object, img_loading="lazy"):
                 < config.settings["OG_IMAGE"]["MIN_DIM_PX"]
             ):
                 make_has_thumb_false(
-                    reason=f"image too small: {story_as_object.og_image_filename_details_from_url['base_name']}",
+                    reason=f"shorter image dimension is too small ({min(downloaded_img.width, downloaded_img.height)}px)",
                     story_object=story_as_object,
                     log_prefix=log_prefix,
                     exc=None,
@@ -508,7 +511,7 @@ def get_image_slug(story_as_object, img_loading="lazy"):
                 downloaded_img.strip()
             except Exception as exc:
                 make_has_thumb_false(
-                    reason="error while stripping metadata from image",
+                    reason="failed to strip metadata from image",
                     story_object=story_as_object,
                     log_prefix=log_prefix,
                     exc=None,
@@ -560,50 +563,61 @@ def get_image_slug(story_as_object, img_loading="lazy"):
             story_as_object.image_slug = create_img_slug_html(
                 story_as_object, img_loading
             )
+
             if story_as_object.image_slug:
-                story_as_object.has_thumb = True
+                if not story_as_object.has_thumb:
+                    story_as_object.has_thumb = True
+                    logger.info(
+                        log_prefix
+                        + "image_slug was present but has_thumb was False, so made has_thumb True (~Tim~)"
+                    )
 
     except Exception as exc:
-        exc_name = str(exc.__class__.__name__)
-        msg = str(exc)
+        context = {}
+        context["image_format"] = image_format if image_format else None
+        context["magic_result"] = magic_result if magic_result else None
+        handle_exception(
+            exc=exc, log_prefix=log_prefix + "with Image(): ", context=context
+        )
 
-        logger.error(log_prefix + f"{exc_name} {msg}")
-        if "Invalid URL" in msg:
-            pass
-        elif "no decode delegate for this image format" in msg:  # probably an html file
-            logger.error(
-                log_prefix + f"no decode delegate for image type {image_format}"
-            )
-            pass
-        elif "Not a JPEG file: starts with 0x3c 0x21" in msg:  # probably an html file
-            pass
-        elif "Not a JPEG file" in msg:
-            pass
-        elif "improper image header" in msg:
-            pass
-        elif "orig_image's height or width is less than" in msg:
-            pass
-        elif "nrecognized color" in msg:  # i.e., "[Uu]nrecognized color"
-            pass
-        elif "OptionWarning: geometry does not contain image" in msg:
-            pass
-        elif "must specify image size" in msg:
-            pass
-        elif "corrupt image" in msg:
-            pass
-        elif "xmlParseStartTag: invalid element name" in msg:
-            pass
-        elif "insufficient image data in file" in msg:
-            pass
-        elif "No scheme supplied." in msg:
-            pass
-        elif "invalid colormap index" in msg:
-            pass
-        elif "unable to open file `/tmp/magick" in msg:
-            pass
-        logger.error(log_prefix + f"story_as_object dump: {story_as_object}")
+
+def handle_exception(exc: Exception = None, log_prefix="", context=None):
+    exc_name = str(exc.__class__.__name__)
+    exc_msg = str(exc)
+    exc_slug = f"{exc_name}: {exc_msg}"
+
+    if isinstance(exc, wand.exceptions.MissingDelegateError):
+        if "image_format" in context:
+            image_format_slug = f"with image_format {context['image_format']}"
+        else:
+            image_format_slug = "with unknown image_format"
+        if "magic_result" in context:
+            magic_result_slug = f"with magic type {context['magic_result']}"
+        else:
+            magic_result_slug = "with unknown magic_result"
+
+        logline = (
+            log_prefix
+            + f"no decode delegate for image type {image_format_slug} and {magic_result_slug}"
+            + exc_slug
+        )
+        logger.error(logline)
+
+    elif isinstance(exc, Exception):
         tb_str = traceback.format_exc()
+        logger.error(log_prefix + "unexpected exception: " + exc_slug + " (~Tim~)")
         logger.error(log_prefix + tb_str)
+
+    else:
+        logger.error(
+            log_prefix + "fell through all exceptions! should never happen. (~Tim~)"
+        )
+
+    # extremely rare Wand exceptions:
+    # - invalid colormap index
+    # - must specify image size
+
+    return
 
 
 def make_has_thumb_false(
@@ -611,18 +625,22 @@ def make_has_thumb_false(
 ):
     if not reason:
         raise Exception("must supply reason for no thumb")
+
     if exc:
         exc_name = exc.__class__.__name__
         exc_msg = str(exc)
-        exc_slug = f"{exc_name} {exc_msg}"
+
+        exc_slug = f"{exc_name}: {exc_msg}"
+        colon_slug = ": "
     else:
         exc_slug = ""
+        colon_slug = ""
         log_tb = False
 
-    log_prefix += "make_has_thumb_false(): "
+    log_prefix += "no thumbnail for story card because: "
 
     story_object.has_thumb = False
-    story_object.reason_for_no_thumb = f"{reason}: {exc_slug}"
+    story_object.reason_for_no_thumb = f"{reason}{colon_slug}{exc_slug}"
     logger.info(log_prefix + story_object.reason_for_no_thumb)
     if log_tb:
         tb_str = traceback.format_exc(exception=exc)
@@ -874,7 +892,13 @@ def get_image_to_use(
         min(trimmed_img.width, trimmed_img.height)
         < config.settings["OG_IMAGE"]["MIN_DIM_PX"]
     ):
-        logger.info(log_prefix + "trimmed image too small")
+        make_has_thumb_false(
+            reason="trimmed image is too small",
+            story_object=story_as_object,
+            log_prefix=log_prefix,
+            exc=None,
+            log_tb=False,
+        )
         return None
 
     # check for ineffective trim
@@ -935,7 +959,7 @@ def get_image_to_use(
         )
         image_to_use = Image(image=altered_img)
 
-    logger.info(log_prefix + "successfully trimmed og:image")
+    # logger.info(log_prefix + "successfully trimmed og:image")
     return image_to_use
 
 

@@ -47,19 +47,52 @@ logger.setLevel(logging.INFO)
 # Crawler._publish_date_to_utc = monkeypatched_publish_date_to_utc
 
 
+def handle_exception(exc: Exception = None, log_prefix=""):
+    exc_name = str(exc.__class__.__name__)
+    exc_msg = str(exc)
+    exc_slug = f"{exc_name}: {exc_msg}"
+
+    if isinstance(exc, requests.exceptions.ConnectTimeout):
+        if "Max retries exceeded with url" in exc_msg:
+            logger.info(log_prefix + exc_slug)
+        else:
+            tb_str = traceback.format_exc()
+            logger.error(log_prefix + "unexpected exception: " + exc_slug)
+            logger.error(log_prefix + tb_str)
+
+    if isinstance(exc, requests.exceptions.HTTPError):
+        if "502 Server Error: Bad Gateway for url" in exc_msg:
+            logger.info(log_prefix + exc_slug)
+        else:
+            tb_str = traceback.format_exc()
+            logger.error(log_prefix + "unexpected exception: " + exc_slug)
+            logger.error(log_prefix + tb_str)
+
+    if isinstance(exc, Exception):
+        tb_str = traceback.format_exc()
+        logger.error(log_prefix + "unexpected exception: " + exc_slug)
+        logger.error(log_prefix + tb_str)
+
+
 def download_og_image(story_as_object, alt_url=None):
-    # guard
-    if not story_as_object.linked_url_og_image_url_initial:
+    log_prefix_id = f"id {story_as_object.id}: "
+    log_prefix_local = log_prefix_id + f"d_og_i(): "
+
+    # if no URL, no thumbnail
+    if not story_as_object.linked_url_og_image_url_initial and not alt_url:
+        logger.info(
+            log_prefix_local + "no linked_url_og_image_url_initial or alt_url provided"
+        )
         return False
 
-    log_prefix = f"id {story_as_object.id}: "
-
     if alt_url:
-        story_as_object.linked_url_og_image_url_initial = alt_url
+        url_to_use = alt_url
+    else:
+        url_to_use = story_as_object.linked_url_og_image_url_initial
 
     try:
         with requests.get(
-            url=story_as_object.linked_url_og_image_url_initial,
+            url=url_to_use,
             allow_redirects=True,
             verify=False,
             timeout=config.settings["SCRAPING"]["REQUESTS_GET_TIMEOUT_S"],
@@ -67,78 +100,26 @@ def download_og_image(story_as_object, alt_url=None):
         ) as response:
             story_as_object.linked_url_og_image_url_final = response.url
 
-            # if story_as_object.linked_url_og_image_url_final:
-            #     while "//" in story_as_object.linked_url_og_image_url_final:
-            #         story_as_object.linked_url_og_image_url_final = (
-            #             story_as_object.linked_url_og_image_url_final.replace("//", "/")
-            #         )
+    except requests.exceptions.ConnectTimeout as exc:
+        handle_exception(exc=exc, log_prefix=log_prefix_local + "get(): ")
 
-            story_as_object.og_image_filename_details_from_url = (
-                url_utils.get_filename_details_from_url(
-                    story_as_object.linked_url_og_image_url_final
-                )
-            )
+    except requests.exceptions.HTTPError as exc:
+        handle_exception(exc=exc, log_prefix=log_prefix_local + "get(): ")
 
-            # get server-reported content type for og:image
-            story_as_object.og_image_content_type = get_content_type_via_head_request(
-                url=story_as_object.linked_url_og_image_url_final, log_prefix=log_prefix
-            )
-            if not story_as_object.og_image_content_type:
-                logger.info(
-                    log_prefix
-                    + f"no content-type header provided for {story_as_object.linked_url_og_image_url_final}"
-                )
+    except requests.exceptions.MissingSchema as exc:
+        exc_name = exc.__class__.__name__
+        exc_msg = str(exc)
+        exc_slug = f"{exc_name}: {exc_msg}"
+        tb_str = traceback.format_exc()
 
-            # download og:image
-            story_as_object.normalized_og_image_filename = f"orig-{story_as_object.id}"
-            story_as_object.downloaded_orig_thumb_full_path = os.path.join(
-                config.settings["TEMP_DIR"],
-                story_as_object.normalized_og_image_filename,
-            )
-            with open(story_as_object.downloaded_orig_thumb_full_path, "wb") as fout:
-                fout.write(response.content)
-            # logger.info(
-            #     log_prefix+ + f"download_og_image(): downloaded og:image {story_as_object.normalized_og_image_filename}"
-            # )
-
-            # determine magic type of downloaded og:image
-            story_as_object.downloaded_og_image_magic_result = magic.from_file(
-                story_as_object.downloaded_orig_thumb_full_path, mime=True
-            )
-            logger.info(
-                log_prefix
-                + f"downloaded og:image file has magic type {story_as_object.downloaded_og_image_magic_result}"
-            )
-
-            if story_as_object.downloaded_og_image_magic_result.startswith("image/"):
-                if alt_url:
-                    logger.info(
-                        log_prefix
-                        + f"healed og:image URL {story_as_object.linked_url_og_image_url_initial} to {story_as_object.linked_url_og_image_url_final}"
-                    )
-                return True
-            elif story_as_object.downloaded_og_image_magic_result == "application/pdf":
-                logger.info(
-                    log_prefix
-                    + f"healed og:image URL {story_as_object.linked_url_og_image_url_initial} to {story_as_object.linked_url_og_image_url_final}"
-                )
-
-                return True
-            else:
-                logger.info(
-                    log_prefix
-                    + f"failed to heal og:image URL {story_as_object.linked_url_og_image_url_initial}"
-                )
-
-                return False
-    except requests.exceptions.MissingSchema as e:
         if (
             story_as_object.linked_url_og_image_url_initial[0:2] == "//"
             and story_as_object.linked_url_og_image_url_initial[2:3] != "/"
         ):
             possibly_fixed_url = f"http://{story_as_object.hostname['minus_www']}/{story_as_object.linked_url_og_image_url_initial[2:]}"
             logger.info(
-                log_prefix
+                log_prefix_local
+                + "get(): "
                 + f"attempting to heal and retry schemeless og:image URL {story_as_object.linked_url_og_image_url_initial} as {possibly_fixed_url}"
             )
             return download_og_image(story_as_object, alt_url=possibly_fixed_url)
@@ -148,94 +129,135 @@ def download_og_image(story_as_object, alt_url=None):
         ):
             possibly_fixed_url = f"http://{story_as_object.hostname['minus_www']}/{story_as_object.linked_url_og_image_url_initial[1:]}"
             logger.info(
-                log_prefix
+                log_prefix_local
+                + "get(): "
                 + f"attempting to heal and retry schemeless og:image URL {story_as_object.linked_url_og_image_url_initial} as {possibly_fixed_url}"
             )
             return download_og_image(story_as_object, alt_url=possibly_fixed_url)
         else:
-            logger.info(log_prefix + "failed to get og:image")
+            logger.info(log_prefix_local + "get(): " + "failed to get og:image")
+            logger.info(log_prefix_local + "get(): " + exc_slug)
+            logger.info(log_prefix_local + "get(): " + tb_str)
             story_as_object.linked_url_og_image_url_initial = ""
             story_as_object.linked_url_og_image_url_final = ""
             return False
-    except Exception as e:
-        if "No scheme supplied." in str(e):
-            if (
-                story_as_object.linked_url_og_image_url_initial[0:2] == "//"
-                and story_as_object.linked_url_og_image_url_initial[2:3] != "/"
-            ):
-                possibly_fixed_url = f"http://{story_as_object.hostname['minus_www']}/{story_as_object.linked_url_og_image_url_initial[2:]}"
-                logger.info(
-                    log_prefix + "attempting to heal and retry schemeless og:image URL"
-                )
-                return download_og_image(story_as_object, alt_url=possibly_fixed_url)
-            elif (
-                story_as_object.linked_url_og_image_url_initial[0:1] == "/"
-                and story_as_object.linked_url_og_image_url_initial[1:2] != "/"
-            ):
-                possibly_fixed_url = f"http://{story_as_object.hostname['minus_www']}/{story_as_object.linked_url_og_image_url_initial[1:]}"
-                logger.info(
-                    log_prefix + "attempting to heal and retry schemeless og:image URL"
-                )
-                return download_og_image(story_as_object, alt_url=possibly_fixed_url)
-            else:
-                logger.info(log_prefix + "failed to get og:image")
-                story_as_object.linked_url_og_image_url_initial = ""
-                story_as_object.linked_url_og_image_url_final = ""
-                return False
+
+    except Exception as exc:
+        handle_exception(exc=exc, log_prefix=log_prefix_local + "get(): ")
+
+    story_as_object.og_image_filename_details_from_url = (
+        url_utils.get_filename_details_from_url(
+            story_as_object.linked_url_og_image_url_final
+        )
+    )
+
+    # get server-reported content type for og:image
+    story_as_object.og_image_content_type = get_content_type_via_head_request(
+        url=story_as_object.linked_url_og_image_url_final, log_prefix=log_prefix_local
+    )
+    if story_as_object.og_image_content_type:
+        logger.info(
+            log_prefix_id
+            + f"content-type is {story_as_object.og_image_content_type}"
+            + f" for og:image uri {story_as_object.linked_url_og_image_url_final}"
+        )
+    else:
+        logger.info(
+            log_prefix_id
+            + f"content-type unavailable for og:image uri {story_as_object.linked_url_og_image_url_final}"
+        )
+
+    # download og:image
+    story_as_object.normalized_og_image_filename = f"orig-{story_as_object.id}"
+    story_as_object.downloaded_orig_thumb_full_path = os.path.join(
+        config.settings["TEMP_DIR"],
+        story_as_object.normalized_og_image_filename,
+    )
+    with open(story_as_object.downloaded_orig_thumb_full_path, "wb") as fout:
+        fout.write(response.content)
+    # logger.info(
+    #     log_prefix
+    #     + f"downloaded og:image {story_as_object.normalized_og_image_filename}"
+    # )
+
+    # determine magic type of downloaded og:image
+    story_as_object.downloaded_og_image_magic_result = magic.from_file(
+        story_as_object.downloaded_orig_thumb_full_path, mime=True
+    )
+    # logger.info(
+    #     log_prefix
+    #     + f"downloaded og:image file has magic type {story_as_object.downloaded_og_image_magic_result}"
+    # )
+
+    logger.info(
+        log_prefix_id
+        + f"magic type is {story_as_object.downloaded_og_image_magic_result}"
+        + f" for downloaded og:image"
+    )
+
+    if alt_url:
+        if (
+            story_as_object.downloaded_og_image_magic_result.startswith("image/")
+            or story_as_object.downloaded_og_image_magic_result == "application/pdf"
+        ):
+            logger.info(
+                log_prefix_id
+                + f"successfully healed og:image URL {story_as_object.linked_url_og_image_url_initial} to {alt_url}"
+            )
+            return True
         else:
-            logger.info(log_prefix + "failed to get og:image")
-            story_as_object.linked_url_og_image_url_initial = ""
-            story_as_object.linked_url_og_image_url_final = ""
+            logger.info(
+                log_prefix_id
+                + f"og:image URL {story_as_object.linked_url_og_image_url_initial} seemed healed to {alt_url}, but downloaded og:image has magic type {story_as_object.downloaded_og_image_magic_result}"
+            )
             return False
+
+    return True
 
 
 def get_content_type_via_head_request(url: str = None, log_prefix=""):
-    # log_prefix += "get_content_type_via_head_request(): "
-    # get headers
-    headers = ""
+    if not url:
+        raise Exception("no URL provided")
+
+    headers = None
     try:
-        headers = url_utils.get_response_headers(url, log_prefix=log_prefix)
+        headers = url_utils.head_request(url, log_prefix=log_prefix)
     except Exception as exc:
-        msg = str(exc)
-        if msg == "no URL provided":
-            logger.error(log_prefix + f"{msg}")
-        if msg.startswith("requests.head() failed to complete HEAD request to"):
-            logger.warning(log_prefix + f"{msg}")
+        exc_name = str(exc.__class__.__name__)
+        exc_msg = str(exc)
+        exc_slug = f"{exc_name}: {exc_msg}"
+        logger.info(log_prefix + f"{exc_slug}")
 
     if not headers:
-        logger.warning(
-            log_prefix + f"get_response_headers() returned no headers for {url}"
-        )
-        return ""
+        # suppress logging if we're coming from download_og_image() since we log there
+        if log_prefix.startswith("d_og_i():"):
+            pass
+        else:
+            logger.info(log_prefix + f"headers unavailable for {url}")
+        return None
 
     # extract content-type from headers
-    content_type = ""
-    try:
-        if "content-type" in headers:
-            for each_ct_val in headers["content-type"].split(";"):
-                if "charset" in each_ct_val:
-                    continue
-                if "/" in each_ct_val:
-                    content_type = each_ct_val
-                    break
-        else:
-            logger.warning(log_prefix + "content-type is absent from headers")
-    except Exception as exc:
-        logger.warning(
-            log_prefix
-            + f"parse headers: {exc.__class__.__name__} ({str(exc)}) for {url}"
-        )
+    content_type = None
+    if "content-type" in headers:
+        for each_ct_val in headers["content-type"].split(";"):
+            if "charset" in each_ct_val:
+                continue
+            if "/" in each_ct_val:
+                content_type = each_ct_val
+                break
+    else:
+        logger.info(log_prefix + f"content-type is absent from headers for url {url}")
+        return None
 
     if content_type:
-        logger.info(log_prefix + f"content-type is {content_type} for url {url}")
         return content_type
     else:
         logger.info(log_prefix + f"content-type could not be determined for url {url}")
-        return ""
+        return None
 
 
 def get_reading_time_via_goose(page_source=None, log_prefix=""):
-    log_prefix += "get_reading_time_via_goose(): "
+    log_prefix += "grt_via_g(): "
 
     try:
         if not page_source:

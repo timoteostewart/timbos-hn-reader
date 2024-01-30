@@ -471,38 +471,40 @@ def get_github_repo_languages(driver=None, repo_url=None, story_id=None):
         log_prefix=log_prefix,
     )
 
-    soup = BeautifulSoup(page_source, "html.parser")
-    h2_languages = soup.find("h2", string="Languages")
+    if page_source:
+        soup = BeautifulSoup(page_source, "html.parser")
+        h2_languages = soup.find("h2", string="Languages")
 
-    if h2_languages:
-        ul_languages = h2_languages.find_next_sibling("ul")
-        if not ul_languages:
-            logger.info(log_prefix + f"failed to get GH repo lang stats from {repo_url}")
-            return None
-        gh_repo_lang_stats = []
-        li_els = ul_languages.find_all("li")
-        for each_li in li_els:
-            """
-            (lang_name, percent, color)
-            """
-            lang_name = ""
-            lang_percent = ""
-            lang_color = ""
-            for each_span in each_li.find_all("span"):
-                if (
-                    each_span.has_attr("class")
-                    and "color-fg-default" in each_span["class"]
-                ):
-                    lang_name = each_span.text
-                if each_span.text.endswith("%"):
-                    lang_percent = each_span.text
-            lang_color = each_li.find("svg")["style"][6:-1].upper()
-            gh_repo_lang_stats.append((lang_name, lang_percent, lang_color))
-        logger.info(log_prefix + f"got GH repo lang stats from {repo_url}")
-        return gh_repo_lang_stats
+        if h2_languages:
+            ul_languages = h2_languages.find_next_sibling("ul")
+            if not ul_languages:
+                logger.info(log_prefix + f"failed to get GH repo lang stats from {repo_url}")
+                return None
+            gh_repo_lang_stats = []
+            li_els = ul_languages.find_all("li")
+            for each_li in li_els:
+                """
+                (lang_name, percent, color)
+                """
+                lang_name = ""
+                lang_percent = ""
+                lang_color = ""
+                for each_span in each_li.find_all("span"):
+                    if (
+                        each_span.has_attr("class")
+                        and "color-fg-default" in each_span["class"]
+                    ):
+                        lang_name = each_span.text
+                    if each_span.text.endswith("%"):
+                        lang_percent = each_span.text
+                lang_color = each_li.find("svg")["style"][6:-1].upper()
+                gh_repo_lang_stats.append((lang_name, lang_percent, lang_color))
+            logger.info(log_prefix + f"got GH repo lang stats from {repo_url}")
+            return gh_repo_lang_stats
+        else:
+            logger.info(log_prefix + f"failed to find h2_languages on url {repo_url}")
     else:
-        logger.info(log_prefix + f"failed to find h2_languages on url {repo_url}")
-
+        logger.info(log_prefix + f"failed to read GH repo page  {repo_url}")
 
 def get_theguardian_account_slug(
     theguardian_url=None, story_as_object=None, page_source_soup=None

@@ -229,8 +229,8 @@ def get_filename_details_from_url(full_url):
     return filename_details
 
 
-def get_response_headers(url=None, log_prefix=""):
-    log_prefix += "get_response_headers(): "
+def head_request(url=None, log_prefix=""):
+    log_prefix += "head_request(): "
     if not url:
         # logger.error(log_prefix + "no URL provided")
         raise Exception("no URL provided")
@@ -242,13 +242,14 @@ def get_response_headers(url=None, log_prefix=""):
             timeout=config.settings["SCRAPING"]["REQUESTS_GET_TIMEOUT_S"],
             headers={"User-Agent": config.settings["SCRAPING"]["UA_STR"]},
         )
+        return resp.headers
 
     except Exception as exc:
-        msg = f"requests.head() failed to complete HEAD request to {url} {exc}"
-        # logger.error(log_prefix + msg)
-        raise Exception(msg)
-
-    return resp.headers
+        exc_name = str(exc.__class__.__name__)
+        exc_msg = str(exc)
+        exc_slug = f"{exc_name}: {exc_msg}"
+        logger.error(log_prefix + f"{exc_slug} for url {url}")
+        return None
 
 
 def split_domain_on_chars(domain_string: str):

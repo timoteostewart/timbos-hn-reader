@@ -3,11 +3,13 @@ import json
 import logging
 import os
 import pickle
+import re
 import time
 import traceback
+import warnings
 
 import requests
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, XMLParsedAsHTMLWarning
 
 import aws_utils
 import config
@@ -26,6 +28,9 @@ from Story import Story
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+# quiet bs4since it's chatty
+warnings.filterwarnings("ignore", category=XMLParsedAsHTMLWarning)
+
 
 badge_codes = {
     "top": {"letter": "T", "sigil": "Ⓣ", "tooltip": "news"},
@@ -41,12 +46,18 @@ skip_getting_content_type_via_head_request_for_domains = {
 }
 
 
-def acquire_story_details_for_first_time(driver=None, item_id=None, pos_on_page=None):
+def acquire_story_details_for_first_time(item_id=None, pos_on_page=None):
     log_prefix = f"id {item_id}: "
+    log_prefix += "asdfft(): "
 
+    story_as_dict = None
     try:
         story_as_dict = query_firebaseio_for_story_data(item_id=item_id)
     except Exception as exc:
+        exc_name = str(exc.__class__.__name__)
+        exc_msg = str(exc)
+        exc_slug = f"{exc_name}: {exc_msg}"
+        logger.info(log_prefix + exc_slug)
         raise exc
 
     if not story_as_dict:
@@ -64,9 +75,33 @@ def acquire_story_details_for_first_time(driver=None, item_id=None, pos_on_page=
     story_as_object = item_factory(story_as_dict)
 
     if not story_as_object:
-        raise Exception(log_prefix + "failed to get story details")
+        raise Exception(log_prefix + "item_factory(): failed to create story object")
 
-    if story_as_object.url:
+    if not story_as_object.url:
+        story_title = story_as_object.title
+        story_title_fragment = story_title[:16] + "…"
+        first_colon_index = story_title.find(":")
+        if 0 <= first_colon_index < 16:
+            story_title_fragment = story_title[: first_colon_index + 1]
+            pattern = r"^(.*[Hh][Nn])\b.*"
+            match = re.search(pattern, story_title_fragment)
+
+            if match:
+                story_title_fragment = match.group(1)
+            else:
+                story_title_fragment = story_title[:16]
+
+        reason = "story has no url (story title starts: " + story_title_fragment + "…)"
+
+        thumbs.make_has_thumb_false(
+            reason=reason,
+            story_object=story_as_object,
+            log_prefix=log_prefix,
+            exc=None,
+            log_tb=False,
+        )
+
+    else:  # there is a url
         _, domains = url_utils.get_domains_from_url(story_as_object.url)
         if domains in skip_getting_content_type_via_head_request_for_domains:
             logger.info(log_prefix + f"skip HEAD request for {domains}")
@@ -93,24 +128,24 @@ def acquire_story_details_for_first_time(driver=None, item_id=None, pos_on_page=
         ):
             page_source = None
             soup = None
-            try:
-                page_source = retrieve_by_url.get_page_source(
-                    url=story_as_object.url,
-                    log_prefix=log_prefix,
-                )
-            except Exception as exc:
-                logger.warning(
-                    log_prefix
-                    + f"problem getting page source from {story_as_object.url}: {exc}"
-                )
+
+            page_source = retrieve_by_url.get_page_source(
+                url=story_as_object.url,
+                log_prefix=log_prefix,
+            )
 
             if page_source:
                 try:
                     soup = BeautifulSoup(page_source, "lxml")
                 except Exception as exc:
-                    logger.warning(
+                    exc_name = exc.__class__.__name__
+                    exc_msg = str(exc)
+                    exc_slug = f"{exc_name}: {exc_msg}"
+                    logger.info(
                         log_prefix
-                        + f"problem making soup from {story_as_object.url}: {exc}"
+                        + f"problem making soup from {story_as_object.url}:"
+                        + exc_slug
+                        + " (~Tim~)"
                     )
 
             if not page_source or not soup:
@@ -152,7 +187,7 @@ def acquire_story_details_for_first_time(driver=None, item_id=None, pos_on_page=
                     )
             else:
                 thumbs.make_has_thumb_false(
-                    reason="did not find og:image url",
+                    reason="page had no og:image tag",
                     story_object=story_as_object,
                     log_prefix=log_prefix,
                     exc=None,
@@ -203,75 +238,80 @@ def acquire_story_details_for_first_time(driver=None, item_id=None, pos_on_page=
         ):
             story_as_object.linked_url_og_image_url_initial = story_as_object.url
 
-        if my_scrapers.download_og_image(story_as_object):
-            if pos_on_page < 5:
-                img_loading_attr = "eager"
-            else:
-                img_loading_attr = "lazy"
+        if story_as_object.linked_url_og_image_url_initial:
+            res = my_scrapers.download_og_image(story_as_object)
+            if res == True:
+                if pos_on_page < 5:
+                    img_loading_attr = "eager"
+                else:
+                    img_loading_attr = "lazy"
 
-            thumbs.get_image_slug(story_as_object, img_loading=img_loading_attr)
+                thumbs.get_image_slug(story_as_object, img_loading=img_loading_attr)
 
-            if story_as_object.pdf_page_count > 0:
-                story_as_object.pdf_page_count_slug = (
-                    "<tr><td>"
-                    '<div class="reading-time-bar">'
-                    '<div class="estimated-reading-time">'
-                    f"📄 {text_utils.add_singular_plural(story_as_object.pdf_page_count, 'page', force_int=True)}"
-                    "</div>"
-                    "</div>"
-                    "</td></tr>"
+                if story_as_object.pdf_page_count > 0:
+                    story_as_object.pdf_page_count_slug = (
+                        "<tr><td>"
+                        '<div class="reading-time-bar">'
+                        '<div class="estimated-reading-time">'
+                        f"📄 {text_utils.add_singular_plural(story_as_object.pdf_page_count, 'page', force_int=True)}"
+                        "</div>"
+                        "</div>"
+                        "</td></tr>"
+                    )
+            elif res == False:
+                thumbs.make_has_thumb_false(
+                    reason="could not download og:image",
+                    story_object=story_as_object,
+                    log_prefix=log_prefix,
+                    exc=None,
+                    log_tb=False,
                 )
 
-        else:
-            thumbs.make_has_thumb_false(
-                reason="couldn't download og:image",
-                story_object=story_as_object,
-                log_prefix=log_prefix,
-                exc=None,
-                log_tb=False,
-            )
+            else:
+                logger.error(
+                    log_prefix
+                    + f"unexpected result from download_og_image(): res={res}, type(res)={type(res)}"
+                )
+                thumbs.make_has_thumb_false(
+                    reason="unexpected result from download_og_image()",
+                    story_object=story_as_object,
+                    log_prefix=log_prefix,
+                    exc=None,
+                    log_tb=False,
+                )
 
-    else:
-        thumbs.make_has_thumb_false(
-            reason="story has no url (probably an Ask HN, etc.)",
-            story_object=story_as_object,
-            log_prefix=log_prefix,
-            exc=None,
-            log_tb=False,
-        )
-
-    ##
-    ## add informative labels before and after the story card title, if possible
-    ##
-
+    # add informative labels before and after the story card title, if possible
     if story_as_object.has_thumb:
         if story_as_object.image_slug:
             logger.info(log_prefix + "story card will have a thumbnail")
         else:
             logger.error(
                 log_prefix
-                + "has_thumb is True, but there's no image_slug, so setting has_thumb to False"
+                + "has_thumb is True, but there's no image_slug, so updating as_thumb to False (~Tim~)"
             )
             story_as_object.has_thumb = False
-    else:
+    else:  # not story_as_object.has_thumb
         if not story_as_object.reason_for_no_thumb:
-            logger.error(log_prefix + "has_thumb is False, but there's no reason why")
-        logger.info(log_prefix + "story card will not have a thumbnail")
+            logger.error(
+                log_prefix
+                + "has_thumb is False, but there's no reason_for_no_thumb (~Tim~)"
+            )
+        # logger.info(log_prefix + "story card will not have a thumbnail")
 
     # if we have no thumbnail, then make sure we don't include a `story_content_type_slug`
     if not story_as_object.has_thumb:
         story_as_object.story_content_type_slug = text_utils.EMPTY_STRING
-    else:
-        # apply "[pdf]" label after title if it's not there but is probably applicable
-        if (
-            story_as_object.downloaded_og_image_magic_result
-            and story_as_object.downloaded_og_image_magic_result == "application/pdf"
-        ):
-            if "pdf" not in story_as_object.title[-12:].lower():
-                story_as_object.story_content_type_slug = (
-                    ' <span class="story-content-type">[pdf]</span>'
-                )
-                logger.info(f"id {story_as_object.id}: added [pdf] label after title")
+
+    # apply "[pdf]" label after title if it's not there but is probably applicable
+    if (
+        story_as_object.downloaded_og_image_magic_result
+        and story_as_object.downloaded_og_image_magic_result == "application/pdf"
+    ):
+        if "pdf" not in story_as_object.title[-12:].lower():
+            story_as_object.story_content_type_slug = (
+                ' <span class="story-content-type">[pdf]</span>'
+            )
+            logger.info(f"id {story_as_object.id}: added [pdf] label after title")
 
     ##
     ## build html for story card
@@ -602,7 +642,9 @@ def item_factory(story_as_dict):
 
 
 def page_package_processor(page_package):
-    ppp_log_prefix = f"page_package_processor(): page {page_package.page_number} of {page_package.story_type}: "
+    ppp_log_prefix = (
+        f"ppp(): page {page_package.page_number} of {page_package.story_type}: "
+    )
 
     logger.info(ppp_log_prefix + "starting")
 
@@ -633,16 +675,17 @@ def page_package_processor(page_package):
     num_stories_on_page = None
 
     for rank, each_id in enumerate(page_package.story_ids):
-        id_log_prefix = f"id {each_id}: "
+        log_prefix_id = f"id {each_id}: "
 
         # logger.info(id_log_prefix + f"page:rank={page_package.page_number}:{rank}")
 
+        # check for locally cached story
         if os.path.exists(
             os.path.join(
                 config.settings["CACHED_STORIES_DIR"], get_pickle_filename(each_id)
             )
         ):
-            logger.info(id_log_prefix + "cached story found")
+            logger.info(log_prefix_id + "cached story found")
 
             with open(
                 os.path.join(
@@ -652,13 +695,10 @@ def page_package_processor(page_package):
             ) as file:
                 story_as_object = pickle.load(file)
 
-            minutes_ago_since_last_firebaseio_update = int(
-                (
-                    time_utils.get_time_now_in_epoch_seconds_float()
-                    - story_as_object.time_of_last_firebaseio_query
-                )
-                / 60
-            )
+            minutes_ago_since_last_firebaseio_update = (
+                time_utils.get_time_now_in_epoch_seconds_int()
+                - story_as_object.time_of_last_firebaseio_query
+            ) // 60
 
             time_ago_since_last_firebaseio_update_display = (
                 text_utils.add_singular_plural(
@@ -672,8 +712,8 @@ def page_package_processor(page_package):
                 > config.settings["MINUTES_BEFORE_REFRESHING_STORY_METADATA"]
             ):
                 logger.info(
-                    id_log_prefix
-                    + f"try to freshen cached story (last update from firebaseio.com {time_ago_since_last_firebaseio_update_display})"
+                    log_prefix_id
+                    + f"try to freshen cached story (last updated from firebaseio.com {time_ago_since_last_firebaseio_update_display})"
                 )
 
                 # attempt to update title, score, comment count
@@ -686,7 +726,7 @@ def page_package_processor(page_package):
 
             else:
                 logger.info(
-                    id_log_prefix
+                    log_prefix_id
                     + f"re-using cached story (last updated from firebaseio.com {time_ago_since_last_firebaseio_update_display})"
                 )
                 # even if we re-use the cached story, we'll still update the
@@ -698,7 +738,7 @@ def page_package_processor(page_package):
                 story_as_object.time
             )
 
-            logger.info(id_log_prefix + f"{repickling_log_detail}")
+            logger.info(log_prefix_id + f"{repickling_log_detail}")
 
             if repickling_log_detail.startswith("re-pickling"):
                 with open(
@@ -725,7 +765,7 @@ def page_package_processor(page_package):
             cur_story_card_html = story_as_object.story_card_html
 
         else:
-            logger.info(id_log_prefix + "no cached story found")
+            logger.info(log_prefix_id + "no cached story found")
 
             try:
                 (
@@ -736,17 +776,26 @@ def page_package_processor(page_package):
                     pos_on_page=rank,
                 )
             except UnsupportedStoryType as exc:
-                logger.info(id_log_prefix + f"{str(exc)}")
+                exc_name = str(exc.__class__.__name__)
+                exc_msg = str(exc)
+                exc_slug = f"{exc_name}: {exc_msg}"
+                logger.info(log_prefix_id + exc_slug)
+                logger.info(log_prefix_id + "discarding this story")
                 continue  # to next each_id
             except Exception as exc:
-                logger.error(
-                    id_log_prefix
-                    + f"acquire_story_details_for_first_time: {str(exc)} ; traceback: {traceback.format_exc(exc)}"
-                )
+                exc_name = str(exc.__class__.__name__)
+                exc_msg = str(exc)
+                exc_slug = f"{exc_name}: {exc_msg}"
+
+                logger.error(log_prefix_id + f"asdfft(): " + exc_slug)
+                tb_str = traceback.format_exc()
+                logger.error(log_prefix_id + tb_str)
+                logger.info(log_prefix_id + "discarding this story")
                 continue  # to next each_id
 
         if not cur_story_card_html:
-            logger.error(id_log_prefix + "couldn't get story details for some reason")
+            logger.info(log_prefix_id + "couldn't get story details for some reason")
+            logger.info(log_prefix_id + "discarding this story")
             continue  # to next each_id
 
         # populate pub_time_ago_display
@@ -1009,7 +1058,7 @@ def page_package_processor(page_package):
     return page_package.page_number
 
 
-def query_firebaseio_for_story_data(driver=None, item_id=None):
+def query_firebaseio_for_story_data(item_id=None):
     query = f"/v0/item/{item_id}.json"
     return retrieve_by_url.firebaseio_endpoint_query(
         query=query, log_prefix=f"id {item_id}: "
@@ -1017,9 +1066,9 @@ def query_firebaseio_for_story_data(driver=None, item_id=None):
 
 
 def supervisor(cur_story_type):
-    uniq = hash_utils.get_sha1_of_current_time()
+    unique_id = hash_utils.get_sha1_of_current_time()
     supervisor_start_ts = time_utils.get_time_now_in_epoch_seconds_float()
-    log_prefix = f"supervisor({cur_story_type}) with unique id {uniq}: "
+    log_prefix = f"supervisor({cur_story_type}) with id {unique_id}: "
 
     logger.info(
         log_prefix

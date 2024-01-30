@@ -5,6 +5,7 @@ import re
 import sys
 import time
 import traceback
+import warnings  # to quiet httpx deprecation warnings
 
 import hrequests
 import hrequests.exceptions
@@ -18,29 +19,36 @@ from my_exceptions import *
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-# declutter logs since httpx is very chatty
+# quiet httpx since it's chatty
 httpx_logger = logging.getLogger("httpx")
 httpx_logger.setLevel(logging.WARNING)
+warnings.filterwarnings("ignore", category=DeprecationWarning, module="httpx")
+
 
 empty_page_source = "<html><head></head><body></body></html>"
 
 
 def endpoint_query_via_requests(url=None, retries=3, delay=8, log_prefix=""):
+    log_prefix_local = log_prefix + "endpoint_query_via_requests(): "
     if retries == 0:
-        logger.error(log_prefix + f"GET request {url} failed")
+        logger.error(log_prefix_local + f"failed to GET endpoint {url}")
         raise FailedAfterRetrying()
 
     try:
         resp = requests.get(url)
         resp.raise_for_status()
-        resp_as_json = resp.json()
+        resp_as_dict = resp.json()
         # logger.info(log_prefix + f"successfully queried endpoint {url}")
-        return resp_as_json
+        return resp_as_dict
     except Exception as exc:
+        exc_name = exc.__class__.__name__
+        exc_msg = str(exc)
+        exc_slug = f"{exc_name}: {exc_msg}"
+
         delay *= 2
         logger.warning(
-            log_prefix
-            + f"problem querying {url}: {exc} ; will delay {delay} seconds and retry (retries left {retries})"
+            log_prefix_local
+            + f"problem querying url {url}: {exc_slug} ; will delay {delay} seconds and retry (retries left {retries})"
         )
         time.sleep(delay)
 
@@ -53,9 +61,9 @@ def firebaseio_endpoint_query(query=None, log_prefix=""):
     url = "https://hacker-news.firebaseio.com" + query
 
     try:
-        resp_as_json = endpoint_query_via_requests(url=url, log_prefix=log_prefix)
+        resp_as_dict = endpoint_query_via_requests(url=url, log_prefix=log_prefix)
         logger.info(log_prefix + f"successfully queried {url}")
-        return resp_as_json
+        return resp_as_dict
     except requests.exceptions.ConnectionError as exc:
         logger.error(
             log_prefix + f"firebaseio.com actively refused query {query}: {exc}"
@@ -77,51 +85,130 @@ def firebaseio_endpoint_query(query=None, log_prefix=""):
 
 
 def get_page_source(url=None, log_prefix=""):
-    gps_log_prefix = log_prefix + "get_page_source(): "
+    log_prefix_local = log_prefix + "get_page_source(): "
 
     if not url:
-        logger.error(gps_log_prefix + f"{url} required")
+        logger.error(log_prefix_local + f"{url} required")
         return None
+
+    res = None
     try:
-        res = get_page_source_hrequests(url=url, log_prefix=log_prefix)
-    except hrequests.exceptions.BrowserTimeoutException as exc:
-        logger.error(
-            gps_log_prefix + f"get_page_source_hrequests() timed out for {url}"
-        )
-        return None
+        res = get_page_source_via_hrequests(url=url, log_prefix=log_prefix)
     except Exception as exc:
-        logger.error(
-            gps_log_prefix + f"get_page_source_hrequests() failed for {url}: {exc}"
-        )
-        logger.error(gps_log_prefix + traceback.format_exc())
-        raise
+        exc_name = exc.__class__.__name__
+        exc_msg = str(exc)
+        exc_slug = f"{exc_name}: {exc_msg}"
+        logger.error(log_prefix_local + f"unexpected exception: " + exc_slug)
 
     if res:
         return res
     else:
-        logger.error(
-            gps_log_prefix + f"get_page_source_hrequests() returned None for {url}"
-        )
+        logger.error(log_prefix_local + f"gps_via_hr() returned None for {url}")
         return None
 
 
 def get_list_of_hrequests_exceptions(text: str = ""):
-    pattern = r"hrequests.exceptions.Browser\w+"
-    exceptions = []
-    comments = []
+    pattern = r"(hrequests.exceptions.Browser\w+):"
+    exc_names = []
+    exc_msgs = []
 
     for match in re.finditer(pattern, text):
-        exceptions.append(match.group())
+        exc_names.append(match.group(1))
         start_pos = match.end()
         end_pos = text.find("\n", start_pos)
         if end_pos == -1:
             end_pos = len(text)
-        comments.append(text[start_pos:end_pos].strip())
+        exc_msgs.append(text[start_pos:end_pos].strip())
 
-    return exceptions, comments
+    return (exc_names, exc_msgs)
 
 
-def get_page_source_hrequests(
+def handle_exception(exc: Exception = None, log_prefix=""):
+    exc_name = str(exc.__class__.__name__)
+    exc_msg = str(exc)
+    exc_slug = f"{exc_name}: {exc_msg}"
+
+    if isinstance(exc, hrequests.exceptions.BrowserTimeoutException):
+        pattern = r"Timeout (\d+)ms exceeded."
+        match = re.search(pattern, exc_msg)
+        if match:
+            pass
+        else:
+            tb_str = traceback.format_exc()
+            logger.error(log_prefix + "unexpected exception: " + exc_slug)
+            logger.error(log_prefix + tb_str)
+
+    elif isinstance(exc, hrequests.exceptions.BrowserException):
+        tb_str = traceback.format_exc()
+        excs_tuple = get_list_of_hrequests_exceptions(tb_str)
+        if len(excs_tuple[0]) > 1:
+            zip_object = zip(excs_tuple[0], excs_tuple[1])
+            excs_list = [f"{x[0]}: {x[1]}" for x in zip_object]
+            excs_str = "; ".join(excs_list)
+            logger.error(log_prefix + "stacked exceptions: " + excs_str)
+
+        # logger.info(log_prefix + f"exc_msg=X{exc_msg}X" + " (~Tim~)")
+
+        if exc_msg.startswith("Browser was closed. Attribute call failed: close"):
+            pass
+        elif exc_msg.startswith(
+            "Unable to retrieve content because the page is navigating and changing the content."
+        ):
+            pass
+        elif exc_msg.startswith("cookies"):
+            pattern = r"cookies\[(\d+)\]\.value: expected string, got undefined"
+            match = re.search(pattern, exc_msg)
+            if match:
+                logger.error(
+                    log_prefix
+                    + "cookies regex finally worked: "
+                    + exc_slug
+                    + " (~Tim~)"
+                )
+        elif exc_msg == "cookies[0].value: expected string, got undefined":
+            logger.info(
+                log_prefix
+                + "caught cookies[0].value: expected string, got undefined"
+                + " (~Tim~)"
+            )
+        elif exc_msg == "cookies[1].value: expected string, got undefined":
+            logger.info(
+                log_prefix
+                + "caught cookies[1].value: expected string, got undefined"
+                + " (~Tim~)"
+            )
+        else:
+            tb_str = traceback.format_exc()
+            logger.error(log_prefix + "unexpected exception: " + exc_slug)
+            logger.error(log_prefix + tb_str)
+
+    elif isinstance(exc, hrequests.exceptions.ClientException):
+        if "x509: certificate signed by unknown authority" in exc_msg:
+            pass
+        elif exc_msg.startswith("Connection error"):
+            tb_str = traceback.format_exc()
+
+            pattern = r"^hrequests.exceptions.ClientException:(.*)$"
+            match = re.search(pattern, tb_str)
+            if match:
+                detailed_msg = match.group(1)
+                logger.error(log_prefix + f"from traceback: {detailed_msg}")
+        else:
+            logger.error(log_prefix + "unexpected exception: " + exc_slug)
+            logger.error(log_prefix + tb_str)
+
+    elif isinstance(exc, Exception):
+        tb_str = traceback.format_exc()
+        logger.error(log_prefix + "unexpected exception: " + exc_slug)
+        logger.error(log_prefix + tb_str)
+
+    else:
+        logger.error(
+            log_prefix + "fell through all exceptions! " + exc_slug + " (~Tim~)"
+        )
+
+
+def get_page_source_via_hrequests(
     url=None,
     browser="chrome",
     log_prefix="",
@@ -129,12 +216,10 @@ def get_page_source_hrequests(
     if not url:
         return None
 
-    log_prefix += "get_page_source_hrequests(): "
+    # logger.info(log_prefix + f"getting {url}")
 
-    logger.info(log_prefix + f"getting {url}")
-
-    page_source1 = None
-    page_source2 = None
+    page_source_via_get = None
+    page_source_via_render = None
 
     try:
         with hrequests.Session(
@@ -146,120 +231,59 @@ def get_page_source_hrequests(
                 url,
                 timeout=8,
             )
-            page_source1 = resp.text
+            # get page source via GET
+            page_source_via_get = resp.text
 
+            # try to get page source via render()
             try:
                 with resp.render(headless=True, mock_human=True) as page:
                     time.sleep(utils_random.random_real(0, 1))
                     page.goto(url)
                     time.sleep(utils_random.random_real(0, 1))
 
-                    page_source2 = (
+                    page_source_via_render = (
                         page.html.find("html").html
                         if (page.html and page.html.find("html"))
                         else ""
                     )
 
-            except hrequests.exceptions.BrowserTimeoutException as exc:
-                exc_name = str(exc.__class__.__name__)
-                msg = str(exc)
-
-                pattern = r"Timeout (\d+)ms exceeded."
-                match = re.search(pattern, msg)
-                if match:
-                    pass
-                else:
-                    tb_str = traceback.format_exc()
-                    logger.error(
-                        log_prefix + f"{exc_name} during hrequests.Session(): {msg}"
-                    )
-                    logger.error(log_prefix + tb_str)
-
-            except hrequests.exceptions.BrowserException as exc:
-                exc_name = str(exc.__class__.__name__)
-                msg = str(exc)
-
-                if "Browser was closed. Attribute call failed: close" in msg:
-                    pass
-                elif "cookies" in msg:
-                    pattern = r"cookies\[(\d+)\].value: expected string, got undefined"
-                    match = re.search(pattern, msg)
-                    if match:
-                        pass
-                else:
-                    tb_str = traceback.format_exc()
-                    logger.error(
-                        log_prefix + f"{exc_name} during hrequests.Session(): {msg}"
-                    )
-                    logger.error(log_prefix + tb_str)
-
-            except hrequests.exceptions.ClientException as exc:
-                exc_name = str(exc.__class__.__name__)
-                msg = str(exc)
-
-                if "x509: certificate signed by unknown authority" in msg:
-                    pass
-                elif "Connection error" in msg:
-                    tb_str = traceback.format_exc()
-
-                    pattern = r"^hrequests.exceptions.ClientException:(.*)$"
-                    match = re.search(pattern, tb_str)
-                    if match:
-                        detailed_msg = match.group(1)
-                        logger.error(log_prefix + f"from traceback: {detailed_msg}")
-
-                else:
-                    tb_str = traceback.format_exc()
-                    logger.error(
-                        log_prefix + f"{exc_name} during hrequests.Session(): {msg}"
-                    )
-                    logger.error(log_prefix + tb_str)
-
             except Exception as exc:
-                tb_str = traceback.format_exc()
-                logger.error(
-                    log_prefix + f"{exc_name} during hrequests.Session(): {msg}"
+                handle_exception(
+                    exc=exc, log_prefix=log_prefix + "gps_via_hr(): render(): "
                 )
-                logger.error(log_prefix + tb_str)
 
     except Exception as exc:
-        exc_name = str(exc.__class__.__name__)
-        msg = str(exc)
+        handle_exception(exc=exc, log_prefix=log_prefix + "gps_via_hr(): get(): ")
 
-        tb_str = traceback.format_exc()
-        logger.error(log_prefix + f"{exc_name} during hrequests.Session(): {msg}")
-        logger.error(log_prefix + tb_str)
-
-    if page_source1:
-        if page_source1 == empty_page_source:
-            len_page_source1 = 0
+    if page_source_via_get:
+        if page_source_via_get == empty_page_source:
+            len_page_source_via_get = 0
         else:
-            len_page_source1 = len(page_source1)
+            len_page_source_via_get = len(page_source_via_get)
     else:
-        len_page_source1 = 0
+        len_page_source_via_get = 0
 
-    if page_source2:
-        if page_source2 == empty_page_source:
-            len_page_source2 = 0
+    if page_source_via_render:
+        if page_source_via_render == empty_page_source:
+            len_page_source_via_render = 0
         else:
-            len_page_source2 = len(page_source2)
+            len_page_source_via_render = len(page_source_via_render)
     else:
-        len_page_source2 = 0
+        len_page_source_via_render = 0
 
-    if len_page_source1 + len_page_source2 == 0:
-        page_source = None
+    if len_page_source_via_get + len_page_source_via_render == 0:
         logger.info(log_prefix + f"failed to get page source for {url}")
+        return None
     else:
-        if len_page_source2 >= len_page_source1:
-            page_source = page_source2
-            logger.info(log_prefix + f"using page_source2 (rendered) for {url}")
+        if len_page_source_via_render >= len_page_source_via_get:
+            page_source = page_source_via_render
+            logger.info(log_prefix + f"got page_source (via render) for {url}")
         else:
-            page_source = page_source1
-            logger.info(log_prefix + f"using page_source1 (GET) for {url}")
+            page_source = page_source_via_get
+            logger.info(log_prefix + f"got page_source (via GET) for {url}")
 
-        logger.info(log_prefix + f"got page source for {url}")
-
-    return page_source
+        # logger.info(log_prefix + f"got page source for {url}")
+        return page_source
 
 
 # monkey patch a few hrequests dependencies to prevent them from crashing on me

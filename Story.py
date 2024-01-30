@@ -57,7 +57,7 @@ class Story(Item):
 
         self.time_of_last_firebaseio_query: int = (
             time_utils.get_time_now_in_epoch_seconds_int()
-        )
+        )  # TODO: don't initialize this here
 
         # by analyzing self.text:
         self.before_title_link_slug: str = ""
