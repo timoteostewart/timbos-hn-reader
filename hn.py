@@ -67,7 +67,7 @@ def parse_content_type_from_raw_header(content_type_header: str):
         if "/" in each_ct_val:
             content_type = each_ct_val
             break
-    return content_type if content_type else None
+    return content_type.lower() if content_type else None
 
 
 def asdfft2(item_id=None, pos_on_page=None):
@@ -131,12 +131,55 @@ def asdfft2(item_id=None, pos_on_page=None):
         content_type = get_content_type_from_response(response)
         logger.info(log_prefix_local + f"linked url content-type={content_type}")
 
+        if not content_type:
+            # try to determine the content type via magic type
+            pass
+
+        if content_type.startswith("application/vnd"):
+            # parse the rest of the content type to determine what action to take
+            pass
+
+            if (
+                content_type
+                == "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            ):
+                pass
+
+            elif content_type == "application/vnd.android.package-archive":
+                pass
+
+            else:
+                logger.info(
+                    log_prefix_local
+                    + f"unexpected content-type {content_type}"
+                    + " (~Tim~)"
+                )
+
+        if content_type == "text/plain":
+            # determine if it's actually text/html
+            pass
+
+            # if it's truly text/plain, get reading time via goose
+            pass
+
+        if content_type == "text/css":
+            # determine if it's actually text/html
+            pass
+
+        if content_type == "application/json":
+            # determine if it's actually text/html
+            pass
+
         if (
-            content_type == "text/html"
+            content_type == "application/xhtml"
             or content_type == "application/xhtml+xml"
-            or content_type == None
+            or content_type == "application/xml"
+            or content_type == "text/xml"
         ):
-            logger.info(log_prefix_local + "linked url is an HTML page")
+            # determine whether it's actually text/html or indeed xhtml or xml
+            pass
+
+        if content_type == "text/html":
             # get page source
             page_source = retrieve_by_url.get_page_source_via_response_object(
                 response_object=response, log_prefix=log_prefix_local
@@ -181,20 +224,20 @@ def asdfft2(item_id=None, pos_on_page=None):
                     # if domain matches social media sites, check for those details
                     pass
 
-        elif content_type.startswith("image/"):
+        if content_type.startswith("image/"):
             # save response.content as image and update story_object with the thumbnail details
             pass
 
-        elif content_type == "text/plain":
-            # get reading time via goose
-            pass
-
-        elif (
-            content_type == "application/pdf"
+        if (
+            content_type == "application/binary"
             or content_type == "application/octet"
             or content_type == "application/octet-stream"
             or content_type == "binary/octet"
         ):
+            # see if it's really pdf or some other format
+            pass
+
+        if content_type == "application/pdf":
             # the content might not be a PDF, so we have to check it after downloading
             pass
 
@@ -207,7 +250,8 @@ def asdfft2(item_id=None, pos_on_page=None):
             # get reading time via goose
             pass
 
-        else:
+        if not story_object.linked_url_confirmed_content_type:
+            # we'll log the unexpected content type, but we'll still create the story card with the details we have
             logger.error(
                 log_prefix_local + f"unexpected linked url content-type {content_type}"
             )
@@ -331,16 +375,16 @@ def acquire_story_details_for_first_time(item_id=None, pos_on_page=None):
         if domains in skip_getting_content_type_via_head_request_for_domains:
             logger.info(log_prefix_local + f"skip HEAD request for {domains}")
         else:
-            story_object.linked_url_content_type = (
+            story_object.linked_url_reported_content_type = (
                 my_scrapers.get_content_type_via_head_request(
                     url=story_object.url, log_prefix=log_prefix_local
                 )
             )
 
         if (
-            story_object.linked_url_content_type == "text/html"
-            or story_object.linked_url_content_type == "application/xhtml+xml"
-            or not story_object.linked_url_content_type
+            story_object.linked_url_reported_content_type == "text/html"
+            or story_object.linked_url_reported_content_type == "application/xhtml+xml"
+            or not story_object.linked_url_reported_content_type
         ):
             page_source = None
             soup = None
@@ -351,9 +395,12 @@ def acquire_story_details_for_first_time(item_id=None, pos_on_page=None):
             )
 
             if page_source:
-                if story_object.linked_url_content_type == "text/html":
+                if story_object.linked_url_reported_content_type == "text/html":
                     parser_to_use = "lxml"
-                elif story_object.linked_url_content_type == "application/xhtml+xml":
+                elif (
+                    story_object.linked_url_reported_content_type
+                    == "application/xhtml+xml"
+                ):
                     logger.info(log_prefix_local + "using 'lxml-xml' parser")
                     parser_to_use = "lxml-xml"
                 else:
@@ -457,10 +504,10 @@ def acquire_story_details_for_first_time(item_id=None, pos_on_page=None):
                 if story_object.reading_time > 0:
                     create_reading_time_slug(story_object)
 
-        elif story_object.linked_url_content_type.startswith("image/"):
+        elif story_object.linked_url_reported_content_type.startswith("image/"):
             story_object.linked_url_og_image_url_initial = story_object.url
 
-        elif story_object.linked_url_content_type == "text/plain":
+        elif story_object.linked_url_reported_content_type == "text/plain":
             # logger.info(
             #     log_prefix_local
             #     + f"creating minimal story card for story '{story_object.title}' at url {story_object.url} because its content-type is text/plain"
@@ -487,15 +534,16 @@ def acquire_story_details_for_first_time(item_id=None, pos_on_page=None):
 
         # if story links to PDF, we'll use 1st page of PDF as thumb instead of og:image (if any)
         elif (
-            story_object.linked_url_content_type == "application/pdf"
-            or story_object.linked_url_content_type == "application/octet-stream"
+            story_object.linked_url_reported_content_type == "application/pdf"
+            or story_object.linked_url_reported_content_type
+            == "application/octet-stream"
         ):
             story_object.linked_url_og_image_url_initial = story_object.url
 
         else:
             logger.error(
                 log_prefix_local
-                + f"unexpected linked url content-type {story_object.linked_url_content_type}"
+                + f"unexpected linked url content-type {story_object.linked_url_reported_content_type}"
             )
 
         if story_object.linked_url_og_image_url_initial:

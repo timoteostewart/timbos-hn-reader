@@ -62,7 +62,8 @@ class Story(Item):
         # by analyzing self.text:
         self.before_title_link_slug: str = ""
 
-        self.linked_url_content_type: str = ""
+        self.linked_url_reported_content_type: str = ""
+        self.linked_url_confirmed_content_type: str = ""
         self.linked_url_og_image_url_initial: str = ""
         self.linked_url_github_langs_inner_html: str = ""
 
@@ -123,6 +124,7 @@ class Story(Item):
         self.how_long_ago_human_readable_slug: str = ""
 
         self.story_object_version = "0.0.1"
+
 
         super().__init__(id, "story", text, by, time, kids)
 

@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+
+URL=$1
+
+if [[ -z ${URL} ]]; then
+    printf "Show magic info for remote file\n"
+    printf "Usage: getmt <url>\n"
+    exit 1
+fi
+
+if ! temp_dir=$(mktemp -d); then
+    printf "Failed to create temp directory.\n"
+    exit 1
+fi
+
+if [[ -z "${temp_dir}" ]]; then
+    printf "Failed to create temp directory.\n"
+    exit 1
+fi
+
+if [[ "${temp_dir}" != "/tmp"* ]]; then
+    printf "Temp directory created but not in /tmp.\n"
+    exit 1
+fi
+
+trap 'rm -rf "${temp_dir}"' EXIT
+
+wget --output-document "${temp_dir}/a" --quiet "${temp_dir}" "${URL}"
+
+file_info=$(file --brief "${temp_dir}/a")
+mime_info=$(file --brief --mime-type --mime-encoding "${temp_dir}/a")
+
+printf "file: ${file_info}\n"
+printf "mime: ${mime_info}\n"

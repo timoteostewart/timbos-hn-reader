@@ -122,11 +122,6 @@ get_cur_year_and_doy() {
     echo "${CUR_YEAR_AND_DOY}"
 }
 
-# get_cur_datetime_local() {
-#     TZ=UTC
-#     echo $(date -u +"%Y-%m-%d %H:%M:%S %Z")
-# }
-
 get_cur_datetime_iso_8601() {
     TZ=UTC
     printf $(date -u +"%Y-%m-%dT%H:%M:%SZ")

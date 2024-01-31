@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+URL=$1
+
+if [[ -z ${URL} ]]; then
+    echo "Usage: getct <url>"
+    exit 1
+fi
+
+curl -sI "${URL}" | grep -i "Content-Type"

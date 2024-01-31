@@ -56,8 +56,23 @@ def handle_exception(exc: Exception = None, log_prefix="", context=None):
         if "Max retries exceeded with url" in exc_msg:
             url = context["url"] if (context and "url" in context) else ""
             if url:
-                url_slug = f"for url {url}"
-            logger.info(log_prefix + exc_name + f" {url_slug}")
+                url_slug = f" for url {url}"
+            else:
+                url_slug = ""
+            logger.info(log_prefix + exc_name + url_slug)
+        else:
+            tb_str = traceback.format_exc()
+            logger.error(log_prefix + "unexpected exception: " + exc_slug)
+            logger.error(log_prefix + tb_str)
+
+    if isinstance(exc, requests.exceptions.ReadTimeout):
+        if "Read timed out." in exc_msg:
+            url = context["url"] if (context and "url" in context) else ""
+            if url:
+                url_slug = f" for url {url}"
+            else:
+                url_slug = ""
+            logger.info(log_prefix + exc_name + url_slug)
         else:
             tb_str = traceback.format_exc()
             logger.error(log_prefix + "unexpected exception: " + exc_slug)
@@ -67,8 +82,10 @@ def handle_exception(exc: Exception = None, log_prefix="", context=None):
         if "502 Server Error: Bad Gateway for url" in exc_msg:
             url = context["url"] if (context and "url" in context) else ""
             if url:
-                url_slug = f"for url {url}"
-            logger.info(log_prefix + exc_name + f" {url_slug}")
+                url_slug = f" for url {url}"
+            else:
+                url_slug = ""
+            logger.info(log_prefix + exc_name + url_slug)
         else:
             tb_str = traceback.format_exc()
             logger.error(log_prefix + "unexpected exception: " + exc_slug)
