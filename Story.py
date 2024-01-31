@@ -10,11 +10,11 @@ class Story(Item):
     def __init__(
         self,
         by: str,
-        descendants: str,
+        descendants: int,
         id: str,
-        kids: List[str],
-        score: str,
-        time: str,
+        kids: List[int],
+        score: int,
+        time: int,
         title: str,
         text: str,
         url: str,
@@ -119,6 +119,10 @@ class Story(Item):
         self.title_slug_string = ""
         self.score_slug_string = ""
         self.descendants_slug_string = ""
+
+        self.how_long_ago_human_readable_slug: str = ""
+
+        self.story_object_version = "0.0.1"
 
         super().__init__(id, "story", text, by, time, kids)
 

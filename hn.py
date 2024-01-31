@@ -21,6 +21,7 @@ import text_utils
 import thumbs
 import time_utils
 import url_utils
+import utils_random
 from my_exceptions import *
 from PageOfStories import PageOfStories
 from Story import Story
@@ -46,46 +47,270 @@ skip_getting_content_type_via_head_request_for_domains = {
 }
 
 
-def acquire_story_details_for_first_time(item_id=None, pos_on_page=None):
-    log_prefix = f"id {item_id}: "
-    log_prefix += "asdfft(): "
+def get_content_type_from_response(response):
+    if not response:
+        return None
+    entire_content_type_header = (
+        response.headers["Content-Type"] if "Content-Type" in response.headers else None
+    )
+    return parse_content_type_from_raw_header(entire_content_type_header)
+
+
+def parse_content_type_from_raw_header(content_type_header: str):
+    if not content_type_header:
+        return None
+    content_type = None
+    for each_ct_val in content_type_header.split(";"):
+        each_ct_val = each_ct_val.strip()
+        if each_ct_val.startswith("charset"):
+            continue
+        if "/" in each_ct_val:
+            content_type = each_ct_val
+            break
+    return content_type if content_type else None
+
+
+def asdfft2(item_id=None, pos_on_page=None):
+
+    time.sleep(utils_random.random_real(0.5, 2.5))
+
+    log_prefix_id = f"id {item_id}: "
+    log_prefix_local = log_prefix_id + "asdfft2(): "
 
     story_as_dict = None
     try:
         story_as_dict = query_firebaseio_for_story_data(item_id=item_id)
     except Exception as exc:
-        exc_name = str(exc.__class__.__name__)
+        exc_name = f"{exc.__class__.__module__}.{exc.__class__.__name__}"
         exc_msg = str(exc)
         exc_slug = f"{exc_name}: {exc_msg}"
-        logger.info(log_prefix + exc_slug)
+        logger.info(log_prefix_local + exc_slug)
         raise exc
 
     if not story_as_dict:
         logger.warning(
-            log_prefix + "failed to receive story details from firebaseio.com"
+            log_prefix_local + "failed to receive story details from firebaseio.com"
+        )
+        raise Exception("failed to receive story details from firebaseio.com")
+
+    elif story_as_dict["type"] not in ["story", "job", "comment"]:
+        # TODO: eventually handle poll, job, etc. other types
+        logger.info(
+            log_prefix_local
+            + f"not processing item of item type {story_as_dict['type']}"
+        )
+        raise UnsupportedStoryType(story_as_dict["type"])
+
+    story_object = item_factory(story_as_dict)
+
+    if not story_object:
+        # we have to give up
+        err_msg = "item_factory(): failed to create story object"
+        logger.error(log_prefix_local + err_msg)
+        raise Exception(log_prefix_local + err_msg)
+
+    if story_object.url:
+        logger.info(log_prefix_local + f"linked url={story_object.url}")
+
+        response = retrieve_by_url.get_response_object_via_hrequests2(
+            url=story_object.url, log_prefix=log_prefix_local
+        )
+
+        if not response:
+            logger.info(log_prefix_local + f"failed to get response object for url")
+            # create the story card with the details we have
+            create_story_card_html_from_story_object(story_object=story_object)
+
+            # save pickle and json
+            pass
+
+            return
+
+        # invariant now: we have a response object
+
+        content_type = get_content_type_from_response(response)
+        logger.info(log_prefix_local + f"linked url content-type={content_type}")
+
+        if (
+            content_type == "text/html"
+            or content_type == "application/xhtml+xml"
+            or content_type == None
+        ):
+            logger.info(log_prefix_local + "linked url is an HTML page")
+            # get page source
+            page_source = retrieve_by_url.get_page_source_via_response_object(
+                response_object=response, log_prefix=log_prefix_local
+            )
+            logger.info(log_prefix_local + "len(page_source)=" + str(len(page_source)))
+
+            # if we can't get page_source, we don't go on to the block below
+            if page_source:
+                # get url domain
+                pass
+
+                # make soup
+                if content_type == "text/html":
+                    parser_to_use = "lxml"
+                elif content_type == "application/xhtml+xml":
+                    parser_to_use = "lxml-xml"
+                else:
+                    parser_to_use = "lxml"
+                try:
+                    soup = BeautifulSoup(page_source, parser_to_use)
+                except Exception as exc:
+                    exc_name = exc.__class__.__name__
+                    exc_msg = str(exc)
+                    exc_slug = f"{exc_name}: {exc_msg}"
+                    logger.info(
+                        log_prefix_local
+                        + f"problem making soup from {story_object.url}:"
+                        + exc_slug
+                        + " (~Tim~)"
+                    )
+
+                # if we can't make soup, we don't go on to the block below
+                if soup:
+                    pass
+
+                    # look for og:image in page source and update story_object with the thumbnail details
+                    pass
+
+                    # get reading time via goose
+                    pass
+
+                    # if domain matches social media sites, check for those details
+                    pass
+
+        elif content_type.startswith("image/"):
+            # save response.content as image and update story_object with the thumbnail details
+            pass
+
+        elif content_type == "text/plain":
+            # get reading time via goose
+            pass
+
+        elif (
+            content_type == "application/pdf"
+            or content_type == "application/octet"
+            or content_type == "application/octet-stream"
+            or content_type == "binary/octet"
+        ):
+            # the content might not be a PDF, so we have to check it after downloading
+            pass
+
+            # extract first page of PDF and use as og:image
+            pass
+
+            # apply "[pdf]" label after title if it's not there but is probably applicable
+            pass
+
+            # get reading time via goose
+            pass
+
+        else:
+            logger.error(
+                log_prefix_local + f"unexpected linked url content-type {content_type}"
+            )
+
+    if not story_object.url:
+        logger.info(log_prefix_local + "story has no url")
+
+    # create the story card with whatever details we have accumulated
+    create_story_card_html_from_story_object(story_object=story_object)
+
+    save_story_object_to_disk(story_object=story_object, log_prefix=log_prefix_local)
+
+    # return html
+    return story_object.story_card_html
+
+
+def save_story_object_to_disk(story_object=None, log_prefix=""):
+    log_prefix += "save_story_object_to_disk(): "
+    try:
+        with open(
+            os.path.join(
+                config.settings["CACHED_STORIES_DIR"],
+                get_pickle_filename(story_object.id),
+            ),
+            mode="wb",
+        ) as file:
+            pickle.dump(story_object, file)
+    except Exception as exc:
+        exc_name = f"{exc.__class__.__module__}.{exc.__class__.__name__}"
+        exc_msg = str(exc)
+        exc_slug = f"{exc_name}: {exc_msg}"
+        logger.info(log_prefix + exc_slug)
+
+    try:
+        with open(
+            os.path.join(
+                config.settings["CACHED_STORIES_DIR"],
+                f"id-{story_object.id}.json",
+            ),
+            mode="w",
+            encoding="utf-8",
+        ) as f:
+            f.write(json.dumps(story_object.to_dict(), indent=4, sort_keys=True))
+    except Exception as exc:
+        exc_name = f"{exc.__class__.__module__}.{exc.__class__.__name__}"
+        exc_msg = str(exc)
+        exc_slug = f"{exc_name}: {exc_msg}"
+        logger.info(log_prefix + exc_slug)
+
+
+def acquire_story_details_for_first_time(item_id=None, pos_on_page=None):
+    log_prefix_id = f"id {item_id}: "
+    log_prefix_local = log_prefix_id + "asdfft(): "
+
+    # try:
+    #     asdfft2(item_id, pos_on_page)
+    # except Exception as exc:
+    #     log_prefix_tmp = log_prefix_id + "asdfft2(): "
+    #     exc_name = exc.__class__.__name__
+    #     exc_msg = str(exc)
+    #     exc_slug = f"{exc_name}: {exc_msg}"
+    #     logger.error(log_prefix_tmp + exc_slug)
+    #     tb_str = traceback.format_exc()
+    #     logger.error(log_prefix_tmp + tb_str)
+
+    story_as_dict = None
+    try:
+        story_as_dict = query_firebaseio_for_story_data(item_id=item_id)
+    except Exception as exc:
+        exc_name = f"{exc.__class__.__module__}.{exc.__class__.__name__}"
+        exc_msg = str(exc)
+        exc_slug = f"{exc_name}: {exc_msg}"
+        logger.info(log_prefix_local + exc_slug)
+        raise exc
+
+    if not story_as_dict:
+        logger.warning(
+            log_prefix_local + "failed to receive story details from firebaseio.com"
         )
         raise Exception()
     elif story_as_dict["type"] not in ["story", "job", "comment"]:
         # TODO: eventually handle poll, job, etc. other types
         logger.info(
-            log_prefix + f"not processing item of item type {story_as_dict['type']}"
+            log_prefix_local
+            + f"not processing item of item type {story_as_dict['type']}"
         )
         raise UnsupportedStoryType(story_as_dict["type"])
 
-    story_as_object = item_factory(story_as_dict)
+    story_object = item_factory(story_as_dict)
 
-    if not story_as_object:
-        raise Exception(log_prefix + "item_factory(): failed to create story object")
+    if not story_object:
+        raise Exception(
+            log_prefix_local + "item_factory(): failed to create story object"
+        )
 
-    if not story_as_object.url:
-        story_title = story_as_object.title
-        story_title_fragment = story_title[:16] + "…"
+    if not story_object.url:
+        story_title = story_object.title
+        story_title_fragment = story_title[:16]
         first_colon_index = story_title.find(":")
         if 0 <= first_colon_index < 16:
             story_title_fragment = story_title[: first_colon_index + 1]
             pattern = r"^(.*[Hh][Nn])\b.*"
             match = re.search(pattern, story_title_fragment)
-
             if match:
                 story_title_fragment = match.group(1)
             else:
@@ -95,83 +320,84 @@ def acquire_story_details_for_first_time(item_id=None, pos_on_page=None):
 
         thumbs.make_has_thumb_false(
             reason=reason,
-            story_object=story_as_object,
-            log_prefix=log_prefix,
+            story_object=story_object,
+            log_prefix=log_prefix_local,
             exc=None,
             log_tb=False,
         )
 
     else:  # there is a url
-        _, domains = url_utils.get_domains_from_url(story_as_object.url)
+        _, domains = url_utils.get_domains_from_url(story_object.url)
         if domains in skip_getting_content_type_via_head_request_for_domains:
-            logger.info(log_prefix + f"skip HEAD request for {domains}")
+            logger.info(log_prefix_local + f"skip HEAD request for {domains}")
         else:
-            story_as_object.linked_url_content_type = (
+            story_object.linked_url_content_type = (
                 my_scrapers.get_content_type_via_head_request(
-                    url=story_as_object.url, log_prefix=log_prefix
+                    url=story_object.url, log_prefix=log_prefix_local
                 )
             )
-        # if story_as_object.linked_url_content_type:
-        #     logger.info(
-        #         log_prefix
-        #         + f"content-type is {story_as_object.linked_url_content_type} for url {story_as_object.url}"
-        #     )
-        # else:
-        #     logger.info(
-        #         log_prefix
-        #         + f"content-type could not be determined for url {story_as_object.url}"
-        #     )
 
         if (
-            story_as_object.linked_url_content_type == "text/html"
-            or not story_as_object.linked_url_content_type
+            story_object.linked_url_content_type == "text/html"
+            or story_object.linked_url_content_type == "application/xhtml+xml"
+            or not story_object.linked_url_content_type
         ):
             page_source = None
             soup = None
 
             page_source = retrieve_by_url.get_page_source(
-                url=story_as_object.url,
-                log_prefix=log_prefix,
+                url=story_object.url,
+                log_prefix=log_prefix_local,
             )
 
             if page_source:
+                if story_object.linked_url_content_type == "text/html":
+                    parser_to_use = "lxml"
+                elif story_object.linked_url_content_type == "application/xhtml+xml":
+                    logger.info(log_prefix_local + "using 'lxml-xml' parser")
+                    parser_to_use = "lxml-xml"
+                else:
+                    parser_to_use = "lxml"
+
                 try:
-                    soup = BeautifulSoup(page_source, "lxml")
+                    soup = BeautifulSoup(page_source, parser_to_use)
                 except Exception as exc:
                     exc_name = exc.__class__.__name__
                     exc_msg = str(exc)
                     exc_slug = f"{exc_name}: {exc_msg}"
                     logger.info(
-                        log_prefix
-                        + f"problem making soup from {story_as_object.url}:"
+                        log_prefix_local
+                        + f"problem making soup from {story_object.url}:"
                         + exc_slug
                         + " (~Tim~)"
                     )
 
             if not page_source or not soup:
+                # logger.info(
+                #     log_prefix_local
+                #     + f"creating minimal story card for story '{story_object.title}' at url {story_object.url}"
+                # )
+
+                # create story card with what we have
+                create_story_card_html_from_story_object(story_object)
+
                 logger.info(
-                    log_prefix
-                    + f"creating minimal story card for story '{story_as_object.title}' at url {story_as_object.url}"
+                    log_prefix_local + "saving story to disk for the first time"
+                )
+                save_story_object_to_disk(
+                    story_object=story_object, log_prefix=log_prefix_local
                 )
 
-                # create super minimal story card to have at least something to return
-                create_story_card_html_from_story_object(story_as_object)
+                # with open(
+                #     os.path.join(
+                #         config.settings["CACHED_STORIES_DIR"],
+                #         get_pickle_filename(story_object.id),
+                #     ),
+                #     mode="wb",
+                # ) as file:
+                #     pickle.dump(story_object, file)
 
-                # pickle `story_as_object` as json to a file
-                logger.info(log_prefix + "pickling item for the first time")
-                with open(
-                    os.path.join(
-                        config.settings["CACHED_STORIES_DIR"],
-                        get_pickle_filename(story_as_object.id),
-                    ),
-                    mode="wb",
-                ) as file:
-                    pickle.dump(story_as_object, file)
-
-                return (
-                    story_as_object.story_card_html,
-                    time_utils.how_long_ago_human_readable(story_as_object.time),
-                )
+                return story_object.story_card_html
 
             # invariant now: we have page_source and soup
 
@@ -180,35 +406,33 @@ def acquire_story_details_for_first_time(item_id=None, pos_on_page=None):
             if og_image_url_result:
                 if og_image_url_result.has_attr("content"):
                     og_image_url = og_image_url_result["content"]
-                    story_as_object.linked_url_og_image_url_initial = og_image_url
+                    story_object.linked_url_og_image_url_initial = og_image_url
                     logger.info(
-                        log_prefix
-                        + f"found og:image url {story_as_object.linked_url_og_image_url_initial}"
+                        log_prefix_local
+                        + f"found og:image url {story_object.linked_url_og_image_url_initial}"
                     )
             else:
                 thumbs.make_has_thumb_false(
                     reason="page had no og:image tag",
-                    story_object=story_as_object,
-                    log_prefix=log_prefix,
+                    story_object=story_object,
+                    log_prefix=log_prefix_local,
                     exc=None,
                     log_tb=False,
                 )
-
-            # logger.info(log_prefix + "after '# og:image'")
 
             # get reading time
             try:
                 # logger.info(log_prefix + "before my_scrapers.get_reading_time")
                 reading_time = my_scrapers.get_reading_time(
-                    page_source=page_source, log_prefix=log_prefix
+                    page_source=page_source, log_prefix=log_prefix_local
                 )
                 # logger.info(log_prefix + "after my_scrapers.get_reading_time")
                 if reading_time:
-                    story_as_object.reading_time = reading_time
+                    story_object.reading_time = reading_time
                 # logger.info(log_prefix + f"reading time: {reading_time}")
             except Exception as exc:
                 logger.error(
-                    log_prefix
+                    log_prefix_local
                     + f"failed to get reading time: {str(exc)}: {traceback.format_exc(exc)}"
                 )
 
@@ -220,119 +444,154 @@ def acquire_story_details_for_first_time(item_id=None, pos_on_page=None):
             try:
                 social_media.check_for_social_media_details(
                     # driver=driver,
-                    story_as_object=story_as_object,
+                    story_object=story_object,
                     page_source_soup=soup,
                 )
             except Exception as exc:
-                logger.error(log_prefix + f"check_for_social_media_details: {exc}")
+                logger.error(
+                    log_prefix_local + f"check_for_social_media_details: {exc}"
+                )
                 raise exc
 
-            if story_as_object.reading_time:
-                if story_as_object.reading_time > 0:
-                    create_reading_time_slug(story_as_object)
+            if story_object.reading_time:
+                if story_object.reading_time > 0:
+                    create_reading_time_slug(story_object)
+
+        elif story_object.linked_url_content_type.startswith("image/"):
+            story_object.linked_url_og_image_url_initial = story_object.url
+
+        elif story_object.linked_url_content_type == "text/plain":
+            # logger.info(
+            #     log_prefix_local
+            #     + f"creating minimal story card for story '{story_object.title}' at url {story_object.url} because its content-type is text/plain"
+            # )
+
+            # create story card with what we have
+            create_story_card_html_from_story_object(story_object)
+
+            # pickle `story_object` as json to a file
+            logger.info(log_prefix_local + "saving item to disk for the first time")
+            save_story_object_to_disk(
+                story_object=story_object, log_prefix=log_prefix_local
+            )
+
+            thumbs.make_has_thumb_false(
+                reason="page had no og:image tag",
+                story_object=story_object,
+                log_prefix=log_prefix_local,
+                exc=None,
+                log_tb=False,
+            )
+
+            return story_object.story_card_html
 
         # if story links to PDF, we'll use 1st page of PDF as thumb instead of og:image (if any)
         elif (
-            story_as_object.linked_url_content_type == "application/pdf"
-            or story_as_object.linked_url_content_type == "application/octet-stream"
+            story_object.linked_url_content_type == "application/pdf"
+            or story_object.linked_url_content_type == "application/octet-stream"
         ):
-            story_as_object.linked_url_og_image_url_initial = story_as_object.url
+            story_object.linked_url_og_image_url_initial = story_object.url
 
-        if story_as_object.linked_url_og_image_url_initial:
-            res = my_scrapers.download_og_image(story_as_object)
+        else:
+            logger.error(
+                log_prefix_local
+                + f"unexpected linked url content-type {story_object.linked_url_content_type}"
+            )
+
+        if story_object.linked_url_og_image_url_initial:
+            res = my_scrapers.download_og_image(story_object)
             if res == True:
                 if pos_on_page < 5:
                     img_loading_attr = "eager"
                 else:
                     img_loading_attr = "lazy"
 
-                thumbs.get_image_slug(story_as_object, img_loading=img_loading_attr)
+                thumbs.get_image_slug(story_object, img_loading=img_loading_attr)
 
-                if story_as_object.pdf_page_count > 0:
-                    story_as_object.pdf_page_count_slug = (
+                if story_object.pdf_page_count > 0:
+                    story_object.pdf_page_count_slug = (
                         "<tr><td>"
                         '<div class="reading-time-bar">'
                         '<div class="estimated-reading-time">'
-                        f"📄 {text_utils.add_singular_plural(story_as_object.pdf_page_count, 'page', force_int=True)}"
+                        f"📄 {text_utils.add_singular_plural(story_object.pdf_page_count, 'page', force_int=True)}"
                         "</div>"
                         "</div>"
                         "</td></tr>"
                     )
             elif res == False:
+                reason_to_use = (
+                    story_object.reason_for_no_thumb
+                    if story_object.reason_for_no_thumb
+                    else "could not download og:image"
+                )
+
                 thumbs.make_has_thumb_false(
-                    reason="could not download og:image",
-                    story_object=story_as_object,
-                    log_prefix=log_prefix,
+                    reason=reason_to_use,
+                    story_object=story_object,
+                    log_prefix=log_prefix_local,
                     exc=None,
                     log_tb=False,
                 )
 
             else:
                 logger.error(
-                    log_prefix
-                    + f"unexpected result from download_og_image(): res={res}, type(res)={type(res)}"
+                    log_prefix_local
+                    + f"unexpected result from download_og_image(): {res=}, {type(res)=}"
                 )
                 thumbs.make_has_thumb_false(
                     reason="unexpected result from download_og_image()",
-                    story_object=story_as_object,
-                    log_prefix=log_prefix,
+                    story_object=story_object,
+                    log_prefix=log_prefix_local,
                     exc=None,
                     log_tb=False,
                 )
 
-    # add informative labels before and after the story card title, if possible
-    if story_as_object.has_thumb:
-        if story_as_object.image_slug:
-            logger.info(log_prefix + "story card will have a thumbnail")
-        else:
+        # add informative labels before and after the story card title, if possible
+        if story_object.has_thumb and story_object.image_slug:
+            logger.info(log_prefix_local + "story card will have a thumbnail")
+
+        if story_object.has_thumb and not story_object.image_slug:
             logger.error(
-                log_prefix
+                log_prefix_local
                 + "has_thumb is True, but there's no image_slug, so updating as_thumb to False (~Tim~)"
             )
-            story_as_object.has_thumb = False
-    else:  # not story_as_object.has_thumb
-        if not story_as_object.reason_for_no_thumb:
-            logger.error(
-                log_prefix
-                + "has_thumb is False, but there's no reason_for_no_thumb (~Tim~)"
-            )
-        # logger.info(log_prefix + "story card will not have a thumbnail")
+            story_object.has_thumb = False
 
-    # if we have no thumbnail, then make sure we don't include a `story_content_type_slug`
-    if not story_as_object.has_thumb:
-        story_as_object.story_content_type_slug = text_utils.EMPTY_STRING
+    if not story_object.has_thumb and not story_object.reason_for_no_thumb:
+        logger.error(
+            log_prefix_local
+            + "has_thumb is False, but there's no reason_for_no_thumb (~Tim~)"
+        )
+
+    if not story_object.has_thumb:
+        logger.info(log_prefix_local + "story card will not have a thumbnail")
+        # if we have no thumbnail, then make sure we don't include a `story_content_type_slug`
+        story_object.story_content_type_slug = text_utils.EMPTY_STRING
 
     # apply "[pdf]" label after title if it's not there but is probably applicable
     if (
-        story_as_object.downloaded_og_image_magic_result
-        and story_as_object.downloaded_og_image_magic_result == "application/pdf"
+        story_object.downloaded_og_image_magic_result
+        and story_object.downloaded_og_image_magic_result == "application/pdf"
     ):
-        if "pdf" not in story_as_object.title[-12:].lower():
-            story_as_object.story_content_type_slug = (
+        if "pdf" not in story_object.title[-12:].lower():
+            story_object.story_content_type_slug = (
                 ' <span class="story-content-type">[pdf]</span>'
             )
-            logger.info(f"id {story_as_object.id}: added [pdf] label after title")
+            logger.info(f"id {story_object.id}: added [pdf] label after title")
 
     ##
     ## build html for story card
     ##
 
-    create_story_card_html_from_story_object(story_as_object)
-
-    # pickle `story_as_object` as json to a file
-    logger.info(log_prefix + "pickling item for the first time")
-    with open(
-        os.path.join(
-            config.settings["CACHED_STORIES_DIR"],
-            get_pickle_filename(story_as_object.id),
-        ),
-        mode="wb",
-    ) as file:
-        pickle.dump(story_as_object, file)
-
-    return story_as_object.story_card_html, time_utils.how_long_ago_human_readable(
-        story_as_object.time
+    story_object.how_long_ago_human_readable_slug = (
+        time_utils.how_long_ago_human_readable(story_object.time)
     )
+
+    create_story_card_html_from_story_object(story_object)
+
+    logger.info(log_prefix_local + "saving story to disk for the first time")
+    save_story_object_to_disk(story_object=story_object, log_prefix=log_prefix_local)
+    return story_object.story_card_html
 
 
 def create_badges_slug(story_id, story_type, rosters):
@@ -373,45 +632,42 @@ def create_badges_slug(story_id, story_type, rosters):
     return badges_slug
 
 
-def create_reading_time_slug(story_as_object):
-    story_as_object.reading_time_slug = (
+def create_reading_time_slug(story_object):
+    story_object.reading_time_slug = (
         "<tr><td>"
         '<div class="reading-time-bar">'
         '<div class="estimated-reading-time">'
-        f"⏱️ {text_utils.add_singular_plural(story_as_object.reading_time, 'minute', force_int=True)}"
+        f"⏱️ {text_utils.add_singular_plural(story_object.reading_time, 'minute', force_int=True)}"
         "</div>"
         "</div>"
         "</td></tr>"
     )
 
 
-def create_story_card_html_from_story_object(story_as_object):
-    title_slug_string = (
-        f'<a href="{story_as_object.url}">{story_as_object.title_slug}</a>'
-    )
-    story_as_object.title_slug_string = title_slug_string
-    score_slug_string = (
-        f'<div class="story-score">{story_as_object.score_display}</div>'
-    )
-    story_as_object.score_slug_string = score_slug_string
-    descendants_slug_string = f'<div class="story-descendants"><a href="{story_as_object.hn_comments_url}">{story_as_object.descendants_display}</a></div>'
-    story_as_object.descendants_slug_string = descendants_slug_string
+def create_story_card_html_from_story_object(story_object):
+    title_slug_string = f'<a href="{story_object.url}">{story_object.title_slug}</a>'
+    story_object.title_slug_string = title_slug_string
+    score_slug_string = f'<div class="story-score">{story_object.score_display}</div>'
+    story_object.score_slug_string = score_slug_string
+    descendants_slug_string = f'<div class="story-descendants"><a href="{story_object.hn_comments_url}">{story_object.descendants_display}</a></div>'
+    story_object.descendants_slug_string = descendants_slug_string
 
     data_separator_slug = f'<div class="data-separator">{config.settings["SYMBOLS"]["DATA_SEPARATOR"]}</div>'
-    story_as_object.story_card_html = (
-        f'<tr data-story-id="{story_as_object.id}"><td>'
+
+    story_object.story_card_html = (
+        f'<tr data-story-id="{story_object.id}"><td>'
         '<table class="story-details"><tbody class="story-details">'
         "<tr><td>"
         "<hr>"
-        f"{story_as_object.image_slug}"
+        f"{story_object.image_slug}"
         "</td></tr>"
-        f"{story_as_object.github_languages_slug}"
+        f"{story_object.github_languages_slug}"
         "<tr><td>"
         '<div class="title-and-domain-bar">'
-        f'<div class="title-part">{story_as_object.before_title_link_slug}'
+        f'<div class="title-part">{story_object.before_title_link_slug}'
         f"{title_slug_string}"
-        f"{story_as_object.story_content_type_slug}</div>"
-        f'<div class="domain-part">{story_as_object.hostname["slug"]}</div>'
+        f"{story_object.story_content_type_slug}</div>"
+        f'<div class="domain-part">{story_object.hostname["slug"]}</div>'
         "</div>"
         "</td></tr>"
         "<tr><td>"
@@ -421,131 +677,131 @@ def create_story_card_html_from_story_object(story_as_object):
         f"{data_separator_slug}"
         f"{descendants_slug_string}"
         f"{data_separator_slug}"
-        f'<div class="story-time-ago" title="{story_as_object.publication_time_ISO_8601}">'
-        "<!-- pub_time_ago_display goes here -->&nbsp;</div>"
-        f'<div class="story-byline">by <a href="https://news.ycombinator.com/user?id={story_as_object.by}">{story_as_object.by}</a></div>'
+        f'<div class="story-time-ago" title="{story_object.publication_time_ISO_8601}">'
+        f"{story_object.how_long_ago_human_readable_slug}&nbsp;</div>"
+        f'<div class="story-byline">by <a href="https://news.ycombinator.com/user?id={story_object.by}">{story_object.by}</a></div>'
         "</div>"
         "</td></tr>"
-        f"{story_as_object.reading_time_slug}"
-        f"{story_as_object.pdf_page_count_slug}"
+        f"{story_object.reading_time_slug}"
+        f"{story_object.pdf_page_count_slug}"
         "</tbody></table>"
         "</td></tr>"
     )
 
 
-def freshen_up(story_as_object=None):
+def freshen_up(story_object=None):
     # try to update title, score, comment count
 
     try:
         updated_story_data_as_dict = query_firebaseio_for_story_data(
-            item_id=story_as_object.id
+            item_id=story_object.id
         )
     except Exception as exc:
         logger.warning(
-            f"freshen_up(): query to hacker-news.firebaseio.com failed for story id {story_as_object.id} ; so re-using old story details"
+            f"freshen_up(): query to hacker-news.firebaseio.com failed for story id {story_object.id} ; so re-using old story details"
         )
         raise exc
 
     if not updated_story_data_as_dict:
         logger.warning(
-            f"freshen_up(): query to hacker-news.firebaseio.com failed for story id {story_as_object.id} ; so re-using old story details"
+            f"freshen_up(): query to hacker-news.firebaseio.com failed for story id {story_object.id} ; so re-using old story details"
         )
         raise exc
 
-    story_as_object.time_of_last_firebaseio_query = (
+    story_object.time_of_last_firebaseio_query = (
         time_utils.get_time_now_in_epoch_seconds_int()
     )
 
     # update title if needed
     if "title" in updated_story_data_as_dict:
-        old_title = story_as_object.title
+        old_title = story_object.title
         new_title = updated_story_data_as_dict["title"]
 
         if old_title != new_title:
             if "url" in updated_story_data_as_dict:
-                # old_url = story_as_object.url
+                # old_url = story_object.url
                 new_url = updated_story_data_as_dict["url"]
             else:
-                # old_url = story_as_object.url
+                # old_url = story_object.url
                 new_url = f'https://news.ycombinator.com/item?id={updated_story_data_as_dict["id"]}'
 
-            old_title_slug_string = story_as_object.title_slug_string
+            old_title_slug_string = story_object.title_slug_string
             new_title_slug_string = f'<a href="{new_url}">{text_utils.insert_possible_line_breaks(new_title)}</a>'
 
-            pre = story_as_object.story_card_html
-            story_as_object.story_card_html = story_as_object.story_card_html.replace(
+            # pre = story_object.story_card_html
+            story_object.story_card_html = story_object.story_card_html.replace(
                 old_title_slug_string, new_title_slug_string, 1
             )
-            post = story_as_object.story_card_html
-            if pre == post:
-                logger.error(
-                    f"id {story_as_object.id}: failed to update title. old title slug string: {old_title_slug_string} ; new title slug string: {new_title_slug_string} ; old title: {old_title} ; new title: {new_title}"
-                )
-                logger.error(
-                    f"id {story_as_object.id}: story_card_html: {story_as_object.story_card_html}"
-                )
+            # post = story_object.story_card_html
+            # if pre == post:
+            #     logger.error(
+            #         f"id {story_object.id}: failed to update title. old title slug string: {old_title_slug_string} ; new title slug string: {new_title_slug_string} ; old title: {old_title} ; new title: {new_title}"
+            #     )
+            #     logger.error(
+            #         f"id {story_object.id}: story_card_html: {story_object.story_card_html}"
+            #     )
 
-            else:
-                story_as_object.title_slug_string = new_title_slug_string
-                story_as_object.title = new_title
-                logger.info(
-                    f"id {story_as_object.id}: updated title from '{old_title}' to '{new_title}'"
-                )
+            # else:
+            story_object.title_slug_string = new_title_slug_string
+            story_object.title = new_title
+            logger.info(
+                f"id {story_object.id}: updated title from '{old_title}' to '{new_title}'"
+            )
 
     else:
-        logger.warning(
-            f"id {story_as_object.id}: no key for 'title' in updated_story_data_as_dict; story is probably dead"
+        logger.info(
+            f"id {story_object.id}: no key for 'title' in updated_story_data_as_dict (story is probably dead)"
         )
 
     # update score if needed
     if "score" in updated_story_data_as_dict:
-        old_score = story_as_object.score
+        old_score = story_object.score
         new_score = int(updated_story_data_as_dict["score"])
         if old_score != new_score:
             # old_score_slug_string = (
-            #     f'<div class="story-score">{story_as_object.score_display}</div>'
+            #     f'<div class="story-score">{story_object.score_display}</div>'
             # )
-            old_score_slug_string = story_as_object.score_slug_string
+            old_score_slug_string = story_object.score_slug_string
             new_score_display = text_utils.add_singular_plural(new_score, "point")
             new_score_slug_string = (
                 f'<div class="story-score">{new_score_display}</div>'
             )
-            story_as_object.story_card_html = story_as_object.story_card_html.replace(
+            story_object.story_card_html = story_object.story_card_html.replace(
                 old_score_slug_string, new_score_slug_string, 1
             )
 
-            story_as_object.score_slug_string = new_score_slug_string
-            story_as_object.score = new_score
+            story_object.score_slug_string = new_score_slug_string
+            story_object.score = new_score
             logger.info(
-                f"id {story_as_object.id}: updated score from {old_score} to {new_score}"
+                f"id {story_object.id}: updated score from {old_score} to {new_score}"
             )
 
     else:
         logger.warning(
-            f"id {story_as_object.id}: no key for 'score' in updated_story_data_as_dict"
+            f"id {story_object.id}: no key for 'score' in updated_story_data_as_dict"
         )
 
     # update comment count (i.e., "descendants") if needed
     if "descendants" in updated_story_data_as_dict:
-        old_descendants = story_as_object.descendants
+        old_descendants = story_object.descendants
         new_descendants = int(updated_story_data_as_dict["descendants"])
         if old_descendants != new_descendants:
-            # old_descendants_slug_string = f'<div class="story-descendants"><a href="{story_as_object.hn_comments_url}">{story_as_object.descendants_display}</a></div>'
-            old_descendants_slug_string = story_as_object.descendants_slug_string
+            # old_descendants_slug_string = f'<div class="story-descendants"><a href="{story_object.hn_comments_url}">{story_object.descendants_display}</a></div>'
+            old_descendants_slug_string = story_object.descendants_slug_string
 
             new_descendants_display = text_utils.add_singular_plural(
                 new_descendants, "comment"
             )
-            new_descendants_slug_string = f'<div class="story-descendants"><a href="{story_as_object.hn_comments_url}">{new_descendants_display}</a></div>'
+            new_descendants_slug_string = f'<div class="story-descendants"><a href="{story_object.hn_comments_url}">{new_descendants_display}</a></div>'
 
-            story_as_object.story_card_html = story_as_object.story_card_html.replace(
+            story_object.story_card_html = story_object.story_card_html.replace(
                 old_descendants_slug_string, new_descendants_slug_string, 1
             )
 
-            story_as_object.descendants_slug_string = new_descendants_slug_string
-            story_as_object.descendants = new_descendants
+            story_object.descendants_slug_string = new_descendants_slug_string
+            story_object.descendants = new_descendants
             logger.info(
-                f"id {story_as_object.id}: updated comment count from {old_descendants} to {new_descendants}"
+                f"id {story_object.id}: updated comment count from {old_descendants} to {new_descendants}"
             )
 
 
@@ -680,24 +936,20 @@ def page_package_processor(page_package):
         # logger.info(id_log_prefix + f"page:rank={page_package.page_number}:{rank}")
 
         # check for locally cached story
-        if os.path.exists(
-            os.path.join(
-                config.settings["CACHED_STORIES_DIR"], get_pickle_filename(each_id)
-            )
-        ):
+
+        cached_filename = os.path.join(
+            config.settings["CACHED_STORIES_DIR"], get_pickle_filename(each_id)
+        )
+
+        if os.path.exists(cached_filename):
             logger.info(log_prefix_id + "cached story found")
 
-            with open(
-                os.path.join(
-                    config.settings["CACHED_STORIES_DIR"], get_pickle_filename(each_id)
-                ),
-                mode="rb",
-            ) as file:
-                story_as_object = pickle.load(file)
+            with open(cached_filename, mode="rb") as file:
+                story_object = pickle.load(file)
 
             minutes_ago_since_last_firebaseio_update = (
                 time_utils.get_time_now_in_epoch_seconds_int()
-                - story_as_object.time_of_last_firebaseio_query
+                - story_object.time_of_last_firebaseio_query
             ) // 60
 
             time_ago_since_last_firebaseio_update_display = (
@@ -718,11 +970,10 @@ def page_package_processor(page_package):
 
                 # attempt to update title, score, comment count
                 try:
-                    freshen_up(story_as_object=story_as_object)
+                    freshen_up(story_object=story_object)
+                    repickling_log_detail = "re-pickling freshened story"
                 except Exception as exc:
                     repickling_log_detail = f"failed to freshen story: {exc}"
-                else:
-                    repickling_log_detail = "re-pickling freshened story"
 
             else:
                 logger.info(
@@ -734,59 +985,87 @@ def page_package_processor(page_package):
                 repickling_log_detail = "re-pickling re-used cached story"
 
             # whether freshened or not, update pub_time_ago_display
-            pub_time_ago_display = time_utils.how_long_ago_human_readable(
-                story_as_object.time
+            # pub_time_ago_display = time_utils.how_long_ago_human_readable(
+            #     story_object.time
+            # )
+
+            # whether we freshed or not or tried to freshen and failed, we can still update the how_long_ago_human_readable_slug
+            old_how_long_ago_human_readable_slug = (
+                story_object.how_long_ago_human_readable_slug
             )
+            new_how_long_ago_human_readable_slug = (
+                time_utils.how_long_ago_human_readable(story_object.time)
+            )
+            if (
+                old_how_long_ago_human_readable_slug
+                != new_how_long_ago_human_readable_slug
+            ):
+                story_object.how_long_ago_human_readable_slug = (
+                    new_how_long_ago_human_readable_slug
+                )
+                story_object.story_card_html = story_object.story_card_html.replace(
+                    old_how_long_ago_human_readable_slug,
+                    new_how_long_ago_human_readable_slug,
+                    1,
+                )
+                logger.info(
+                    f"id {story_object.id}: updated how_long_ago_human_readable_slug from '{old_how_long_ago_human_readable_slug}' to '{new_how_long_ago_human_readable_slug}'"
+                )
+                story_object.how_long_ago_human_readable_slug = (
+                    new_how_long_ago_human_readable_slug
+                )
 
             logger.info(log_prefix_id + f"{repickling_log_detail}")
 
             if repickling_log_detail.startswith("re-pickling"):
-                with open(
-                    os.path.join(
-                        config.settings["CACHED_STORIES_DIR"],
-                        get_pickle_filename(story_as_object.id),
-                    ),
-                    mode="wb",
-                ) as file:
-                    pickle.dump(story_as_object, file)
+                save_story_object_to_disk(
+                    story_object=story_object, log_prefix=log_prefix_id
+                )
 
-                with open(
-                    os.path.join(
-                        config.settings["CACHED_STORIES_DIR"],
-                        f"id-{story_as_object.id}.json",
-                    ),
-                    mode="w",
-                    encoding="utf-8",
-                ) as f:
-                    f.write(
-                        json.dumps(story_as_object.to_dict(), indent=4, sort_keys=True)
-                    )
+                # with open(
+                #     os.path.join(
+                #         config.settings["CACHED_STORIES_DIR"],
+                #         get_pickle_filename(story_object.id),
+                #     ),
+                #     mode="wb",
+                # ) as file:
+                #     pickle.dump(story_object, file)
 
-            cur_story_card_html = story_as_object.story_card_html
+                # with open(
+                #     os.path.join(
+                #         config.settings["CACHED_STORIES_DIR"],
+                #         f"id-{story_object.id}.json",
+                #     ),
+                #     mode="w",
+                #     encoding="utf-8",
+                # ) as f:
+                #     f.write(
+                #         json.dumps(story_object.to_dict(), indent=4, sort_keys=True)
+                #     )
+
+            cur_story_card_html = story_object.story_card_html
 
         else:
             logger.info(log_prefix_id + "no cached story found")
 
             try:
-                (
-                    cur_story_card_html,
-                    pub_time_ago_display,
-                ) = acquire_story_details_for_first_time(
+
+                cur_story_card_html = acquire_story_details_for_first_time(
                     item_id=each_id,
                     pos_on_page=rank,
                 )
             except UnsupportedStoryType as exc:
-                exc_name = str(exc.__class__.__name__)
+                exc_name = f"{exc.__class__.__module__}.{exc.__class__.__name__}"
                 exc_msg = str(exc)
                 exc_slug = f"{exc_name}: {exc_msg}"
                 logger.info(log_prefix_id + exc_slug)
                 logger.info(log_prefix_id + "discarding this story")
                 continue  # to next each_id
+
             except Exception as exc:
-                exc_name = str(exc.__class__.__name__)
+                exc_name = f"{exc.__class__.__module__}.{exc.__class__.__name__}"
                 exc_msg = str(exc)
                 exc_slug = f"{exc_name}: {exc_msg}"
-
                 logger.error(log_prefix_id + f"asdfft(): " + exc_slug)
                 tb_str = traceback.format_exc()
                 logger.error(log_prefix_id + tb_str)
@@ -799,9 +1078,9 @@ def page_package_processor(page_package):
             continue  # to next each_id
 
         # populate pub_time_ago_display
-        cur_story_card_html = cur_story_card_html.replace(
-            "<!-- pub_time_ago_display goes here -->", pub_time_ago_display, 1
-        )
+        # cur_story_card_html = cur_story_card_html.replace(
+        #     "<!-- pub_time_ago_display goes here -->", pub_time_ago_display, 1
+        # )
 
         # populate badges_slug placeholder
         new_badges_slug = create_badges_slug(
@@ -1140,8 +1419,6 @@ def supervisor(cur_story_type):
         cur_story_ids.clear()
         is_first_page = False
 
-    # logger.info(log_prefix + f"len(page_packages)={len(page_packages)}")
-
     if config.DEBUG_FLAG_DISABLE_CONCURRENT_PAGE_PROCESSING:
         for each_page in page_packages:
             res = page_package_processor(each_page)
@@ -1157,14 +1434,7 @@ def supervisor(cur_story_type):
                     executor.submit(page_package_processor, each_page_package)
                 )
 
-        # logger.info(
-        #     log_prefix
-        #     + f"awaiting {len(page_processing_job_futures)} page processing job futures"
-        # )
-
         concurrent.futures.wait(page_processing_job_futures)
-
-        # logger.info(log_prefix + "awaiting done!")
 
         for future in page_processing_job_futures:
             pages_in_progress.remove(int(future.result()))

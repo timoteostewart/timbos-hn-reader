@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+
+# Check if at least one story_id is provided
+if [[ $# -eq 0 ]]; then
+    echo "Usage: nuke <story_id> [<story_id> ...]"
+    exit 1
+fi
+
+# THNR's base directory
+BASE_DIR=/srv/timbos-hn-reader/
+CACHED_STORY_DIR="${BASE_DIR}cached_stories/"
+
+# Function to delete a file if it exists
+delete_file() {
+    local file=$1
+    local file_display_name=$(basename "${file}")
+    if [[ -f "${file}" ]]; then
+        if rm --force "${file}"; then
+            echo "${file_display_name} deleted."
+        else
+            echo "${file_display_name} couldn't be deleted for some reason."
+            exit 1
+        fi
+    else
+        echo "${file_display_name} doesn't exist."
+    fi
+}
+
+for story_id in "$@"; do
+    PICKLE_FILE="${CACHED_STORY_DIR}id-${story_id}.pickle"
+    JSON_FILE="${CACHED_STORY_DIR}id-${story_id}.json"
+
+    delete_file "${PICKLE_FILE}"
+    delete_file "${JSON_FILE}"
+done

@@ -30,57 +30,55 @@ ARTICLE_SYMBOL = "📄"
 
 
 def check_for_social_media_details(
-    driver=None, story_as_object=None, page_source_soup=None
+    driver=None, story_object=None, page_source_soup=None
 ):
     #
     # arstechnica.com
     #
-    if story_as_object.hostname["minus_www"] == "arstechnica.com":
-        story_as_object.social_media[
-            "account_name_slug"
-        ] = get_arstechnica_account_slug(
-            arstechnica_url=story_as_object.url,
-            story_as_object=story_as_object,
+    if story_object.hostname["minus_www"] == "arstechnica.com":
+        story_object.social_media["account_name_slug"] = get_arstechnica_account_slug(
+            arstechnica_url=story_object.url,
+            story_object=story_object,
             page_source_soup=page_source_soup,
         )
 
-        if story_as_object.social_media["account_name_slug"]:
-            story_as_object.hostname["slug"] += story_as_object.social_media[
+        if story_object.social_media["account_name_slug"]:
+            story_object.hostname["slug"] += story_object.social_media[
                 "account_name_slug"
             ]
 
     #
     # bloomberg.com
     #
-    elif story_as_object.hostname["minus_www"] == "bloomberg.com":
-        story_as_object.social_media["account_name_slug"] = get_bloomberg_account_slug(
-            bloomberg_url=story_as_object.url,
-            story_as_object=story_as_object,
+    elif story_object.hostname["minus_www"] == "bloomberg.com":
+        story_object.social_media["account_name_slug"] = get_bloomberg_account_slug(
+            bloomberg_url=story_object.url,
+            story_object=story_object,
             page_source_soup=page_source_soup,
         )
 
-        if story_as_object.social_media["account_name_slug"]:
-            story_as_object.hostname["slug"] += story_as_object.social_media[
+        if story_object.social_media["account_name_slug"]:
+            story_object.hostname["slug"] += story_object.social_media[
                 "account_name_slug"
             ]
 
     #
     # github.com
     #
-    elif story_as_object.hostname["minus_www"] == "github.com":
-        story_as_object.social_media["account_name_slug"] = get_github_account_slug(
-            story_as_object.url, story_as_object=story_as_object
+    elif story_object.hostname["minus_www"] == "github.com":
+        story_object.social_media["account_name_slug"] = get_github_account_slug(
+            story_object.url, story_object=story_object
         )
 
-        if story_as_object.social_media["account_name_slug"]:
-            story_as_object.hostname[
-                "slug"
-            ] = f'<a class="domains-for-search{story_as_object.hostname["for_display_addl_class"]}" href="https://news.ycombinator.com/from?site={story_as_object.social_media["hn_search_query"]}">({story_as_object.hostname["for_display"]})</a>'
-            story_as_object.hostname["slug"] += story_as_object.social_media[
+        if story_object.social_media["account_name_slug"]:
+            story_object.hostname["slug"] = (
+                f'<a class="domains-for-search{story_object.hostname["for_display_addl_class"]}" href="https://news.ycombinator.com/from?site={story_object.social_media["hn_search_query"]}">({story_object.hostname["for_display"]})</a>'
+            )
+            story_object.hostname["slug"] += story_object.social_media[
                 "account_name_slug"
             ]
 
-        story_as_object.gh_repo_lang_stats = text_utils.EMPTY_STRING
+        story_object.gh_repo_lang_stats = text_utils.EMPTY_STRING
         a_data_pjax_repo = page_source_soup.find(
             "a", {"data-pjax": "#repo-content-pjax-container"}
         )
@@ -90,183 +88,181 @@ def check_for_social_media_details(
             gh_repo_lang_stats = get_github_repo_languages(
                 driver=driver,
                 repo_url=repo_url,
-                story_id=story_as_object.id,
+                story_id=story_object.id,
             )
             if gh_repo_lang_stats:
-                story_as_object.gh_repo_lang_stats = gh_repo_lang_stats
-                create_github_languages_slug(story_as_object)
+                story_object.gh_repo_lang_stats = gh_repo_lang_stats
+                create_github_languages_slug(story_object)
 
     #
     # gist.github.com
     #
-    elif story_as_object.hostname["minus_www"] == "gist.github.com":
-        story_as_object.social_media[
-            "account_name_slug"
-        ] = get_github_gist_account_slug(
-            github_gist_url=story_as_object.url,
-            story_as_object=story_as_object,
+    elif story_object.hostname["minus_www"] == "gist.github.com":
+        story_object.social_media["account_name_slug"] = get_github_gist_account_slug(
+            github_gist_url=story_object.url,
+            story_object=story_object,
             page_source_soup=page_source_soup,
         )
 
-        if story_as_object.social_media["account_name_slug"]:
-            story_as_object.hostname["slug"] += story_as_object.social_media[
+        if story_object.social_media["account_name_slug"]:
+            story_object.hostname["slug"] += story_object.social_media[
                 "account_name_slug"
             ]
 
     #
     # theguardian.com
     #
-    # elif story_as_object.hostname["minus_www"] == "theguardian.com":
-    #     story_as_object.social_media[
+    # elif story_object.hostname["minus_www"] == "theguardian.com":
+    #     story_object.social_media[
     #         "account_name_slug"
     #     ] = get_theguardian_account_slug(
-    #         theguardian_url=story_as_object.url,
-    #         story_as_object=story_as_object,
+    #         theguardian_url=story_object.url,
+    #         story_object=story_object,
     #         page_source_soup=page_source_soup,
     #     )
 
-    #     if story_as_object.social_media["account_name_slug"]:
-    #         story_as_object.hostname["slug"] += story_as_object.social_media[
+    #     if story_object.social_media["account_name_slug"]:
+    #         story_object.hostname["slug"] += story_object.social_media[
     #             "account_name_slug"
     #         ]
 
     #
     # linkedin.com
     #
-    elif story_as_object.hostname["minus_www"].endswith("linkedin.com"):  # TODO
+    elif story_object.hostname["minus_www"].endswith("linkedin.com"):  # TODO
         pass
     #
     # medium.com
     #
-    elif story_as_object.hostname["minus_www"].endswith("medium.com"):
-        story_as_object.social_media["account_name_slug"] = get_medium_account_slug(
-            story_as_object.url, story_as_object
+    elif story_object.hostname["minus_www"].endswith("medium.com"):
+        story_object.social_media["account_name_slug"] = get_medium_account_slug(
+            story_object.url, story_object
         )
 
-        if story_as_object.social_media["account_name_slug"]:
-            story_as_object.hostname[
-                "slug"
-            ] = f'<a class="domains-for-search{story_as_object.hostname["for_display_addl_class"]}" href="https://news.ycombinator.com/from?site={story_as_object.social_media["hn_search_query"]}">({story_as_object.hostname["for_display"]})</a>'
-            story_as_object.hostname["slug"] += story_as_object.social_media[
+        if story_object.social_media["account_name_slug"]:
+            story_object.hostname["slug"] = (
+                f'<a class="domains-for-search{story_object.hostname["for_display_addl_class"]}" href="https://news.ycombinator.com/from?site={story_object.social_media["hn_search_query"]}">({story_object.hostname["for_display"]})</a>'
+            )
+            story_object.hostname["slug"] += story_object.social_media[
                 "account_name_slug"
             ]
 
     #
     # nytimes.org
     #
-    elif story_as_object.hostname["minus_www"].endswith("nytimes.com"):
-        story_as_object.social_media["account_name_slug"] = get_nytimes_article_slug(
-            nytimes_url=story_as_object.url,
-            story_as_object=story_as_object,
+    elif story_object.hostname["minus_www"].endswith("nytimes.com"):
+        story_object.social_media["account_name_slug"] = get_nytimes_article_slug(
+            nytimes_url=story_object.url,
+            story_object=story_object,
             page_source_soup=page_source_soup,
         )
 
-        if story_as_object.social_media["account_name_slug"]:
-            story_as_object.hostname["slug"] += story_as_object.social_media[
+        if story_object.social_media["account_name_slug"]:
+            story_object.hostname["slug"] += story_object.social_media[
                 "account_name_slug"
             ]
 
     #
     # reddit.com
     #
-    elif story_as_object.hostname["minus_www"].endswith(
+    elif story_object.hostname["minus_www"].endswith(
         "reddit.com"
     ):  # endswith, so we get `old.reddit.com` too
-        story_as_object.social_media["account_name_slug"] = get_reddit_account_slug(
-            story_as_object.url, story_as_object
+        story_object.social_media["account_name_slug"] = get_reddit_account_slug(
+            story_object.url, story_object
         )
 
-        if story_as_object.social_media["account_name_slug"]:
-            story_as_object.hostname[
-                "slug"
-            ] = f'<a class="domains-for-search{story_as_object.hostname["for_display_addl_class"]}" href="https://news.ycombinator.com/from?site={story_as_object.social_media["hn_search_query"]}">({story_as_object.hostname["for_display"]})</a>'
-            story_as_object.hostname["slug"] += story_as_object.social_media[
+        if story_object.social_media["account_name_slug"]:
+            story_object.hostname["slug"] = (
+                f'<a class="domains-for-search{story_object.hostname["for_display_addl_class"]}" href="https://news.ycombinator.com/from?site={story_object.social_media["hn_search_query"]}">({story_object.hostname["for_display"]})</a>'
+            )
+            story_object.hostname["slug"] += story_object.social_media[
                 "account_name_slug"
             ]
     #
     # substack.com
     #
-    elif story_as_object.hostname["minus_www"].endswith("substack.com"):
-        if story_as_object.hostname["minus_www"].count(".") == 2:  # i.e., no subdomain
-            story_as_object.social_media[
-                "account_name_slug"
-            ] = get_substack_account_slug(story_as_object.url, story_as_object)
+    elif story_object.hostname["minus_www"].endswith("substack.com"):
+        if story_object.hostname["minus_www"].count(".") == 2:  # i.e., no subdomain
+            story_object.social_media["account_name_slug"] = get_substack_account_slug(
+                story_object.url, story_object
+            )
 
-            if story_as_object.social_media["account_name_slug"]:
-                story_as_object.hostname[
-                    "slug"
-                ] = f'<a class="domains-for-search{story_as_object.hostname["for_display_addl_class"]}" href="https://news.ycombinator.com/from?site={story_as_object.social_media["hn_search_query"]}">({story_as_object.hostname["for_display"]})</a>'
-                story_as_object.hostname["slug"] += story_as_object.social_media[
+            if story_object.social_media["account_name_slug"]:
+                story_object.hostname["slug"] = (
+                    f'<a class="domains-for-search{story_object.hostname["for_display_addl_class"]}" href="https://news.ycombinator.com/from?site={story_object.social_media["hn_search_query"]}">({story_object.hostname["for_display"]})</a>'
+                )
+                story_object.hostname["slug"] += story_object.social_media[
                     "account_name_slug"
                 ]
 
         meta_name_author = page_source_soup.find("head meta", {"name": "author"})
         if meta_name_author and meta_name_author.has_attr("content"):
-            story_as_object.social_media["account_name_display"] = meta_name_author[
+            story_object.social_media["account_name_display"] = meta_name_author[
                 "content"
             ]
 
     #
     # techcrunch.com
     #
-    elif story_as_object.hostname["minus_www"] == "techcrunch.com":
-        story_as_object.social_media["account_name_slug"] = get_techcrunch_account_slug(
-            techcrunch_url=story_as_object.url,
-            story_as_object=story_as_object,
+    elif story_object.hostname["minus_www"] == "techcrunch.com":
+        story_object.social_media["account_name_slug"] = get_techcrunch_account_slug(
+            techcrunch_url=story_object.url,
+            story_object=story_object,
             page_source_soup=page_source_soup,
         )
 
-        if story_as_object.social_media["account_name_slug"]:
-            story_as_object.hostname["slug"] += story_as_object.social_media[
+        if story_object.social_media["account_name_slug"]:
+            story_object.hostname["slug"] += story_object.social_media[
                 "account_name_slug"
             ]
 
     #
     # twitter.com
     #
-    elif story_as_object.hostname["minus_www"] == "twitter.com":
-        story_as_object.social_media["account_name_slug"] = get_twitter_account_slug(
-            story_as_object.url, story_as_object=story_as_object
+    elif story_object.hostname["minus_www"] == "twitter.com":
+        story_object.social_media["account_name_slug"] = get_twitter_account_slug(
+            story_object.url, story_object=story_object
         )
 
-        if story_as_object.social_media["account_name_slug"]:
-            story_as_object.hostname[
-                "slug"
-            ] = f'<a class="domains-for-search{story_as_object.hostname["for_display_addl_class"]}" href="https://news.ycombinator.com/from?site={story_as_object.social_media["hn_search_query"]}">({story_as_object.hostname["for_display"]})</a>'
-            story_as_object.hostname["slug"] += story_as_object.social_media[
+        if story_object.social_media["account_name_slug"]:
+            story_object.hostname["slug"] = (
+                f'<a class="domains-for-search{story_object.hostname["for_display_addl_class"]}" href="https://news.ycombinator.com/from?site={story_object.social_media["hn_search_query"]}">({story_object.hostname["for_display"]})</a>'
+            )
+            story_object.hostname["slug"] += story_object.social_media[
                 "account_name_slug"
             ]
 
     #
     # wikipedia.org
     #
-    elif story_as_object.hostname["minus_www"].endswith("wikipedia.org"):
-        story_as_object.social_media["account_name_slug"] = get_wikipedia_article_slug(
-            wikipedia_url=story_as_object.url,
-            story_as_object=story_as_object,
+    elif story_object.hostname["minus_www"].endswith("wikipedia.org"):
+        story_object.social_media["account_name_slug"] = get_wikipedia_article_slug(
+            wikipedia_url=story_object.url,
+            story_object=story_object,
             page_source_soup=page_source_soup,
         )
 
-        if story_as_object.social_media["account_name_slug"]:
-            # story_as_object.hostname[
+        if story_object.social_media["account_name_slug"]:
+            # story_object.hostname[
             #     "slug"
-            # ] = f'<a class="domains-for-search{story_as_object.hostname["for_display_addl_class"]}" href="https://news.ycombinator.com/from?site={story_as_object.social_media["hn_search_query"]}">({story_as_object.hostname["for_display"]})</a>'
+            # ] = f'<a class="domains-for-search{story_object.hostname["for_display_addl_class"]}" href="https://news.ycombinator.com/from?site={story_object.social_media["hn_search_query"]}">({story_object.hostname["for_display"]})</a>'
 
-            story_as_object.hostname["slug"] += story_as_object.social_media[
+            story_object.hostname["slug"] += story_object.social_media[
                 "account_name_slug"
             ]
 
     #
     # youtube.com
     #
-    elif story_as_object.hostname["minus_www"] == "youtube.com":
-        story_as_object.social_media["account_name_slug"] = get_youtube_channel_slug(
-            story_as_object.url, story_as_object=story_as_object
+    elif story_object.hostname["minus_www"] == "youtube.com":
+        story_object.social_media["account_name_slug"] = get_youtube_channel_slug(
+            story_object.url, story_object=story_object
         )
 
         # note: HN search stores youtube.com links without channel info, so no need to update domains_slug
-        if story_as_object.social_media["account_name_slug"]:
-            story_as_object.hostname["slug"] += story_as_object.social_media[
+        if story_object.social_media["account_name_slug"]:
+            story_object.hostname["slug"] += story_object.social_media[
                 "account_name_slug"
             ]
 
@@ -279,7 +275,7 @@ def check_if_nowrap_needed(account_name: str):
 
 
 def get_arstechnica_account_slug(
-    arstechnica_url=None, story_as_object=None, page_source_soup=None
+    arstechnica_url=None, story_object=None, page_source_soup=None
 ):
     author_display_name = None
     author_link = None
@@ -298,12 +294,10 @@ def get_arstechnica_account_slug(
                             break
 
     if not author_display_name:
-        logger.info(
-            f"id {story_as_object.id}: failed to find arstechnica author name"
-        )
+        logger.info(f"id {story_object.id}: failed to find arstechnica author name")
         return text_utils.EMPTY_STRING
 
-    logger.info(f"id {story_as_object.id}: arstechnica author is {author_display_name}")
+    logger.info(f"id {story_object.id}: arstechnica author is {author_display_name}")
 
     if author_link:
         author_slug = f'<a href="{author_link}">{author_display_name}</a>'
@@ -320,18 +314,18 @@ def get_arstechnica_account_slug(
         "</span>"
     )
 
-    if story_as_object:
-        story_as_object.social_media["account_name_url"] = author_link
-        story_as_object.social_media["account_name_display"] = author_display_name
-        story_as_object.social_media["nowrap_class"] = nowrap_class
-        story_as_object.social_media["account_url"] = author_link
-        story_as_object.social_media["account_name_slug"] = account_name_slug
+    if story_object:
+        story_object.social_media["account_name_url"] = author_link
+        story_object.social_media["account_name_display"] = author_display_name
+        story_object.social_media["nowrap_class"] = nowrap_class
+        story_object.social_media["account_url"] = author_link
+        story_object.social_media["account_name_slug"] = account_name_slug
 
     return account_name_slug
 
 
 def get_bloomberg_account_slug(
-    bloomberg_url=None, story_as_object=None, page_source_soup=None
+    bloomberg_url=None, story_object=None, page_source_soup=None
 ):
     author_display_name = None
     author_link = None
@@ -346,10 +340,10 @@ def get_bloomberg_account_slug(
                 break
 
     if not author_display_name:
-        logger.info(f"id {story_as_object.id}: failed to find bloomberg author name")
+        logger.info(f"id {story_object.id}: failed to find bloomberg author name")
         return text_utils.EMPTY_STRING
 
-    logger.info(f"id {story_as_object.id}: bloomberg author is {author_display_name}")
+    logger.info(f"id {story_object.id}: bloomberg author is {author_display_name}")
 
     if author_link:
         author_slug = f'<a href="{author_link}">{author_display_name}</a>'
@@ -366,17 +360,17 @@ def get_bloomberg_account_slug(
         "</span>"
     )
 
-    if story_as_object:
-        story_as_object.social_media["account_name_url"] = author_link
-        story_as_object.social_media["account_name_display"] = author_display_name
-        story_as_object.social_media["nowrap_class"] = nowrap_class
-        story_as_object.social_media["account_url"] = author_link
-        story_as_object.social_media["account_name_slug"] = account_name_slug
+    if story_object:
+        story_object.social_media["account_name_url"] = author_link
+        story_object.social_media["account_name_display"] = author_display_name
+        story_object.social_media["nowrap_class"] = nowrap_class
+        story_object.social_media["account_url"] = author_link
+        story_object.social_media["account_name_slug"] = account_name_slug
 
     return account_name_slug
 
 
-def get_github_account_slug(github_url: str, story_as_object=None):
+def get_github_account_slug(github_url: str, story_object=None):
     account_name_url = text_utils.get_text_between(
         "github.com/",
         "/",
@@ -394,19 +388,19 @@ def get_github_account_slug(github_url: str, story_as_object=None):
 
     account_name_slug = f"<br/><span class='social-media-account-name{nowrap_class}'><a href='{account_url}'><span class='social-media-account-emoji'>{SILHOUETTE_SYMBOL}</span>{account_name_url}</a></span>"
 
-    if story_as_object:
-        story_as_object.social_media["account_name_url"] = account_name_url
-        story_as_object.social_media["account_name_display"] = account_name_url
-        story_as_object.social_media["nowrap_class"] = nowrap_class
-        story_as_object.social_media["account_url"] = account_url
-        story_as_object.social_media["account_name_slug"] = account_name_slug
-        story_as_object.social_media["hn_search_query"] = hn_search_query
+    if story_object:
+        story_object.social_media["account_name_url"] = account_name_url
+        story_object.social_media["account_name_display"] = account_name_url
+        story_object.social_media["nowrap_class"] = nowrap_class
+        story_object.social_media["account_url"] = account_url
+        story_object.social_media["account_name_slug"] = account_name_slug
+        story_object.social_media["hn_search_query"] = hn_search_query
 
     return account_name_slug
 
 
 def get_github_gist_account_slug(
-    github_gist_url=None, story_as_object=None, page_source_soup=None
+    github_gist_url=None, story_object=None, page_source_soup=None
 ):
     author_handle = None
     author_link = None
@@ -420,9 +414,7 @@ def get_github_gist_account_slug(
                 author_link = f'https://gist.github.com/{each_a["href"]}'
 
     if not author_handle:
-        logger.info(
-            f"id {story_as_object.id}: failed to find github gist author name"
-        )
+        logger.info(f"id {story_object.id}: failed to find github gist author name")
         return text_utils.EMPTY_STRING
 
     nowrap_class = check_if_nowrap_needed(author_handle)
@@ -437,27 +429,27 @@ def get_github_gist_account_slug(
         "</span>"
     )
 
-    if story_as_object:
-        story_as_object.social_media["account_name_url"] = author_link
-        story_as_object.social_media["account_name_display"] = author_handle
-        story_as_object.social_media["nowrap_class"] = nowrap_class
-        story_as_object.social_media["account_url"] = author_link
-        story_as_object.social_media["account_name_slug"] = account_name_slug
+    if story_object:
+        story_object.social_media["account_name_url"] = author_link
+        story_object.social_media["account_name_display"] = author_handle
+        story_object.social_media["nowrap_class"] = nowrap_class
+        story_object.social_media["account_url"] = author_link
+        story_object.social_media["account_name_slug"] = account_name_slug
 
     return account_name_slug
 
 
-def create_github_languages_slug(story_as_object):
-    if not story_as_object.gh_repo_lang_stats:
+def create_github_languages_slug(story_object):
+    if not story_object.gh_repo_lang_stats:
         return text_utils.EMPTY_STRING
 
     languages_list = []
-    for ld in story_as_object.gh_repo_lang_stats:
+    for ld in story_object.gh_repo_lang_stats:
         this_lang = f'<div class="each-lang"><div class="lang-dot" style="color: {ld[2]}">⬤</div><div class="lang-name-and-percentage"><div class="lang-name">&nbsp;{ld[0]}</div><div class="lang-percentage">&nbsp;{ld[1]}</div></div></div>'
         languages_list.append(this_lang)
 
     languages_list[-1] = languages_list[-1].replace("class=", 'id="#final-lang" class=')
-    story_as_object.github_languages_slug = (
+    story_object.github_languages_slug = (
         f'<tr><td><div class="languages-bar">{"".join(languages_list)}</div></td></tr>'
     )
 
@@ -478,7 +470,9 @@ def get_github_repo_languages(driver=None, repo_url=None, story_id=None):
         if h2_languages:
             ul_languages = h2_languages.find_next_sibling("ul")
             if not ul_languages:
-                logger.info(log_prefix + f"failed to get GH repo lang stats from {repo_url}")
+                logger.info(
+                    log_prefix + f"failed to get GH repo lang stats from {repo_url}"
+                )
                 return None
             gh_repo_lang_stats = []
             li_els = ul_languages.find_all("li")
@@ -506,8 +500,9 @@ def get_github_repo_languages(driver=None, repo_url=None, story_id=None):
     else:
         logger.info(log_prefix + f"failed to read GH repo page  {repo_url}")
 
+
 def get_theguardian_account_slug(
-    theguardian_url=None, story_as_object=None, page_source_soup=None
+    theguardian_url=None, story_object=None, page_source_soup=None
 ):
     author_display_name = None
     author_link = None
@@ -528,12 +523,10 @@ def get_theguardian_account_slug(
                 break
 
     if not author_display_name:
-        logger.info(
-            f"id {story_as_object.id}: failed to find theguardian author name"
-        )
+        logger.info(f"id {story_object.id}: failed to find theguardian author name")
         return text_utils.EMPTY_STRING
 
-    logger.info(f"id {story_as_object.id}: theguardian author is {author_display_name}")
+    logger.info(f"id {story_object.id}: theguardian author is {author_display_name}")
 
     if author_link:
         author_slug = f'<a href="{author_link}">{author_display_name}</a>'
@@ -550,19 +543,19 @@ def get_theguardian_account_slug(
         "</span>"
     )
 
-    if story_as_object:
-        story_as_object.social_media["account_name_url"] = author_link
-        story_as_object.social_media["account_name_display"] = author_display_name
-        story_as_object.social_media["nowrap_class"] = nowrap_class
-        story_as_object.social_media["account_url"] = author_link
-        story_as_object.social_media["account_name_slug"] = account_name_slug
+    if story_object:
+        story_object.social_media["account_name_url"] = author_link
+        story_object.social_media["account_name_display"] = author_display_name
+        story_object.social_media["nowrap_class"] = nowrap_class
+        story_object.social_media["account_url"] = author_link
+        story_object.social_media["account_name_slug"] = account_name_slug
 
     return account_name_slug
 
 
-def get_medium_account_slug(medium_url, story_as_object):
-    if story_as_object.hostname["minus_www"].count(".") >= 2:
-        domains_as_list = story_as_object.hostname["minus_www"].split(".")
+def get_medium_account_slug(medium_url, story_object):
+    if story_object.hostname["minus_www"].count(".") >= 2:
+        domains_as_list = story_object.hostname["minus_www"].split(".")
         account_name_url = domains_as_list[-3]
         account_url = f"https://{domains_as_list[-3]}.medium.com"
         at_sign_slug = ""
@@ -596,21 +589,21 @@ def get_medium_account_slug(medium_url, story_as_object):
 
     account_name_slug = f"<br/><span class='social-media-account-name{nowrap_class}'><a href='{account_url}'><span class='social-media-account-emoji'>{SILHOUETTE_SYMBOL}</span>{at_sign_slug}{account_name_url}</a></span>"
 
-    if story_as_object:
-        story_as_object.social_media["account_name_url"] = account_name_url
-        story_as_object.social_media[
-            "account_name_display"
-        ] = account_name_url  # TODO: find a display name?
-        story_as_object.social_media["nowrap_class"] = nowrap_class
-        story_as_object.social_media["account_url"] = account_url
-        story_as_object.social_media["account_name_slug"] = account_name_slug
-        story_as_object.social_media["hn_search_query"] = hn_search_query
+    if story_object:
+        story_object.social_media["account_name_url"] = account_name_url
+        story_object.social_media["account_name_display"] = (
+            account_name_url  # TODO: find a display name?
+        )
+        story_object.social_media["nowrap_class"] = nowrap_class
+        story_object.social_media["account_url"] = account_url
+        story_object.social_media["account_name_slug"] = account_name_slug
+        story_object.social_media["hn_search_query"] = hn_search_query
 
     return account_name_slug
 
 
 def get_nytimes_article_slug(
-    nytimes_url=None, story_as_object=None, page_source_soup=None
+    nytimes_url=None, story_object=None, page_source_soup=None
 ):
     author_accumulator = []
     a_els = page_source_soup.select("a")
@@ -623,7 +616,7 @@ def get_nytimes_article_slug(
                     )
     if not author_accumulator:
         logger.info(
-            f"id {story_as_object.id}: failed to determine nytimes article authors"
+            f"id {story_object.id}: failed to determine nytimes article authors"
         )
         return text_utils.EMPTY_STRING
 
@@ -644,17 +637,17 @@ def get_nytimes_article_slug(
         "</span>"
     )
 
-    if story_as_object:
-        story_as_object.social_media["account_name_url"] = text_utils.EMPTY_STRING
-        # story_as_object.social_media["account_name_display"] = article_author
-        # story_as_object.social_media["nowrap_class"] = nowrap_class
-        story_as_object.social_media["account_url"] = text_utils.EMPTY_STRING
-        story_as_object.social_media["account_name_slug"] = account_name_slug
+    if story_object:
+        story_object.social_media["account_name_url"] = text_utils.EMPTY_STRING
+        # story_object.social_media["account_name_display"] = article_author
+        # story_object.social_media["nowrap_class"] = nowrap_class
+        story_object.social_media["account_url"] = text_utils.EMPTY_STRING
+        story_object.social_media["account_name_slug"] = account_name_slug
 
     return account_name_slug
 
 
-def get_reddit_account_slug(reddit_url, story_as_object):
+def get_reddit_account_slug(reddit_url, story_object):
     if "reddit.com/r/" not in reddit_url:
         return text_utils.EMPTY_STRING
 
@@ -671,41 +664,41 @@ def get_reddit_account_slug(reddit_url, story_as_object):
 
     account_name_slug = f"<br/><span class='social-media-account-name{nowrap_class}'><a href='{subreddit_url}'>r/{subreddit_name_url}</a></span>"
 
-    if story_as_object:
-        story_as_object.social_media["account_name_url"] = subreddit_name_url
-        story_as_object.social_media["account_name_display"] = subreddit_name_url
-        story_as_object.social_media["nowrap_class"] = nowrap_class
-        story_as_object.social_media["account_url"] = subreddit_url
-        story_as_object.social_media["account_name_slug"] = account_name_slug
-        story_as_object.social_media["hn_search_query"] = hn_search_query
+    if story_object:
+        story_object.social_media["account_name_url"] = subreddit_name_url
+        story_object.social_media["account_name_display"] = subreddit_name_url
+        story_object.social_media["nowrap_class"] = nowrap_class
+        story_object.social_media["account_url"] = subreddit_url
+        story_object.social_media["account_name_slug"] = account_name_slug
+        story_object.social_media["hn_search_query"] = hn_search_query
 
     return account_name_slug
 
 
-def get_substack_account_slug(substack_url, story_as_object):
-    account_name_url = story_as_object.hostname["minus_www"].split(".")[0]
+def get_substack_account_slug(substack_url, story_object):
+    account_name_url = story_object.hostname["minus_www"].split(".")[0]
 
     if not account_name_url:
         return text_utils.EMPTY_STRING
 
     nowrap_class = check_if_nowrap_needed(account_name_url)
-    account_url = f"https://{story_as_object.hostname['minus_www']}"
-    hn_search_query = story_as_object.hostname["minus_www"]
+    account_url = f"https://{story_object.hostname['minus_www']}"
+    hn_search_query = story_object.hostname["minus_www"]
 
     account_name_slug = f"<br/><span class='social-media-account-name{nowrap_class}'><a href='{account_url}'><span class='social-media-account-emoji'>{SILHOUETTE_SYMBOL}</span>{account_name_url}</a></span>"
 
-    if story_as_object:
-        story_as_object.social_media["account_name_url"] = account_name_url
-        story_as_object.social_media["nowrap_class"] = nowrap_class
-        story_as_object.social_media["account_url"] = account_name_url
-        story_as_object.social_media["account_name_slug"] = account_name_slug
-        story_as_object.social_media["hn_search_query"] = hn_search_query
+    if story_object:
+        story_object.social_media["account_name_url"] = account_name_url
+        story_object.social_media["nowrap_class"] = nowrap_class
+        story_object.social_media["account_url"] = account_name_url
+        story_object.social_media["account_name_slug"] = account_name_slug
+        story_object.social_media["hn_search_query"] = hn_search_query
 
     return account_name_slug
 
 
 def get_techcrunch_account_slug(
-    techcrunch_url=None, story_as_object=None, page_source_soup=None
+    techcrunch_url=None, story_object=None, page_source_soup=None
 ):
     author_display_name = None
     author_link = None
@@ -719,9 +712,7 @@ def get_techcrunch_account_slug(
                 break
 
     if not author_display_name:
-        logger.info(
-            f"id {story_as_object.id}: failed to find techcrunch author name"
-        )
+        logger.info(f"id {story_object.id}: failed to find techcrunch author name")
         return text_utils.EMPTY_STRING
 
     a_els = page_source_soup.select("a")
@@ -743,17 +734,17 @@ def get_techcrunch_account_slug(
         "</span>"
     )
 
-    if story_as_object:
-        story_as_object.social_media["account_name_url"] = author_link
-        story_as_object.social_media["account_name_display"] = author_display_name
-        story_as_object.social_media["nowrap_class"] = nowrap_class
-        story_as_object.social_media["account_url"] = author_link
-        story_as_object.social_media["account_name_slug"] = account_name_slug
+    if story_object:
+        story_object.social_media["account_name_url"] = author_link
+        story_object.social_media["account_name_display"] = author_display_name
+        story_object.social_media["nowrap_class"] = nowrap_class
+        story_object.social_media["account_url"] = author_link
+        story_object.social_media["account_name_slug"] = account_name_slug
 
     return account_name_slug
 
 
-def get_twitter_account_slug(twitter_url: str, story_as_object=None):
+def get_twitter_account_slug(twitter_url: str, story_object=None):
     if "/events/" in twitter_url:
         return text_utils.EMPTY_STRING
 
@@ -773,30 +764,28 @@ def get_twitter_account_slug(twitter_url: str, story_as_object=None):
 
     account_name_slug = f"<br/><span class='social-media-account-name{nowrap_class}'><a href='{account_url}'><span class='social-media-account-atsign'>@</span>{account_name_url}</a></span>"
 
-    if story_as_object:
-        story_as_object.social_media["account_name_url"] = account_name_url
-        story_as_object.social_media["account_name_display"] = account_name_url
-        story_as_object.social_media["nowrap_class"] = nowrap_class
-        story_as_object.social_media["account_url"] = account_url
-        story_as_object.social_media["account_name_slug"] = account_name_slug
-        story_as_object.social_media["hn_search_query"] = hn_search_query
+    if story_object:
+        story_object.social_media["account_name_url"] = account_name_url
+        story_object.social_media["account_name_display"] = account_name_url
+        story_object.social_media["nowrap_class"] = nowrap_class
+        story_object.social_media["account_url"] = account_url
+        story_object.social_media["account_name_slug"] = account_name_slug
+        story_object.social_media["hn_search_query"] = hn_search_query
 
     return account_name_slug
 
 
 def get_wikipedia_article_slug(
-    wikipedia_url=None, story_as_object=None, page_source_soup=None
+    wikipedia_url=None, story_object=None, page_source_soup=None
 ):
     article_title = None
 
     article_title_el = page_source_soup.select("span.mw-page-title-main")
     if article_title_el:
-        logger.info(f"id {story_as_object.id}: found wikipedia article title")
+        logger.info(f"id {story_object.id}: found wikipedia article title")
         article_title = article_title_el[0].text
     else:
-        logger.info(
-            f"id {story_as_object.id}: failed to find wikipedia article title"
-        )
+        logger.info(f"id {story_object.id}: failed to find wikipedia article title")
         return text_utils.EMPTY_STRING
 
     nowrap_class = check_if_nowrap_needed(article_title)
@@ -809,17 +798,17 @@ def get_wikipedia_article_slug(
         "</span>"
     )
 
-    if story_as_object:
-        story_as_object.social_media["account_name_url"] = text_utils.EMPTY_STRING
-        story_as_object.social_media["account_name_display"] = article_title
-        story_as_object.social_media["nowrap_class"] = nowrap_class
-        story_as_object.social_media["account_url"] = text_utils.EMPTY_STRING
-        story_as_object.social_media["account_name_slug"] = account_name_slug
+    if story_object:
+        story_object.social_media["account_name_url"] = text_utils.EMPTY_STRING
+        story_object.social_media["account_name_display"] = article_title
+        story_object.social_media["nowrap_class"] = nowrap_class
+        story_object.social_media["account_url"] = text_utils.EMPTY_STRING
+        story_object.social_media["account_name_slug"] = account_name_slug
 
     return account_name_slug
 
 
-def get_youtube_channel_slug(youtube_url: str, story_as_object=None):
+def get_youtube_channel_slug(youtube_url: str, story_object=None):
     if "youtube.com/watch?v=" in youtube_url:
         video_id = text_utils.get_text_between(
             "v=", "&", youtube_url, okay_to_elide_right_pattern=True
@@ -838,9 +827,9 @@ def get_youtube_channel_slug(youtube_url: str, story_as_object=None):
                 channel_id = json["items"][0]["snippet"]["channelId"]
                 account_url = f"https://www.youtube.com/channel/{channel_id}"
         except Exception as exc:
-            if story_as_object:
+            if story_object:
                 logger.warning(
-                    f"id {story_as_object.id}: failed to get video details for YouTube URL {youtube_url}: {exc}"
+                    f"id {story_object.id}: failed to get video details for YouTube URL {youtube_url}: {exc}"
                 )
             else:
                 logger.warning(
@@ -870,9 +859,9 @@ def get_youtube_channel_slug(youtube_url: str, story_as_object=None):
                 channel_id = json["items"][0]["snippet"]["channelId"]
                 account_url = f"https://www.youtube.com/channel/{channel_id}"
         except Exception as exc:
-            if story_as_object:
+            if story_object:
                 logger.warning(
-                    f"id {story_as_object.id}: failed to get channel details for YouTube URL {youtube_url}: {exc}"
+                    f"id {story_object.id}: failed to get channel details for YouTube URL {youtube_url}: {exc}"
                 )
             else:
                 logger.warning(
@@ -899,9 +888,9 @@ def get_youtube_channel_slug(youtube_url: str, story_as_object=None):
                 channel_id = json["items"][0]["snippet"]["channelId"]
                 account_url = f"https://www.youtube.com/channel/{channel_id}"
         except Exception as exc:
-            if story_as_object:
+            if story_object:
                 logger.warning(
-                    f"id {story_as_object.id}: failed to get playlist details for YouTube URL {youtube_url}: {exc}"
+                    f"id {story_object.id}: failed to get playlist details for YouTube URL {youtube_url}: {exc}"
                 )
             else:
                 logger.warning(
@@ -909,9 +898,9 @@ def get_youtube_channel_slug(youtube_url: str, story_as_object=None):
                 )
             return text_utils.EMPTY_STRING
     else:
-        if story_as_object:
+        if story_object:
             logger.warning(
-                f"id {story_as_object.id}: failed to understand format or structure of YouTube URL: {youtube_url}"
+                f"id {story_object.id}: failed to understand format or structure of YouTube URL: {youtube_url}"
             )
         else:
             logger.warning(
@@ -927,11 +916,11 @@ def get_youtube_channel_slug(youtube_url: str, story_as_object=None):
 
     account_name_slug = f"<br/><span class='social-media-account-name{nowrap_class}'><a href='{account_url}'><span class='social-media-account-emoji'>{SILHOUETTE_SYMBOL}</span>{account_name}</a></span>"
 
-    if story_as_object:
-        story_as_object.social_media["account_name_url"] = channel_id
-        story_as_object.social_media["account_name_display"] = account_name
-        story_as_object.social_media["nowrap_class"] = nowrap_class
-        story_as_object.social_media["account_url"] = account_url
-        story_as_object.social_media["account_name_slug"] = account_name_slug
+    if story_object:
+        story_object.social_media["account_name_url"] = channel_id
+        story_object.social_media["account_name_display"] = account_name
+        story_object.social_media["nowrap_class"] = nowrap_class
+        story_object.social_media["account_url"] = account_url
+        story_object.social_media["account_name_slug"] = account_name_slug
 
     return account_name_slug

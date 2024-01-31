@@ -80,11 +80,12 @@ if ! am-root; then
     die "Please run as root."
 fi
 
-ONCE_FLAG=$1
-if [[ ! ${ONCE_FLAG} =~ ^(once)$ ]]; then
-    die "Usage: ${BASH_SOURCE##*/} [once [all|active|best|classic|new|top]]"
-fi
-ONCE_STORY_TYPE="${2:-new}"
+ONCE_FLAG="${1:-}"
+ONCE_STORY_TYPE="${2:-all}"
+
+# if [[ ! ${ONCE_FLAG} =~ ^(once)$ ]]; then
+#     die "Usage: ${BASH_SOURCE##*/} [once [all|active|best|classic|new|top]]"
+# fi
 
 # handle of the server THNR is running on
 SERVER_NAME=thnr
@@ -200,8 +201,8 @@ declare -a story_types=(
     "active"
     "best"
     "classic"
-    "new"
     "top"
+    "new"
 )
 
 declare -a apt_packages=(
@@ -231,6 +232,8 @@ LOOP_NUMBER=1
 
 while true
 do
+    CUR_LOOP_START_TS=$(get-time-in-unix-seconds)
+
     if ! "${BASE_DIR}connect_to_vpn.sh"; then
         exit 1
     fi
@@ -313,6 +316,11 @@ do
         cleanup_uc_temp_files
 
     done
+
+    CUR_LOOP_END_TS=$(get-time-in-unix-seconds)
+    SECONDS_SPENT=$((CUR_LOOP_END_TS - CUR_LOOP_START_TS))
+    DURATION=$(date -d@${SECONDS_SPENT} -u +"%Hh:%Mm:%Ss")
+    write_log_message loop info "${LOOP_LOG_PREFIX} LOOP_NUMBER=${LOOP_NUMBER}, CUR_LOOP_START_TS=${MAIN_PY_START_TS}, CUR_LOOP_END_TS=${MAIN_PY_END_TS}, SECONDS_SPENT=${SECONDS_SPENT}, DURATION=${DURATION}"
 
     if [[ ${ONCE_FLAG} == "once" ]]; then
         exit 0

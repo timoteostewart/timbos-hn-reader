@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+KEYWORD=$1
+
+if [[ $# -eq 0 ]]; then
+    echo "grl: (G)rep (L)ocal (L)ogfiles"
+    echo "Usage: gll <keyword>"
+    exit 1
+fi
+
+LOGS_DIR="/srv/timbos-hn-reader/logs/"  # Ensure this path is correct
+
+for file in "${LOGS_DIR}thnr-combined-"*.log; do
+    grep --color -P "${KEYWORD}" "${file}"
+done

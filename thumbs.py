@@ -94,7 +94,7 @@ ignore_images_from_these_domains = set()
 ignore_images_with_these_content_types = {
     "image/vnd.microsoft.icon",
     "image/avif",  # TODO: support avif and jpeg XL
-    "text/html"
+    "text/html",
     # "image/svg+xml",
 }
 
@@ -122,37 +122,37 @@ def shortcode_if_og_image_url_contains_certain_substring(og_image_url: str):
     return None
 
 
-def get_webp_filename(story_as_object, size):
-    return f"thumb-{story_as_object.id}-{size}.webp"
+def get_webp_filename(story_object, size):
+    return f"thumb-{story_object.id}-{size}.webp"
 
 
-def get_webp_full_save_path(story_as_object, size):
+def get_webp_full_save_path(story_object, size):
     return os.path.join(
         config.settings["THUMBS_DIR"],
-        get_webp_filename(story_as_object, size),
+        get_webp_filename(story_object, size),
     )
 
 
-def can_find_a_shortcode(story_as_object, img_loading):
-    log_prefix = f"id {story_as_object.id}: "
+def can_find_a_shortcode(story_object, img_loading):
+    log_prefix = f"id {story_object.id}: "
 
     # logger.info(log_prefix+"checking for a shortcode...")
     # check if thumb is already available as prepared image
     prepared_image_shortcode = ""
 
     if (
-        story_as_object.linked_url_og_image_url_final
+        story_object.linked_url_og_image_url_final
         in prepared_images_roster_by_exact_url
-        or story_as_object.linked_url_og_image_url_initial
+        or story_object.linked_url_og_image_url_initial
         in prepared_images_roster_by_exact_url
     ):
         prepared_image_shortcode = prepared_images_roster_by_exact_url[
-            story_as_object.linked_url_og_image_url_final
+            story_object.linked_url_og_image_url_final
         ]
 
     if not prepared_image_shortcode:
         prepared_image_shortcode = shortcode_if_og_image_url_contains_certain_substring(
-            story_as_object.linked_url_og_image_url_final
+            story_object.linked_url_og_image_url_final
         )
 
     if prepared_image_shortcode:
@@ -162,7 +162,7 @@ def can_find_a_shortcode(story_as_object, img_loading):
 
         # load prepared image for certain size as image
         for each_size in ["medium", "extralarge"]:
-            thumb_filename = get_webp_filename(story_as_object, each_size)
+            thumb_filename = get_webp_filename(story_object, each_size)
             shutil.copyfile(
                 os.path.join(
                     config.settings["PREPARED_THUMBS_SERVICE_DIR"],
@@ -182,29 +182,29 @@ def can_find_a_shortcode(story_as_object, img_loading):
                 os.path.join(config.settings["TEMP_DIR"], thumb_filename)
             )
 
-        story_as_object.image_slug = create_img_slug_html(story_as_object, img_loading)
+        story_object.image_slug = create_img_slug_html(story_object, img_loading)
         logger.info(
             log_prefix
-            + f"using prepared image instead of {story_as_object.linked_url_og_image_url_final}"
+            + f"using prepared image instead of {story_object.linked_url_og_image_url_final}"
         )
         return True
     else:
         return False
 
 
-def create_img_slug_html(story_as_object, img_loading="lazy"):
+def create_img_slug_html(story_object, img_loading="lazy"):
     return (
         '<div class="thumb">'
-        f'<a href="{story_as_object.url}">'
+        f'<a href="{story_object.url}">'
         "<img "
         # "srcset="
-        # f'"{config.settings["THUMBS_URL"]}{get_webp_filename(story_as_object, "extralarge")} 4x, '
-        # f'{config.settings["THUMBS_URL"]}{get_webp_filename(story_as_object, "extralarge")} 3x, '
-        # f'{config.settings["THUMBS_URL"]}{get_webp_filename(story_as_object, "extralarge")} 2x, '
-        # f'{config.settings["THUMBS_URL"]}{get_webp_filename(story_as_object, "medium")} 1x" '
+        # f'"{config.settings["THUMBS_URL"]}{get_webp_filename(story_object, "extralarge")} 4x, '
+        # f'{config.settings["THUMBS_URL"]}{get_webp_filename(story_object, "extralarge")} 3x, '
+        # f'{config.settings["THUMBS_URL"]}{get_webp_filename(story_object, "extralarge")} 2x, '
+        # f'{config.settings["THUMBS_URL"]}{get_webp_filename(story_object, "medium")} 1x" '
         # 'sizes="(min-width: 1440px) 350px, (min-width: 1080px) 350px, (min-width: 768px) 350px, 350px" '
-        f'src="{config.settings["THUMBS_URL"]}{get_webp_filename(story_as_object, "extralarge")}" '
-        f'alt="{sanitize(story_as_object.title)}" '
+        f'src="{config.settings["THUMBS_URL"]}{get_webp_filename(story_object, "extralarge")}" '
+        f'alt="{sanitize(story_object.title)}" '
         'class="thumb" '
         f'loading="{img_loading}" />'
         "</a>"
@@ -212,9 +212,9 @@ def create_img_slug_html(story_as_object, img_loading="lazy"):
     )
 
 
-def save_thumb_where_it_should_go(webp_image, story_as_object, size):
-    log_prefix = f"id {story_as_object.id}: save_thumb_where_it_should_go(): "
-    thumb_filename = get_webp_filename(story_as_object, size)
+def save_thumb_where_it_should_go(webp_image, story_object, size):
+    log_prefix = f"id {story_object.id}: save_thumb_where_it_should_go(): "
+    thumb_filename = get_webp_filename(story_object, size)
     webp_image.save(filename=os.path.join(config.settings["TEMP_DIR"], thumb_filename))
     try:
         aws_utils.upload_thumb(thumb_filename=thumb_filename)
@@ -227,32 +227,32 @@ def save_thumb_where_it_should_go(webp_image, story_as_object, size):
         )
 
 
-def get_image_slug(story_as_object, img_loading="lazy"):
-    log_prefix_id = f"id {story_as_object.id}: "
+def get_image_slug(story_object, img_loading="lazy"):
+    log_prefix_id = f"id {story_object.id}: "
     log_prefix = log_prefix_id + "get_image_slug(): "
-    story_as_object.image_slug = text_utils.EMPTY_STRING
+    story_object.image_slug = text_utils.EMPTY_STRING
     # bgcolor_as_Color = (None,)
     force_aspect = None
     no_trim = False
     no_pad = False
 
     # # check if we ignore this filename
-    # if story_as_object.og_image_filename_details_from_url:
-    #     if story_as_object.og_image_filename_details_from_url.filename:
+    # if story_object.og_image_filename_details_from_url:
+    #     if story_object.og_image_filename_details_from_url.filename:
     #         if (
-    #             story_as_object.og_image_filename_details_from_url.filename
+    #             story_object.og_image_filename_details_from_url.filename
     #             in ignore_images_with_these_filenames
     #         ):
     #             logger.info(
-    #                 log_prefix+f"ignore og:image based on filename {story_as_object.og_image_filename_details_from_url.filename}"
+    #                 log_prefix+f"ignore og:image based on filename {story_object.og_image_filename_details_from_url.filename}"
     #             )
     #             return
 
     # check if we ignore the exact URL
-    if story_as_object.linked_url_og_image_url_final in ignore_images_at_these_urls:
+    if story_object.linked_url_og_image_url_final in ignore_images_at_these_urls:
         make_has_thumb_false(
             reason="ignore og:image based on exact URL",
-            story_object=story_as_object,
+            story_object=story_object,
             log_prefix=log_prefix,
             exc=None,
             log_tb=False,
@@ -261,12 +261,12 @@ def get_image_slug(story_as_object, img_loading="lazy"):
 
     # check if we ignore this domain
     _, og_image_domains = url_utils.get_domains_from_url(
-        story_as_object.linked_url_og_image_url_final
+        story_object.linked_url_og_image_url_final
     )
     if og_image_domains in ignore_images_from_these_domains:
         make_has_thumb_false(
             reason="ignore og:image based on domain",
-            story_object=story_as_object,
+            story_object=story_object,
             log_prefix=log_prefix,
             exc=None,
             log_tb=False,
@@ -275,10 +275,10 @@ def get_image_slug(story_as_object, img_loading="lazy"):
 
     # check if we ignore URLs starting with specific prefixes
     for x in prepared_images_roster_by_url_prefix.keys():
-        if story_as_object.linked_url_og_image_url_final.startswith(x):
+        if story_object.linked_url_og_image_url_final.startswith(x):
             make_has_thumb_false(
                 reason="ignore og:image based on URL prefix",
-                story_object=story_as_object,
+                story_object=story_object,
                 log_prefix=log_prefix,
                 exc=None,
                 log_tb=False,
@@ -287,10 +287,10 @@ def get_image_slug(story_as_object, img_loading="lazy"):
 
     # check if we ignore URLs ending with specific suffixes
     for x in prepared_images_roster_by_url_suffix.keys():
-        if story_as_object.linked_url_og_image_url_final.endswith(x):
+        if story_object.linked_url_og_image_url_final.endswith(x):
             make_has_thumb_false(
                 reason="ignore og:image based on URL suffix",
-                story_object=story_as_object,
+                story_object=story_object,
                 log_prefix=log_prefix,
                 exc=None,
                 log_tb=False,
@@ -298,8 +298,8 @@ def get_image_slug(story_as_object, img_loading="lazy"):
             return
 
     # check for shortcode
-    if can_find_a_shortcode(story_as_object, img_loading):
-        story_as_object.has_thumb = True
+    if can_find_a_shortcode(story_object, img_loading):
+        story_object.has_thumb = True
         return
 
     ##
@@ -308,20 +308,20 @@ def get_image_slug(story_as_object, img_loading="lazy"):
 
     # update trim settings, if necessary
     _, og_image_domains = url_utils.get_domains_from_url(
-        story_as_object.linked_url_og_image_url_final
+        story_object.linked_url_og_image_url_final
     )
     if og_image_domains in domains_exempt_from_trim:
         no_trim = True
 
     # check if there's a keyword in the image filename that means we don't trim (e.g., "flag")
     magic_result = magic.from_file(
-        story_as_object.downloaded_orig_thumb_full_path, mime=True
+        story_object.downloaded_orig_thumb_full_path, mime=True
     )
 
     if magic_result in ignore_images_with_these_content_types:
         make_has_thumb_false(
             reason=f"ignore og:image with content type {magic_result}",
-            story_object=story_as_object,
+            story_object=story_object,
             log_prefix=log_prefix,
             exc=None,
             log_tb=True,
@@ -330,18 +330,16 @@ def get_image_slug(story_as_object, img_loading="lazy"):
 
     if (
         "image" in magic_result
-        and "base_name" in story_as_object.og_image_filename_details_from_url
+        and "base_name" in story_object.og_image_filename_details_from_url
     ):
         for pattern in filename_substrings_making_exempt_from_trim:
             if (
                 pattern
-                in story_as_object.og_image_filename_details_from_url[
-                    "base_name"
-                ].lower()
+                in story_object.og_image_filename_details_from_url["base_name"].lower()
             ):
                 logger.info(
                     log_prefix_id
-                    + f"will not trim image with base filename {story_as_object.og_image_filename_details_from_url['base_name']}"
+                    + f"will not trim image with base filename {story_object.og_image_filename_details_from_url['base_name']}"
                 )
                 force_no_trim = True
                 no_trim = True
@@ -350,13 +348,11 @@ def get_image_slug(story_as_object, img_loading="lazy"):
         for pattern in ignore_images_whose_urls_contain_these_substrings:
             if (
                 pattern
-                in story_as_object.og_image_filename_details_from_url[
-                    "base_name"
-                ].lower()
+                in story_object.og_image_filename_details_from_url["base_name"].lower()
             ):
                 make_has_thumb_false(
-                    reason=f"ignore image {story_as_object.og_image_filename_details_from_url['base_name']} based on substring {pattern}",
-                    story_object=story_as_object,
+                    reason=f"ignore image {story_object.og_image_filename_details_from_url['base_name']} based on substring {pattern}",
+                    story_object=story_object,
                     log_prefix=log_prefix,
                     exc=None,
                     log_tb=True,
@@ -395,12 +391,12 @@ def get_image_slug(story_as_object, img_loading="lazy"):
     # if multipage PDF, keep only first page
     if magic_result == "application/pdf":
         try:
-            fix_multipage_pdf(story_as_object)
+            fix_multipage_pdf(story_object)
             no_pad = True
         except Exception as exc:
             make_has_thumb_false(
                 reason="could not extract single page from PDF",
-                story_object=story_as_object,
+                story_object=story_object,
                 log_prefix=log_prefix,
                 exc=exc,
                 log_tb=True,
@@ -411,7 +407,7 @@ def get_image_slug(story_as_object, img_loading="lazy"):
 
     try:
         with Image(
-            filename=story_as_object.downloaded_orig_thumb_full_path
+            filename=story_object.downloaded_orig_thumb_full_path
         ) as downloaded_img:
             image_format = downloaded_img.format
 
@@ -425,13 +421,13 @@ def get_image_slug(story_as_object, img_loading="lazy"):
                         first_frame = downloaded_img.sequence[0]
                         logger.info(
                             log_prefix
-                            + f"used first frame of animation in {story_as_object.normalized_og_image_filename}"
+                            + f"used first frame of animation in {story_object.normalized_og_image_filename}"
                         )
                         downloaded_img = Image(image=first_frame)
                 except Exception as exc:
                     make_has_thumb_false(
                         reason="failed to get first frame of animation",
-                        story_object=story_as_object,
+                        story_object=story_object,
                         log_prefix=log_prefix,
                         exc=exc,
                         log_tb=True,
@@ -442,13 +438,13 @@ def get_image_slug(story_as_object, img_loading="lazy"):
             elif image_format in ["SVG"]:
                 try:
                     vec_img = Image(
-                        filename=story_as_object.downloaded_orig_thumb_full_path,
+                        filename=story_object.downloaded_orig_thumb_full_path,
                         resolution=600.0,  # 1000.0 might have caused error
                     )
                 except Exception as exc:
                     make_has_thumb_false(
-                        reason=f"problem converting svg file {story_as_object.downloaded_orig_thumb_full_path}",
-                        story_object=story_as_object,
+                        reason=f"problem converting svg file {story_object.downloaded_orig_thumb_full_path}",
+                        story_object=story_object,
                         log_prefix=log_prefix,
                         exc=exc,
                         log_tb=True,
@@ -465,18 +461,18 @@ def get_image_slug(story_as_object, img_loading="lazy"):
             elif image_format in ["PDF", "AI"]:
                 try:
                     png2pdf_filename_full_path = rasterize_pdf_using_ghostscript(
-                        story_as_object
+                        story_object
                     )
-                    story_as_object.downloaded_orig_thumb_full_path = (
+                    story_object.downloaded_orig_thumb_full_path = (
                         png2pdf_filename_full_path
                     )
-                    # print(story_as_object.downloaded_orig_thumb_full_path)
+                    # print(story_object.downloaded_orig_thumb_full_path)
                     downloaded_img = Image(filename=png2pdf_filename_full_path)
                     no_pad = True
                 except wand.exceptions.PolicyError as exc:
                     make_has_thumb_false(
-                        reason=f"wand PolicyError for {story_as_object.og_image_filename_details_from_url['base_name']}",
-                        story_object=story_as_object,
+                        reason=f"wand PolicyError for {story_object.og_image_filename_details_from_url['base_name']}",
+                        story_object=story_object,
                         log_prefix=log_prefix,
                         exc=exc,
                         log_tb=True,
@@ -484,8 +480,8 @@ def get_image_slug(story_as_object, img_loading="lazy"):
                     return
                 except Exception as exc:
                     make_has_thumb_false(
-                        reason=f"error with PDF {story_as_object.og_image_filename_details_from_url['base_name']}",
-                        story_object=story_as_object,
+                        reason=f"error with PDF {story_object.og_image_filename_details_from_url['base_name']}",
+                        story_object=story_object,
                         log_prefix=log_prefix,
                         exc=exc,
                         log_tb=True,
@@ -499,7 +495,7 @@ def get_image_slug(story_as_object, img_loading="lazy"):
             ):
                 make_has_thumb_false(
                     reason=f"shorter image dimension is too small ({min(downloaded_img.width, downloaded_img.height)}px)",
-                    story_object=story_as_object,
+                    story_object=story_object,
                     log_prefix=log_prefix,
                     exc=None,
                     log_tb=False,
@@ -512,7 +508,7 @@ def get_image_slug(story_as_object, img_loading="lazy"):
             except Exception as exc:
                 make_has_thumb_false(
                     reason="failed to strip metadata from image",
-                    story_object=story_as_object,
+                    story_object=story_object,
                     log_prefix=log_prefix,
                     exc=None,
                     log_tb=False,
@@ -523,7 +519,7 @@ def get_image_slug(story_as_object, img_loading="lazy"):
             image_to_use = None
             try:
                 image_to_use = get_image_to_use(
-                    story_as_object,
+                    story_object,
                     downloaded_img,
                     force_aspect=force_aspect,
                     no_trim=no_trim,
@@ -532,7 +528,7 @@ def get_image_slug(story_as_object, img_loading="lazy"):
             except Exception as exc:
                 make_has_thumb_false(
                     reason="problem in get_image_to_use()",
-                    story_object=story_as_object,
+                    story_object=story_object,
                     log_prefix=log_prefix,
                     exc=None,
                     log_tb=True,
@@ -553,20 +549,18 @@ def get_image_slug(story_as_object, img_loading="lazy"):
                     )
                     try:
                         save_thumb_where_it_should_go(
-                            webp_image, story_as_object, "extralarge"
+                            webp_image, story_object, "extralarge"
                         )
                     except Exception as exc:
                         return
 
-            file_utils.delete_file(story_as_object.downloaded_orig_thumb_full_path)
+            file_utils.delete_file(story_object.downloaded_orig_thumb_full_path)
 
-            story_as_object.image_slug = create_img_slug_html(
-                story_as_object, img_loading
-            )
+            story_object.image_slug = create_img_slug_html(story_object, img_loading)
 
-            if story_as_object.image_slug:
-                if not story_as_object.has_thumb:
-                    story_as_object.has_thumb = True
+            if story_object.image_slug:
+                if not story_object.has_thumb:
+                    story_object.has_thumb = True
                     logger.info(
                         log_prefix
                         + "image_slug was present but has_thumb was False, so made has_thumb True (~Tim~)"
@@ -582,7 +576,7 @@ def get_image_slug(story_as_object, img_loading="lazy"):
 
 
 def handle_exception(exc: Exception = None, log_prefix="", context=None):
-    exc_name = str(exc.__class__.__name__)
+    exc_name = f"{exc.__class__.__module__}.{exc.__class__.__name__}"
     exc_msg = str(exc)
     exc_slug = f"{exc_name}: {exc_msg}"
 
@@ -647,19 +641,19 @@ def make_has_thumb_false(
         logger.info(log_prefix + tb_str)
 
 
-def fix_multipage_pdf(story_as_object):
-    log_prefix = f"id {story_as_object.id}: "
+def fix_multipage_pdf(story_object):
+    log_prefix = f"id {story_object.id}: "
     log_prefix += "fix_multipage_pdf(): "
     try:
         with open(
-            story_as_object.downloaded_orig_thumb_full_path, "rb"
+            story_object.downloaded_orig_thumb_full_path, "rb"
         ) as pdf_file_stream:
             pdf_file = PdfReader(pdf_file_stream, strict=False)
-            story_as_object.pdf_page_count = len(pdf_file.pages)
+            story_object.pdf_page_count = len(pdf_file.pages)
             if len(pdf_file.pages) > 1:
                 outfile = PdfWriter()
                 outfile.add_page(pdf_file.pages[0])
-                temp_pdf_filename = f"temp-{story_as_object.id}.pdf"
+                temp_pdf_filename = f"temp-{story_object.id}.pdf"
                 temp_pdf_full_path = os.path.join(
                     config.settings["TEMP_DIR"], temp_pdf_filename
                 )
@@ -671,21 +665,21 @@ def fix_multipage_pdf(story_as_object):
         )
         raise exc
 
-    shutil.copyfile(temp_pdf_full_path, story_as_object.downloaded_orig_thumb_full_path)
+    shutil.copyfile(temp_pdf_full_path, story_object.downloaded_orig_thumb_full_path)
     logger.info(
         log_prefix
-        + f"story_as_object.downloaded_orig_thumb_full_path: {story_as_object.downloaded_orig_thumb_full_path}"
+        + f"story_object.downloaded_orig_thumb_full_path: {story_object.downloaded_orig_thumb_full_path}"
     )
-    story_as_object.thumb_aspect_hint = "PDF page"
+    story_object.thumb_aspect_hint = "PDF page"
     logger.info(log_prefix + "success discarding all but first page of PDF")
     return True
 
 
-def rasterize_pdf_using_ghostscript(story_as_object):
-    log_prefix = f"id {story_as_object.id}: "
-    pdf_filename_full_path = story_as_object.downloaded_orig_thumb_full_path
+def rasterize_pdf_using_ghostscript(story_object):
+    log_prefix = f"id {story_object.id}: "
+    pdf_filename_full_path = story_object.downloaded_orig_thumb_full_path
     cur_unix_time = int(time.time())
-    pdf2png_filename = f"pdf2png-{story_as_object.id}-{cur_unix_time}.png"
+    pdf2png_filename = f"pdf2png-{story_object.id}-{cur_unix_time}.png"
     pdf2png_filename_full_path = os.path.join(
         config.settings["TEMP_DIR"], pdf2png_filename
     )
@@ -858,14 +852,14 @@ def get_altered_img(img, aspect=None, force_aspect=None):
 
 
 def get_image_to_use(
-    story_as_object,
+    story_object,
     downloaded_img,
     force_aspect=None,
     no_trim=False,
     no_pad=False,
     shortcode="image",
 ):
-    log_prefix = f"id {story_as_object.id}: "
+    log_prefix = f"id {story_object.id}: "
 
     if downloaded_img.alpha_channel:
         downloaded_img.background = config.settings["THUMBS"][
@@ -874,7 +868,7 @@ def get_image_to_use(
         downloaded_img.merge_layers("flatten")
         logger.info(
             log_prefix
-            + f"flattened transparency for og:image {story_as_object.linked_url_og_image_url_final}"
+            + f"flattened transparency for og:image {story_object.linked_url_og_image_url_final}"
         )
 
     cropped_img = get_cropped_image(downloaded_img, 4)
@@ -894,7 +888,7 @@ def get_image_to_use(
     ):
         make_has_thumb_false(
             reason="trimmed image is too small",
-            story_object=story_as_object,
+            story_object=story_object,
             log_prefix=log_prefix,
             exc=None,
             log_tb=False,
@@ -923,7 +917,7 @@ def get_image_to_use(
         image_to_use = Image(image=bordered_img)
 
     # check if it's a PDF page
-    elif story_as_object.thumb_aspect_hint == "PDF page":
+    elif story_object.thumb_aspect_hint == "PDF page":
         logger.info(log_prefix + "won't alter aspect ratio of PDF page-based thumb")
         image_to_use = Image(image=bordered_img)
 
@@ -1030,6 +1024,6 @@ def draw_dogear(pdf_page_img, log_prefix=""):
         draw.draw(pdf_page_img)
         # pdf_page_img.save(filename="out2.png")
 
-        logger.info(log_prefix + "successfully added a dogear")
+        logger.info(log_prefix + "successfully added dogear")
 
         return pdf_page_img

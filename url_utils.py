@@ -1,6 +1,7 @@
 import inspect
 import logging
 import sys
+import traceback
 
 import requests
 import urllib3
@@ -244,11 +245,49 @@ def head_request(url=None, log_prefix=""):
         )
         return resp.headers
 
+    except requests.exceptions.ConnectTimeout as exc:
+        exc_name = f"{exc.__class__.__module__}.{exc.__class__.__name__}"
+        # exc_msg = str(exc)
+        # exc_slug = f"{exc_name}: {exc_msg}"
+        logger.info(log_prefix + f"{exc_name} for url {url}")
+        # tb_str = traceback.format_exc()
+        # logger.error(log_prefix + tb_str)
+        return None
+
+    except requests.exceptions.ConnectionError as exc:
+        exc_name = f"{exc.__class__.__module__}.{exc.__class__.__name__}"
+        # exc_msg = str(exc)
+        # exc_slug = f"{exc_name}: {exc_msg}"
+        logger.info(log_prefix + f"{exc_name} for url {url}")
+        # tb_str = traceback.format_exc()
+        # logger.error(log_prefix + tb_str)
+        return None
+
+    except requests.exceptions.ReadTimeout as exc:
+        exc_name = f"{exc.__class__.__module__}.{exc.__class__.__name__}"
+        # exc_msg = str(exc)
+        # exc_slug = f"{exc_name}: {exc_msg}"
+        logger.info(log_prefix + f"{exc_name} for url {url}")
+        # tb_str = traceback.format_exc()
+        # logger.error(log_prefix + tb_str)
+        return None
+
+    except requests.exceptions.SSLError as exc:
+        exc_name = f"{exc.__class__.__module__}.{exc.__class__.__name__}"
+        # exc_msg = str(exc)
+        # exc_slug = f"{exc_name}: {exc_msg}"
+        logger.info(log_prefix + f"{exc_name} for url {url}")
+        # tb_str = traceback.format_exc()
+        # logger.error(log_prefix + tb_str)
+        return None
+
     except Exception as exc:
-        exc_name = str(exc.__class__.__name__)
+        exc_name = f"{exc.__class__.__module__}.{exc.__class__.__name__}"
         exc_msg = str(exc)
         exc_slug = f"{exc_name}: {exc_msg}"
-        logger.error(log_prefix + f"{exc_slug} for url {url}")
+        logger.error(log_prefix + f"unexpected exception: {exc_slug} for url {url}")
+        tb_str = traceback.format_exc()
+        logger.error(log_prefix + tb_str + " (~Tim~)")
         return None
 
 

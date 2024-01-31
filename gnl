@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+KEYWORD=$1
+
+# gnl "discarding this story" | awk '{print substr($5, 1, length($5)-1)}' | xargs -n 1 nuke
+
+if [[ $# -eq 0 ]]; then
+    echo "grl: (G)rep (N)ewest combined (L)ogfile"
+    echo "Usage: gnl <keyword>"
+    exit 1
+fi
+
+get_last_filename() {
+    local pattern="$1"
+    local last_file=""
+    # Use a glob pattern without word splitting
+    for file in $pattern; do
+        if [ -f "$file" ]; then
+            last_file="$file"
+        fi
+    done
+    echo "$last_file"
+}
+
+RECENT_LOGFILE=$(get_last_filename '/srv/timbos-hn-reader/logs/thnr-combined-*.log')
+
+grep --color -P "${KEYWORD}" "${RECENT_LOGFILE}"
