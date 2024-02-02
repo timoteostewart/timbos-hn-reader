@@ -1,12 +1,173 @@
+import inspect
+import re
 import logging
 import math
+import traceback
+
+from dateutil.tz import tzutc
+from goose3 import Goose
+from goose3.crawler import Crawler
+from goose3.extractors.publishdate import TIMEZONE_INFO
 
 import config
+import utils_text
+from multiple_tlds import is_multiple_tlds
+
+# import trafilatura  # never use; ← it has a dependency conflict with another package over the required version of `charset-normalizer`
+
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+CHARS_IN_DOMAINS_BREAK_BEFORE = "."
+CHARS_IN_DOMAINS_BREAK_AFTER = "-"
+
+# NONBREAKING_HYPHEN = config.settings["SYMBOLS"]["NONBREAKING_HYPHEN"]
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 EMPTY_STRING = ""
+
+# def monkeypatched_publish_date_to_utc(self):
+#     try:
+#         publish_datetime = dateutil.parser.parse(
+#             self.article.publish_date, tzinfos=TIMEZONE_INFO
+#         )
+#         if publish_datetime.tzinfo:
+#             return publish_datetime.astimezone(tzutc())
+#         else:
+#             return publish_datetime
+#     except (ValueError, OverflowError):
+#         logger.warning(
+#             f"Publish date {self.article.publish_date} could not be resolved to UTC (monkeypatched_publish_date_to_utc)"
+#         )
+#         return None
+
+
+# Crawler._publish_date_to_utc = monkeypatched_publish_date_to_utc
+
+
+def add_singular_plural(number, unit, force_int=False):
+    if force_int:
+        if number == 0 or number == 0.0:
+            return f"zero {unit}s"
+        elif number == 1 or number == 1.0:
+            return f"1 {unit}"
+        else:
+            return f"{int(math.ceil(number))} {unit}s"
+
+    if number == 0 or number == 0.0:
+        return f"0 {unit}s"
+    elif number == 1 or number == 1.0:
+        return f"1 {unit}"
+    else:
+        x = ""
+        if unit in ["hour"]:
+            x = f"{get_frac(number, 'fourths')} {unit}s"
+        elif unit in ["day", "week", "month", "year"]:
+            x = f"{get_frac(number, 'halves')} {unit}s"
+        else:
+            x = f"{int(math.ceil(number))} {unit}s"
+        if x[:2] == "1 ":
+            return x[:-1]
+        else:
+            return x
+
+
+def create_domains_slug(hostname_dict: str):
+    if not hostname_dict["minus_www"]:
+        return
+
+    # TODO: try using urlparse and netloc to extract domain, and see which is faster/more accurate. maybe log when results of both methods differ
+
+    domains_lowercase = hostname_dict["minus_www"].lower()
+    domains_all_as_list = domains_lowercase.split(".")
+
+    if len(domains_all_as_list) < 2:
+        return
+
+    domains_for_hn_search = f"{domains_all_as_list[-2]}.{domains_all_as_list[-1]}"
+
+    index = -2
+    while (len(domains_all_as_list) + index > 0) and is_multiple_tlds(
+        domains_for_hn_search
+    ):
+        index -= 1
+        domains_for_hn_search = domains_all_as_list[index] + "." + domains_for_hn_search
+
+    if index <= -4:
+        logger.info(
+            f"very long domain name constructed for search: {domains_for_hn_search}"
+        )
+
+    domains_for_search_as_list = domains_for_hn_search.split(".")
+
+    longest_domain_component = len(max(domains_for_search_as_list, key=len))
+
+    # entire hostname is short enough to stay on one line
+    for_display_addl_class = ""
+    CHAR_LENGTH_FOR_LINEWRAPPING_DOMAINS = config.settings["SLUGS"][
+        "CHAR_LENGTH_FOR_LINEWRAPPING_DOMAINS"
+    ]
+    if len(domains_for_hn_search) < CHAR_LENGTH_FOR_LINEWRAPPING_DOMAINS:
+        domains_for_display = domains_for_hn_search
+        for_display_addl_class = " nowrap"
+
+    # hostname is composed of 3 domains, so group the secondary domain with the shorter of the other components
+    elif domains_for_hn_search.count(".") == 2 and longest_domain_component <= (
+        CHAR_LENGTH_FOR_LINEWRAPPING_DOMAINS - 4
+    ):
+        if domains_for_search_as_list[0] < domains_for_search_as_list[2]:
+            domains_for_display = f"{domains_for_search_as_list[0]}.{domains_for_search_as_list[1]}&ZeroWidthSpace;.{domains_for_search_as_list[2]}"
+        else:
+            domains_for_display = f"{domains_for_search_as_list[0]}&ZeroWidthSpace;.{domains_for_search_as_list[1]}.{domains_for_search_as_list[2]}"
+
+    # insert ZeroWidthSpaces in long domains of hostname to aid in line breaking
+    else:
+        domains_for_search_as_list = split_domain_on_chars(domains_for_hn_search)
+        for i in range(len(domains_for_search_as_list)):
+            # skip over periods and hyphens in the list
+            if "&ZeroWidthSpace;" in domains_for_search_as_list[i]:
+                continue
+
+            # if this component is too long...
+            if (
+                len(domains_for_search_as_list[i])
+                >= CHAR_LENGTH_FOR_LINEWRAPPING_DOMAINS
+            ):
+                orig = domains_for_search_as_list[i]
+                logger.info(
+                    f"{inspect.currentframe().f_code.co_name}() saw long domain component: {orig} ({len(orig)} chars)"
+                )
+                parts = []
+                while len(orig) >= CHAR_LENGTH_FOR_LINEWRAPPING_DOMAINS:
+                    if len(orig) < int(CHAR_LENGTH_FOR_LINEWRAPPING_DOMAINS * 1.5):
+                        index_after_split = len(orig) // 2
+                        parts.append(f"{orig[:index_after_split]}&ZeroWidthSpace;")
+                        parts.append(orig[index_after_split:])
+                        orig = ""
+                    else:
+                        DOUBLE_OBLIQUE_HYPHEN = config.settings["SYMBOLS"][
+                            "DOUBLE_OBLIQUE_HYPHEN"
+                        ]
+                        parts.append(
+                            f"{orig[:CHAR_LENGTH_FOR_LINEWRAPPING_DOMAINS]}{DOUBLE_OBLIQUE_HYPHEN}&ZeroWidthSpace;"
+                        )
+                        orig = orig[CHAR_LENGTH_FOR_LINEWRAPPING_DOMAINS:]
+                if orig:
+                    parts.append(orig)
+
+                domains_for_search_as_list[i] = "".join(parts)
+
+        domains_for_display = "".join(domains_for_search_as_list)
+
+    hostname_slug = f"<a class='domains-for-search{for_display_addl_class}' href='https://news.ycombinator.com/from?site={domains_for_hn_search}'>({domains_for_display})</a>"
+
+    hostname_dict["for_hn_search"] = domains_for_hn_search
+    hostname_dict["for_display"] = domains_for_display
+    hostname_dict["for_display_addl_class"] = for_display_addl_class
+    hostname_dict["slug"] = hostname_slug
 
 
 def get_frac(number, precision):
@@ -39,31 +200,154 @@ def get_frac(number, precision):
     return f"{whole_part}{fractions_to_use[best_fraction]}"
 
 
-def add_singular_plural(number, unit, force_int=False):
-    if force_int:
-        if number == 0 or number == 0.0:
-            return f"zero {unit}s"
-        elif number == 1 or number == 1.0:
-            return f"1 {unit}"
-        else:
-            return f"{int(math.ceil(number))} {unit}s"
+def get_domains_from_url(url: str):
+    if not url:
+        return utils_text.EMPTY_STRING, utils_text.EMPTY_STRING
 
-    if number == 0 or number == 0.0:
-        return f"0 {unit}s"
-    elif number == 1 or number == 1.0:
-        return f"1 {unit}"
+    # remove scheme
+    if url.startswith("http"):
+        iodfs = url.index("//")
+        url = url[(iodfs + 2) :]
+
+    try:  # remove path symbol (i.e., forward slash) and remainder of string
+        iofs = url.index("/")
+        url = url[:iofs]
+    except:
+        pass
+
+    try:  # remove percent-encoded path symbol (i.e., forward slash) and remainder of string
+        iofs = url.index("%2F")
+        url = url[:iofs]
+    except:
+        pass
+
+    try:  # remove query marker (i.e., question mark) and remainder of string
+        ioqm = url.index("?")
+        url = url[:ioqm]
+    except:
+        pass
+
+    try:  # remove percent-encoded query marker (i.e., question mark) and remainder of string
+        ioqm = url.index("%3F")
+        url = url[:ioqm]
+    except:
+        pass
+
+    try:  # remove port number symbol and remainder of string
+        ioc = url.index(":")
+        url = url[:ioc]
+    except:
+        pass
+
+    try:  # remove URI fragment and remainder of string
+        # more info: https://en.wikipedia.org/wiki/URI_fragment
+        iohm = url.index("#")
+        url = url[:iohm]
+    except:
+        pass
+
+    hostname_full = url
+
+    # remove any www, www1, www2, www3 subdomains
+    if url.startswith("www."):
+        hostname_minus_www = hostname_full[4:]
+    elif url.startswith("www") and url[3:4].isnumeric() and url[4:5] == ".":
+        hostname_minus_www = url[5:]
     else:
-        x = ""
-        if unit in ["hour"]:
-            x = f"{get_frac(number, 'fourths')} {unit}s"
-        elif unit in ["day", "week", "month", "year"]:
-            x = f"{get_frac(number, 'halves')} {unit}s"
+        hostname_minus_www = hostname_full
+
+    return hostname_full, hostname_minus_www
+
+
+def get_filename_details_from_url(full_url):
+    if not full_url:
+        return None
+
+    # delete rightmost question mark and everything after it
+    end_index = full_url.rfind("?")
+    if end_index != -1:
+        full_url = full_url[0:end_index]
+
+    # delete rightmost percent-encoded question mark and everything after it
+    end_index = full_url.rfind("%3F")
+    if end_index != -1:
+        full_url = full_url[0:end_index]
+
+    # # delete rightmost open square bracket and everything after it
+    # end_index = full_url.rfind("[")
+    # if end_index != -1:
+    #     full_url = full_url[0:end_index]
+
+    # # delete rightmost percent-encoded open square bracket and everything after it
+    # end_index = full_url.rfind("%5B")
+    # if end_index != -1:
+    #     full_url = full_url[0:end_index]
+
+    # delete leftmost forward slash and everything before it
+    start_index = full_url.rfind("/")
+    if start_index != -1:
+        full_url = full_url[(start_index + 1) :]
+
+    # delete leftmost percent-encoded forward slash and everything before it
+    start_index = full_url.rfind("%2F")
+    if start_index != -1:
+        full_url = full_url[(start_index + 1) :]
+
+    # filename is whatever is left of the original URL after the preceding deletions
+    filename = full_url
+
+    # try to determine file extension
+    last_dot_index = filename.rfind(".")
+    if last_dot_index == -1:
+        basename = filename
+        extension = ""
+    else:
+        basename = filename[:last_dot_index]
+        extension = filename[(last_dot_index + 1) :]
+
+    # bundle up our results
+    filename_details = {
+        "filename": filename,
+        "base_name": basename,
+        "file_extension": extension,
+    }
+
+    return filename_details
+
+
+def get_reading_time_via_goose(page_source=None, log_prefix=""):
+    log_prefix += "grt_via_g(): "
+
+    try:
+        if not page_source:
+            logger.error(log_prefix + "page_source required")
+            return None
+        reading_time = None
+        g = Goose()
+        article = g.extract(raw_html=page_source).cleaned_text
+        if article:
+            reading_time = int(
+                utils_text.word_count(article) / config.reading_speed_words_per_minute
+            )
+        if reading_time:
+            reading_time = max(reading_time, 1)
+            logger.info(
+                log_prefix
+                + f"{utils_text.add_singular_plural(reading_time, 'minute', force_int=True)}"
+            )
+            return reading_time
         else:
-            x = f"{int(math.ceil(number))} {unit}s"
-        if x[:2] == "1 ":
-            return x[:-1]
-        else:
-            return x
+            logger.info(log_prefix + "could not determine reading time")
+            return None
+    except Exception as exc:
+        logger.error(
+            log_prefix + f"could not determine reading time due to error: {str(exc)}"
+        )
+        # logger.error(log_prefix + f"{traceback.format_exc()}")
+        return None
+
+
+get_reading_time = get_reading_time_via_goose
 
 
 def get_text_between(
@@ -176,6 +460,50 @@ def insert_possible_line_breaks(orig_title):
     title_slug = " ".join(words_by_spaces)
 
     return title_slug
+
+
+def parse_content_type_from_raw_header(content_type_header: str):
+    if not content_type_header:
+        return None
+    content_type = None
+    for each_ct_val in content_type_header.split(";"):
+        each_ct_val = each_ct_val.strip()
+        if each_ct_val.startswith("charset"):
+            continue
+        if "/" in each_ct_val:
+            content_type = each_ct_val
+            break
+    return content_type.lower() if content_type else None
+
+
+def sanitize(s: str):
+    s = s.lower()
+    allowed_chars = "abcdefghijklmnopqrstuvwxyz 0123456789"
+    sanitized = ""
+    for char in s:
+        if char in allowed_chars:
+            sanitized += char
+    sanitized = re.sub(" {2,}", " ", sanitized)
+    return sanitized.strip()
+
+
+def split_domain_on_chars(domain_string: str):
+    result = []
+    cur_part = ""
+    for char in domain_string:
+        if char in CHARS_IN_DOMAINS_BREAK_BEFORE:
+            result.append(cur_part)
+            result.append(f"&ZeroWidthSpace;{char}")
+            cur_part = ""
+        elif char in CHARS_IN_DOMAINS_BREAK_AFTER:
+            result.append(cur_part)
+            result.append(f"{char}&ZeroWidthSpace;")
+            cur_part = ""
+        else:
+            cur_part += char
+    if cur_part:
+        result.append(cur_part)
+    return result
 
 
 def word_count(text):

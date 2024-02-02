@@ -14,7 +14,7 @@ from botocore.errorfactory import ClientError
 
 import config
 import my_secrets
-from my_exceptions import *
+from thnr_exceptions import *
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -84,14 +84,6 @@ def get_json_from_s3_as_dict(full_s3_key):
 #             f"failed to retrieve s3 object {full_s3_key}"
 #         )
 #     return obj.read()
-
-
-def upload_roster_to_s3(roster_dict=None, roster_dest_fullpath=None):
-    extra_args = {"ContentType": "application/json", "Tagging": "Activity=UploadRoster"}
-
-    upload_dict_to_s3_as_json(
-        d=roster_dict, full_s3_key=roster_dest_fullpath, extra_args=extra_args
-    )
 
 
 def upload_dict_to_s3_as_json(d, full_s3_key, extra_args=None):
@@ -167,6 +159,14 @@ def upload_page_of_stories(page_filename=None, log_prefix=""):
     except Exception as exc:
         logger.error(log_prefix + f"failed to upload {page_filename} to S3")
         raise exc
+
+
+def upload_roster_to_s3(roster_dict=None, roster_dest_fullpath=None):
+    extra_args = {"ContentType": "application/json", "Tagging": "Activity=UploadRoster"}
+
+    upload_dict_to_s3_as_json(
+        d=roster_dict, full_s3_key=roster_dest_fullpath, extra_args=extra_args
+    )
 
 
 def upload_string_to_s3(string: str, full_s3_key, extra_args=None, bucket=bucket_cdn):

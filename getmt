@@ -61,7 +61,7 @@ elif [[ "${local_or_url}" == "url" ]]; then
         exit 1
     fi
 
-    trap 'rm -rf "${temp_dir}"' EXIT
+    # trap 'rm -rf "${temp_dir}"' EXIT
 
     local_file="${temp_dir}/a"
 
@@ -76,8 +76,12 @@ elif [[ "${local_or_url}" == "url" ]]; then
         exit 1
     fi
 
+    absolute_path=$(realpath ${local_file})
+
     addl_json_slug="\"url\": \"${url}\",
+    \"local_file_path\": \"${absolute_path}\",
     "
+
 
 else
     printf "Invalid arguments.\n" >&2

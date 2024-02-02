@@ -104,7 +104,6 @@ def main():
     check_for_required_dirs()
     exit_code = None
     try:
-        # update_chromedriver.check_for_updated_chromedriver()
         exit_code = hn.supervisor(cur_story_type=story_type)
 
     except Exception as exc:
