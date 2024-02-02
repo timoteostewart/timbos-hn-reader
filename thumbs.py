@@ -16,10 +16,10 @@ from wand.color import Color
 from wand.drawing import Drawing
 from wand.image import Image
 
-import aws_utils
+import utils_aws
 import config
-import file_utils
-import text_utils
+import utils_file
+import utils_text
 import url_utils
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -171,14 +171,14 @@ def can_find_a_shortcode(story_object, img_loading):
                 os.path.join(config.settings["TEMP_DIR"], thumb_filename),
             )
             try:
-                aws_utils.upload_thumb(thumb_filename=thumb_filename)
+                utils_aws.upload_thumb(thumb_filename=thumb_filename)
             except Exception as exc:
                 logger.error(
                     log_prefix + f"failed to upload thumb (prepared image) to S3: {exc}"
                 )
                 return False
 
-            file_utils.delete_file(
+            utils_file.delete_file(
                 os.path.join(config.settings["TEMP_DIR"], thumb_filename)
             )
 
@@ -217,12 +217,12 @@ def save_thumb_where_it_should_go(webp_image, story_object, size):
     thumb_filename = get_webp_filename(story_object, size)
     webp_image.save(filename=os.path.join(config.settings["TEMP_DIR"], thumb_filename))
     try:
-        aws_utils.upload_thumb(thumb_filename=thumb_filename)
+        utils_aws.upload_thumb(thumb_filename=thumb_filename)
     except Exception as exc:
         logger.error(log_prefix + f"failed to upload thumb to S3: {str(exc)}")
         raise exc
     finally:
-        file_utils.delete_file(
+        utils_file.delete_file(
             os.path.join(config.settings["TEMP_DIR"], thumb_filename)
         )
 
@@ -230,7 +230,7 @@ def save_thumb_where_it_should_go(webp_image, story_object, size):
 def get_image_slug(story_object, img_loading="lazy"):
     log_prefix_id = f"id {story_object.id}: "
     log_prefix = log_prefix_id + "get_image_slug(): "
-    story_object.image_slug = text_utils.EMPTY_STRING
+    story_object.image_slug = utils_text.EMPTY_STRING
     # bgcolor_as_Color = (None,)
     force_aspect = None
     no_trim = False
@@ -554,7 +554,7 @@ def get_image_slug(story_object, img_loading="lazy"):
                     except Exception as exc:
                         return
 
-            file_utils.delete_file(story_object.downloaded_orig_thumb_full_path)
+            utils_file.delete_file(story_object.downloaded_orig_thumb_full_path)
 
             story_object.image_slug = create_img_slug_html(story_object, img_loading)
 
@@ -570,6 +570,21 @@ def get_image_slug(story_object, img_loading="lazy"):
         context = {}
         context["image_format"] = image_format if image_format else None
         context["magic_result"] = magic_result if magic_result else None
+        context["url"] = (
+            story_object.linked_url_og_image_url_final
+            if story_object.linked_url_og_image_url_final
+            else None
+        )
+        context["og_image_content_type"] = (
+            story_object.og_image_content_type
+            if story_object.og_image_content_type
+            else None
+        )
+        context["downloaded_og_image_magic_result"] = (
+            story_object.downloaded_og_image_magic_result
+            if story_object.downloaded_og_image_magic_result
+            else None
+        )
         handle_exception(
             exc=exc, log_prefix=log_prefix + "with Image(): ", context=context
         )
@@ -596,6 +611,29 @@ def handle_exception(exc: Exception = None, log_prefix="", context=None):
             + exc_slug
         )
         logger.error(logline)
+
+    if isinstance(exc, wand.exceptions.ResourceLimitError):
+
+        slug = ""
+
+        if "url" in context:
+            slug += f' for url {context["url"]}'
+        else:
+            slug += f" for unknown url"
+
+        if "og_image_content_type" in context:
+            slug += f' with og:image content-type {context["og_image_content_type"]}'
+        else:
+            slug += f" with unknown content-type"
+
+        if "downloaded_og_image_magic_result" in context:
+            slug += f' with magic type {context["downloaded_og_image_magic_result"]}'
+        else:
+            slug += f" with unknown magic type"
+
+        tb_str = traceback.format_exc()
+        logger.error(log_prefix + exc_slug + slug + " (~Tim~)")
+        logger.error(log_prefix + tb_str)
 
     elif isinstance(exc, Exception):
         tb_str = traceback.format_exc()

@@ -1,14 +1,16 @@
 import inspect
 import logging
+import os
 import sys
 import traceback
+
 
 import requests
 import urllib3
 
 import config
 import retrieve_by_url
-import text_utils
+import utils_text
 from multiple_tlds import is_multiple_tlds
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -25,6 +27,8 @@ CHARS_IN_DOMAINS_BREAK_AFTER = "-"
 def create_domains_slug(hostname_dict: str):
     if not hostname_dict["minus_www"]:
         return
+
+    # TODO: try using urlparse and netloc to extract domain, and see which is faster/more accurate. maybe log when results of both methods differ
 
     domains_lowercase = hostname_dict["minus_www"].lower()
     domains_all_as_list = domains_lowercase.split(".")
@@ -117,7 +121,7 @@ def create_domains_slug(hostname_dict: str):
 
 def get_domains_from_url(url: str):
     if not url:
-        return text_utils.EMPTY_STRING, text_utils.EMPTY_STRING
+        return utils_text.EMPTY_STRING, utils_text.EMPTY_STRING
 
     # remove scheme
     if url.startswith("http"):
@@ -172,6 +176,9 @@ def get_domains_from_url(url: str):
         hostname_minus_www = hostname_full
 
     return hostname_full, hostname_minus_www
+
+
+
 
 
 def get_filename_details_from_url(full_url):

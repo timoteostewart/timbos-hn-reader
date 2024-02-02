@@ -13,7 +13,7 @@ import traceback
 
 import config
 import hn
-import text_utils
+import utils_text
 
 logger = None
 
@@ -30,6 +30,7 @@ def check_for_required_dirs():
         config.settings["COMPLETED_PAGES_DIR"],
         config.settings["PREPARED_THUMBS_SERVICE_DIR"],
         config.settings["TEMPLATES_SERVICE_DIR"],
+        config.settings["SCRATCH_DIR"],
     ]
 
     for each_dir in required_directories:
@@ -91,7 +92,7 @@ def main():
     if config.DEBUG_FLAG_DISABLE_CONCURRENT_PAGE_PROCESSING:
         workers_slug = "1 thread"
     else:
-        workers_slug = text_utils.add_singular_plural(
+        workers_slug = utils_text.add_singular_plural(
             config.max_workers, "thread", force_int=True
         )
 

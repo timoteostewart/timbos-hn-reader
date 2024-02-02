@@ -10,7 +10,6 @@ fi
 BASE_DIR=/srv/timbos-hn-reader/
 CACHED_STORY_DIR="${BASE_DIR}cached_stories/"
 
-# Function to delete a file if it exists
 delete_file() {
     local file=$1
     local file_display_name=$(basename "${file}")

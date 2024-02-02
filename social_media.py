@@ -9,7 +9,7 @@ from bs4 import BeautifulSoup
 import config
 import my_secrets
 import retrieve_by_url
-import text_utils
+import utils_text
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -78,7 +78,7 @@ def check_for_social_media_details(
                 "account_name_slug"
             ]
 
-        story_object.gh_repo_lang_stats = text_utils.EMPTY_STRING
+        story_object.gh_repo_lang_stats = utils_text.EMPTY_STRING
         a_data_pjax_repo = page_source_soup.find(
             "a", {"data-pjax": "#repo-content-pjax-container"}
         )
@@ -271,7 +271,7 @@ def check_if_nowrap_needed(account_name: str):
     if len(account_name) <= 22:
         return " nowrap"
     else:
-        return text_utils.EMPTY_STRING
+        return utils_text.EMPTY_STRING
 
 
 def get_arstechnica_account_slug(
@@ -295,7 +295,7 @@ def get_arstechnica_account_slug(
 
     if not author_display_name:
         logger.info(f"id {story_object.id}: failed to find arstechnica author name")
-        return text_utils.EMPTY_STRING
+        return utils_text.EMPTY_STRING
 
     logger.info(f"id {story_object.id}: arstechnica author is {author_display_name}")
 
@@ -341,7 +341,7 @@ def get_bloomberg_account_slug(
 
     if not author_display_name:
         logger.info(f"id {story_object.id}: failed to find bloomberg author name")
-        return text_utils.EMPTY_STRING
+        return utils_text.EMPTY_STRING
 
     logger.info(f"id {story_object.id}: bloomberg author is {author_display_name}")
 
@@ -371,7 +371,7 @@ def get_bloomberg_account_slug(
 
 
 def get_github_account_slug(github_url: str, story_object=None):
-    account_name_url = text_utils.get_text_between(
+    account_name_url = utils_text.get_text_between(
         "github.com/",
         "/",
         github_url,
@@ -380,7 +380,7 @@ def get_github_account_slug(github_url: str, story_object=None):
     )
 
     if not account_name_url:
-        return text_utils.EMPTY_STRING
+        return utils_text.EMPTY_STRING
 
     account_url = f"https://www.github.com/{account_name_url}"
     nowrap_class = check_if_nowrap_needed(account_name_url)
@@ -415,7 +415,7 @@ def get_github_gist_account_slug(
 
     if not author_handle:
         logger.info(f"id {story_object.id}: failed to find github gist author name")
-        return text_utils.EMPTY_STRING
+        return utils_text.EMPTY_STRING
 
     nowrap_class = check_if_nowrap_needed(author_handle)
 
@@ -441,7 +441,7 @@ def get_github_gist_account_slug(
 
 def create_github_languages_slug(story_object):
     if not story_object.gh_repo_lang_stats:
-        return text_utils.EMPTY_STRING
+        return utils_text.EMPTY_STRING
 
     languages_list = []
     for ld in story_object.gh_repo_lang_stats:
@@ -524,7 +524,7 @@ def get_theguardian_account_slug(
 
     if not author_display_name:
         logger.info(f"id {story_object.id}: failed to find theguardian author name")
-        return text_utils.EMPTY_STRING
+        return utils_text.EMPTY_STRING
 
     logger.info(f"id {story_object.id}: theguardian author is {author_display_name}")
 
@@ -561,7 +561,7 @@ def get_medium_account_slug(medium_url, story_object):
         at_sign_slug = ""
         hn_search_query = f"{domains_as_list[-3]}.medium.com"
     elif "medium.com/@" in medium_url:
-        account_name_url = text_utils.get_text_between(
+        account_name_url = utils_text.get_text_between(
             "medium.com/@",
             "/",
             medium_url,
@@ -572,7 +572,7 @@ def get_medium_account_slug(medium_url, story_object):
         at_sign_slug = "@"
         hn_search_query = f"medium.com/{account_name_url}"
     else:
-        account_name_url = text_utils.get_text_between(
+        account_name_url = utils_text.get_text_between(
             "medium.com/", "/", medium_url, okay_to_elide_right_pattern=True
         )
         account_url = f"https://www.medium.com/{account_name_url}"
@@ -580,7 +580,7 @@ def get_medium_account_slug(medium_url, story_object):
         hn_search_query = f"medium.com/{account_name_url}".lower()
 
     if not account_name_url:
-        return text_utils.EMPTY_STRING
+        return utils_text.EMPTY_STRING
 
     nowrap_class = check_if_nowrap_needed(account_name_url)
 
@@ -618,7 +618,7 @@ def get_nytimes_article_slug(
         logger.info(
             f"id {story_object.id}: failed to determine nytimes article authors"
         )
-        return text_utils.EMPTY_STRING
+        return utils_text.EMPTY_STRING
 
     author_slug = ", ".join(
         [
@@ -638,10 +638,10 @@ def get_nytimes_article_slug(
     )
 
     if story_object:
-        story_object.social_media["account_name_url"] = text_utils.EMPTY_STRING
+        story_object.social_media["account_name_url"] = utils_text.EMPTY_STRING
         # story_object.social_media["account_name_display"] = article_author
         # story_object.social_media["nowrap_class"] = nowrap_class
-        story_object.social_media["account_url"] = text_utils.EMPTY_STRING
+        story_object.social_media["account_url"] = utils_text.EMPTY_STRING
         story_object.social_media["account_name_slug"] = account_name_slug
 
     return account_name_slug
@@ -649,14 +649,14 @@ def get_nytimes_article_slug(
 
 def get_reddit_account_slug(reddit_url, story_object):
     if "reddit.com/r/" not in reddit_url:
-        return text_utils.EMPTY_STRING
+        return utils_text.EMPTY_STRING
 
-    subreddit_name_url = text_utils.get_text_between(
+    subreddit_name_url = utils_text.get_text_between(
         "reddit.com/r/", "/", reddit_url, okay_to_elide_right_pattern=True
     )
 
     if not subreddit_name_url:
-        return text_utils.EMPTY_STRING
+        return utils_text.EMPTY_STRING
 
     subreddit_url = f"https://old.reddit.com/r/{subreddit_name_url}"
     nowrap_class = check_if_nowrap_needed(subreddit_name_url)
@@ -679,7 +679,7 @@ def get_substack_account_slug(substack_url, story_object):
     account_name_url = story_object.hostname["minus_www"].split(".")[0]
 
     if not account_name_url:
-        return text_utils.EMPTY_STRING
+        return utils_text.EMPTY_STRING
 
     nowrap_class = check_if_nowrap_needed(account_name_url)
     account_url = f"https://{story_object.hostname['minus_www']}"
@@ -713,7 +713,7 @@ def get_techcrunch_account_slug(
 
     if not author_display_name:
         logger.info(f"id {story_object.id}: failed to find techcrunch author name")
-        return text_utils.EMPTY_STRING
+        return utils_text.EMPTY_STRING
 
     a_els = page_source_soup.select("a")
     for each_a in a_els:
@@ -746,17 +746,17 @@ def get_techcrunch_account_slug(
 
 def get_twitter_account_slug(twitter_url: str, story_object=None):
     if "/events/" in twitter_url:
-        return text_utils.EMPTY_STRING
+        return utils_text.EMPTY_STRING
 
     if "/spaces/" in twitter_url:
-        return text_utils.EMPTY_STRING
+        return utils_text.EMPTY_STRING
 
-    account_name_url = text_utils.get_text_between(
+    account_name_url = utils_text.get_text_between(
         "twitter.com/", "/status/", twitter_url, okay_to_elide_right_pattern=True
     )
 
     if not account_name_url:
-        return text_utils.EMPTY_STRING
+        return utils_text.EMPTY_STRING
 
     account_url = f"https://www.twitter.com/{account_name_url}"
     nowrap_class = check_if_nowrap_needed(account_name_url)
@@ -786,7 +786,7 @@ def get_wikipedia_article_slug(
         article_title = article_title_el[0].text
     else:
         logger.info(f"id {story_object.id}: failed to find wikipedia article title")
-        return text_utils.EMPTY_STRING
+        return utils_text.EMPTY_STRING
 
     nowrap_class = check_if_nowrap_needed(article_title)
 
@@ -799,10 +799,10 @@ def get_wikipedia_article_slug(
     )
 
     if story_object:
-        story_object.social_media["account_name_url"] = text_utils.EMPTY_STRING
+        story_object.social_media["account_name_url"] = utils_text.EMPTY_STRING
         story_object.social_media["account_name_display"] = article_title
         story_object.social_media["nowrap_class"] = nowrap_class
-        story_object.social_media["account_url"] = text_utils.EMPTY_STRING
+        story_object.social_media["account_url"] = utils_text.EMPTY_STRING
         story_object.social_media["account_name_slug"] = account_name_slug
 
     return account_name_slug
@@ -810,7 +810,7 @@ def get_wikipedia_article_slug(
 
 def get_youtube_channel_slug(youtube_url: str, story_object=None):
     if "youtube.com/watch?v=" in youtube_url:
-        video_id = text_utils.get_text_between(
+        video_id = utils_text.get_text_between(
             "v=", "&", youtube_url, okay_to_elide_right_pattern=True
         )
 
@@ -836,10 +836,10 @@ def get_youtube_channel_slug(youtube_url: str, story_object=None):
                     f"failed to get video details for YouTube URL {youtube_url}: {exc}"
                 )
 
-            return text_utils.EMPTY_STRING
+            return utils_text.EMPTY_STRING
 
     elif "youtube.com/channel/" in youtube_url:
-        channel_id = text_utils.get_text_between(
+        channel_id = utils_text.get_text_between(
             "youtube.com/channel/",
             "?",
             youtube_url,
@@ -868,10 +868,10 @@ def get_youtube_channel_slug(youtube_url: str, story_object=None):
                     f"failed to get channel details for YouTube URL {youtube_url}: {exc}"
                 )
 
-            return text_utils.EMPTY_STRING
+            return utils_text.EMPTY_STRING
 
     elif "youtube.com/playlist" in youtube_url:
-        playlist_id = text_utils.get_text_between(
+        playlist_id = utils_text.get_text_between(
             "list=", "&", youtube_url, okay_to_elide_right_pattern=True
         )
 
@@ -896,7 +896,7 @@ def get_youtube_channel_slug(youtube_url: str, story_object=None):
                 logger.warning(
                     f"failed to get playlist details for YouTube URL {youtube_url}: {exc}"
                 )
-            return text_utils.EMPTY_STRING
+            return utils_text.EMPTY_STRING
     else:
         if story_object:
             logger.warning(
@@ -907,10 +907,10 @@ def get_youtube_channel_slug(youtube_url: str, story_object=None):
                 f"failed to understand format or structure of YouTube URL: {youtube_url}"
             )
 
-        return text_utils.EMPTY_STRING
+        return utils_text.EMPTY_STRING
 
     if not account_name and not account_url:
-        return text_utils.EMPTY_STRING
+        return utils_text.EMPTY_STRING
 
     nowrap_class = check_if_nowrap_needed(account_name)
 

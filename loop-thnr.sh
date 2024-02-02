@@ -297,7 +297,7 @@ do
 
         write_log_message loop info "${LOOP_LOG_PREFIX} MAIN_PY_START_TS=${MAIN_PY_START_TS}, MAIN_PY_END_TS=${MAIN_PY_END_TS}, SECONDS_SPENT=${SECONDS_SPENT}, DURATION=${DURATION}"
 
-        if (( ${MAIN_PY_ERROR_CODE} == 0 )); then
+        if (( MAIN_PY_ERROR_CODE == 0 )); then
             write_log_message loop info "${LOOP_LOG_PREFIX} Exited main.py \"${cur_story_type}\" after ${DURATION}"
         else
             write_log_message loop error "${LOOP_LOG_PREFIX} Exited main.py \"${cur_story_type}\" with error code ${MAIN_PY_ERROR_CODE} after ${DURATION}"
@@ -328,7 +328,7 @@ do
 	(( LOOP_NUMBER += 1 ))
 
     # periodically restart the host as a stability measure, if we're root
-    if (( ${LOOP_NUMBER} == 25 )); then
+    if (( LOOP_NUMBER == 25 )); then
         if am-root; then
             shutdown -r now
         fi

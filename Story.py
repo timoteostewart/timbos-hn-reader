@@ -1,7 +1,7 @@
 from typing import List
 
-import text_utils
-import time_utils
+import utils_text
+import utils_time
 import url_utils
 from Item import Item
 
@@ -29,7 +29,7 @@ class Story(Item):
             self.url_content_type: str = ""
 
         self.title: str = title
-        self.title_slug = text_utils.insert_possible_line_breaks(title)
+        self.title_slug = utils_text.insert_possible_line_breaks(title)
 
         self.text: str = text
 
@@ -47,16 +47,16 @@ class Story(Item):
         url_utils.create_domains_slug(self.hostname)
 
         self.descendants: int = int(descendants)
-        self.descendants_display = text_utils.add_singular_plural(
+        self.descendants_display = utils_text.add_singular_plural(
             self.descendants, "comment"
         )
         self.hn_comments_url: str = f"https://news.ycombinator.com/item?id={id}"
 
         self.score: int = int(score)
-        self.score_display = text_utils.add_singular_plural(self.score, "point")
+        self.score_display = utils_text.add_singular_plural(self.score, "point")
 
         self.time_of_last_firebaseio_query: int = (
-            time_utils.get_time_now_in_epoch_seconds_int()
+            utils_time.get_time_now_in_epoch_seconds_int()
         )  # TODO: don't initialize this here
 
         # by analyzing self.text:

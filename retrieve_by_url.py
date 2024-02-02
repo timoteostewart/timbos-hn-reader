@@ -74,6 +74,28 @@ def endpoint_query_via_requests(url=None, retries=3, delay=8, log_prefix=""):
         )
 
 
+
+def get_rendered_page_source_via_response_object(response_object, log_prefix=""):
+    log_prefix_local = log_prefix + "get_rendered_page_source_via_response_object(): "
+    url = response_object.url
+    try:
+        with response_object.render(headless=True, mock_human=True) as page:
+            time.sleep(utils_random.random_real(0, 1))
+            page.goto(url)
+            time.sleep(utils_random.random_real(0, 1))
+
+            if page.html and page.html.find("html"):
+                page_source_via_render = page.html.find("html").html
+            else:
+                page_source_via_render = ""
+
+    except Exception as exc:
+        logger.info(log_prefix_local + "got exception in render(): " + str(exc))
+        handle_exception(exc=exc, log_prefix=log_prefix_local + "render(): ")
+
+
+
+
 def get_page_source_via_response_object(response_object=None, log_prefix=""):
 
     log_prefix_local = log_prefix + "get_page_source_via_response_object(): "

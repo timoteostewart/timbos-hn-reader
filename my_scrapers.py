@@ -1,10 +1,13 @@
+import json
 import logging
 import os
+import subprocess
 import sys
 import time
 import traceback
 
 import dateutil.parser
+import exiftool
 import lxml
 import magic
 
@@ -16,11 +19,11 @@ from goose3 import Goose
 from goose3.crawler import Crawler
 from goose3.extractors.publishdate import TIMEZONE_INFO
 
-import aws_utils
+import utils_aws
 import config
 import retrieve_by_url
-import text_utils
-import time_utils
+import utils_text
+import utils_time
 import url_utils
 from my_exceptions import *
 
@@ -65,7 +68,7 @@ def handle_exception(exc: Exception = None, log_prefix="", context=None):
             logger.error(log_prefix + "unexpected exception: " + exc_slug)
             logger.error(log_prefix + tb_str)
 
-    if isinstance(exc, requests.exceptions.ReadTimeout):
+    elif isinstance(exc, requests.exceptions.ReadTimeout):
         if "Read timed out." in exc_msg:
             url = context["url"] if (context and "url" in context) else ""
             if url:
@@ -100,6 +103,137 @@ def handle_exception(exc: Exception = None, log_prefix="", context=None):
         logger.error(
             log_prefix + "fell through all exceptions! should never happen. (~Tim~)"
         )
+
+
+def get_mimetype_via_exiftool(local_file: str, log_prefix="") -> str:
+    log_prefix_local = log_prefix + "get_mimetype_via_exiftool(): "
+    mimetype = None
+    try:
+        with exiftool.ExifToolHelper() as et:
+            metadata = et.get_metadata(local_file)[0]
+            file_type = metadata.get("File:FileType")
+            file_type_extension = metadata.get("File:FileTypeExtension")
+            mimetype = metadata.get("File:MIMEType")
+        return mimetype
+    except Exception as exc:
+        short_exc_name = exc.__class__.__name__
+        exc_name = exc.__class__.__module__ + "." + short_exc_name
+        exc_msg = str(exc)
+        exc_slug = f"{exc_name}: {exc_msg}"
+        tb_str = traceback.format_exc()
+        logger.error(log_prefix_local + "unexpected exception: " + exc_slug)
+        logger.error(log_prefix_local + tb_str)
+        return None
+
+
+def get_mimetype_via_libmagic(local_file, log_prefix="") -> str:
+    log_prefix_local = log_prefix + "get_mimetype_via_libmagic(): "
+    try:
+        magic_type_as_mimetype = magic.from_file(local_file, mime=True)
+        return magic_type_as_mimetype
+    except Exception as exc:
+        short_exc_name = exc.__class__.__name__
+        exc_name = exc.__class__.__module__ + "." + short_exc_name
+        exc_msg = str(exc)
+        exc_slug = f"{exc_name}: {exc_msg}"
+        tb_str = traceback.format_exc()
+        logger.error(log_prefix_local + "unexpected exception: " + exc_slug)
+        logger.error(log_prefix_local + tb_str)
+        return None
+
+
+def get_mimetype_via_file_command(local_file, log_prefix="") -> str:
+    log_prefix_local = log_prefix + "get_mimetype_via_file_command(): "
+
+    cmd = f"/srv/timbos-hn-reader/getmt local {local_file}"
+
+    try:
+        res = subprocess.run(
+            cmd,
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            shell=True,
+        ).stdout
+    except subprocess.CalledProcessError as exc:
+        short_exc_name = exc.__class__.__name__
+        exc_name = exc.__class__.__module__ + "." + short_exc_name
+        exc_msg = str(exc)
+        exc_slug = f"{exc_name}: {exc_msg}"
+        tb_str = traceback.format_exc()
+        logger.error(log_prefix_local + exc_slug)
+        logger.error(log_prefix_local + tb_str)
+        return None
+    except Exception as exc:
+        short_exc_name = exc.__class__.__name__
+        exc_name = exc.__class__.__module__ + "." + short_exc_name
+        exc_msg = str(exc)
+        exc_slug = f"{exc_name}: {exc_msg}"
+        tb_str = traceback.format_exc()
+        logger.error(log_prefix_local + "unexpected exception: " + exc_slug)
+        logger.error(log_prefix_local + tb_str)
+        return None
+
+    # res is json, so decode it into a python dictionary
+    res = json.loads(res)
+    return res["mimetype"]
+
+
+def save_response_content_to_disk(response, dest_local_file, log_prefix=""):
+    # TODO: move to utils_file.py
+    log_prefix_local = log_prefix + "save_response_content_to_disk(): "
+
+    if isinstance(response.content, str):
+        content_to_use = response.content.encode("utf-8")
+    else:
+        content_to_use = response.content
+
+    try:
+        with open(dest_local_file, "wb") as fout:
+            fout.write(content_to_use)
+        return True
+    except Exception as exc:
+        short_exc_name = exc.__class__.__name__
+        exc_name = exc.__class__.__module__ + "." + short_exc_name
+        exc_msg = str(exc)
+        exc_slug = exc_name + ": " + exc_msg
+        logger.error(log_prefix_local + exc_slug)
+        return False
+
+
+def download_file(url, dest_local_file, log_prefix="") -> bool:
+    log_prefix_local = log_prefix + "download_file(): "
+    try:
+        with requests.get(
+            allow_redirects=True,
+            headers={"User-Agent": config.settings["SCRAPING"]["UA_STR"]},
+            stream=True,
+            timeout=config.settings["SCRAPING"]["REQUESTS_GET_TIMEOUT_S"],
+            url=url,
+            verify=False,
+        ) as response:
+            if response.status_code == 200:
+                with open(dest_local_file, "wb") as fout:
+                    for chunk in response.iter_content(chunk_size=8192):
+                        fout.write(chunk)
+                return True
+            else:
+                logger.error(
+                    f"{log_prefix_local} requests.get() status code {response.status_code}"
+                )
+                return False
+    except Exception as exc:
+        handle_exception(
+            exc=exc,
+            log_prefix=log_prefix_local + "get(): ",
+            context={"url": url},
+        )
+        return False
+
+    # determine magic type of downloaded og:image
+    # story_object.downloaded_og_image_magic_result = magic.from_file(
+    #     story_object.downloaded_orig_thumb_full_path, mime=True
 
 
 def download_og_image(story_object, alt_url=None):
@@ -139,7 +273,8 @@ def download_og_image(story_object, alt_url=None):
     #     return False
 
     except requests.exceptions.MissingSchema as exc:
-        exc_name = exc.__class__.__name__
+        short_exc_name = exc.__class__.__name__
+        exc_name = f"{exc.__class__.__module__}.{short_exc_name}"
         exc_msg = str(exc)
         exc_slug = f"{exc_name}: {exc_msg}"
 
@@ -323,13 +458,13 @@ def get_reading_time_via_goose(page_source=None, log_prefix=""):
         article = g.extract(raw_html=page_source).cleaned_text
         if article:
             reading_time = int(
-                text_utils.word_count(article) / config.reading_speed_words_per_minute
+                utils_text.word_count(article) / config.reading_speed_words_per_minute
             )
         if reading_time:
             reading_time = max(reading_time, 1)
             logger.info(
                 log_prefix
-                + f"{text_utils.add_singular_plural(reading_time, 'minute', force_int=True)}"
+                + f"{utils_text.add_singular_plural(reading_time, 'minute', force_int=True)}"
             )
             return reading_time
         else:
@@ -398,14 +533,14 @@ def get_roster_via_screen_scraping(roster_story_type: str = None, log_prefix="")
 
     prev_roster_as_dict = None
     try:
-        prev_roster_as_dict = aws_utils.get_json_from_s3_as_dict(
+        prev_roster_as_dict = utils_aws.get_json_from_s3_as_dict(
             f"rosters/{roster_story_type}_roster.json"
         )
         if prev_roster_as_dict:
             prev_time = prev_roster_as_dict["time_retrieved"]
-            cur_time = time_utils.get_time_now_in_epoch_seconds_int()
+            cur_time = utils_time.get_time_now_in_epoch_seconds_int()
             roster_age_seconds = cur_time - prev_time
-            if 0 < roster_age_seconds < 2 * time_utils.SECONDS_PER_HOUR:
+            if 0 < roster_age_seconds < 2 * utils_time.SECONDS_PER_HOUR:
                 if prev_roster_as_dict["story_ids"]:
                     logger.info(
                         log_prefix
@@ -486,9 +621,9 @@ def get_roster_via_screen_scraping(roster_story_type: str = None, log_prefix="")
 
     new_roster = {}
     new_roster["story_type"] = roster_story_type
-    new_roster["time_retrieved"] = time_utils.get_time_now_in_epoch_seconds_int()
+    new_roster["time_retrieved"] = utils_time.get_time_now_in_epoch_seconds_int()
     new_roster["story_ids"] = cur_roster
-    aws_utils.upload_roster_to_s3(
+    utils_aws.upload_roster_to_s3(
         roster_dict=new_roster,
         roster_dest_fullpath=f"rosters/{roster_story_type}_roster.json",
     )

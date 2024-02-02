@@ -1,7 +1,0 @@
-
-
-to fix Chrome problems:
-- upgrade pip packages, especially selenium and undetected_chromedriver
-- sudo apt-get -y update && sudo apt-get -y upgrade
-- download new version of chromedriver for project /bin folder to match system Chrome browser version
-- comment/uncomment `chrome_options` settings

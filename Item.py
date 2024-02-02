@@ -1,7 +1,7 @@
 import datetime
 from typing import List
 
-import time_utils
+import utils_time
 
 
 class Item:
@@ -43,9 +43,9 @@ class Item:
             "%Y-%m-%dT%H:%M:%SZ"
         )  # note: in ISO 8601 in UTC
 
-        time_now = time_utils.get_time_now_in_epoch_seconds_int()
+        time_now = utils_time.get_time_now_in_epoch_seconds_int()
         seconds_ago = time_now - ztime
-        self.time_ago_display = time_utils.convert_seconds_ago_to_human_readable(
+        self.time_ago_display = utils_time.convert_seconds_ago_to_human_readable(
             seconds_ago
         )
 

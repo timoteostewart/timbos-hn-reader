@@ -61,6 +61,8 @@ def load_settings(cur_host, settings_file):
                 settings["cur_host"]
             ]
 
+        settings["SCRATCH_DIR"] = settings["TEMP_DIR"]
+
     except Exception as e:
         traceback.print_exc()
         print(f"Error: {e}")
