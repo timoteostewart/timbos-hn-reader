@@ -22,6 +22,8 @@ def download_og_image(story_object, alt_url=None):
     log_prefix_id = f"id {story_object.id}: "
     log_prefix_local = log_prefix_id + f"d_og_i(): "
 
+    # TODO: 2024-02-02T05:44:23Z [new]     INFO     id 39219609: asdfft1(): found og:image url http://localhost:3000/opengraph-image.jpeg?6a9141518aeca0a0
+
     # if no URL, no thumbnail
     if not story_object.linked_url_og_image_url_initial and not alt_url:
         logger.info(

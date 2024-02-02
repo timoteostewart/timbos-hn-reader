@@ -121,7 +121,7 @@ def asdfft1(item_id=None, pos_on_page=None):
             logger.info(log_prefix_local + f"skip HEAD request for {domains}")
         else:
             story_object.linked_url_reported_content_type = (
-                thnr_scrapers.get_content_type_via_head_request(
+                utils_http.get_content_type_via_head_request(
                     url=story_object.url, log_prefix=log_prefix_local
                 )
             )
@@ -215,7 +215,7 @@ def asdfft1(item_id=None, pos_on_page=None):
             # get reading time
             try:
                 # logger.info(log_prefix + "before my_scrapers.get_reading_time")
-                reading_time = thnr_scrapers.get_reading_time(
+                reading_time = utils_text.get_reading_time(
                     page_source=page_source, log_prefix=log_prefix_local
                 )
                 # logger.info(log_prefix + "after my_scrapers.get_reading_time")
@@ -426,7 +426,7 @@ def asdfft2(item_id=None, pos_on_page=None):
         raise Exception(log_prefix_local + err_msg)
 
     if story_object.url:
-        logger.info(log_prefix_local + f"linked url={story_object.url}")
+        # logger.info(log_prefix_local + f"linked url={story_object.url}")
 
         response_object = utils_http.get_response_object_via_hrequests2(
             url=story_object.url, log_prefix=log_prefix_local
@@ -445,10 +445,10 @@ def asdfft2(item_id=None, pos_on_page=None):
         # invariant now: we have a response object
 
         server_reported_content_type = get_content_type_from_response(response_object)
-        logger.info(
-            log_prefix_local
-            + f"reported linked url content-type={server_reported_content_type}"
-        )
+        # logger.info(
+        #     log_prefix_local
+        #     + f"reported linked url content-type={server_reported_content_type}"
+        # )
 
         # whether we have a reported_content_type or not, let's download the content and get its magic type
         hash_of_url = utils_hash.get_hash_of_url(story_object.url)
@@ -459,23 +459,27 @@ def asdfft2(item_id=None, pos_on_page=None):
             log_prefix=log_prefix_local,
         ):
             # get magic type of the file
-            mimetype_via_libmagic = thnr_scrapers.get_mimetype_via_libmagic(
-                local_file=local_file_response_content,
-                log_prefix=log_prefix_local,
+            mimetype_via_python_magic = (
+                utils_mimetypes_magic.get_mimetype_via_python_magic(
+                    local_file=local_file_response_content,
+                    log_prefix=log_prefix_local,
+                )
             )
 
-            mimetype_via_file_command = thnr_scrapers.get_mimetype_via_file_command(
+            mimetype_via_file_command = (
+                utils_mimetypes_magic.get_mimetype_via_file_command(
+                    local_file=local_file_response_content, log_prefix=log_prefix_local
+                )
+            )
+
+            mimetype_via_exiftool = utils_mimetypes_magic.get_mimetype_via_exiftool(
                 local_file=local_file_response_content, log_prefix=log_prefix_local
             )
 
-            mimetype_via_exiftool = thnr_scrapers.get_mimetype_via_exiftool(
-                local_file=local_file_response_content, log_prefix=log_prefix_local
-            )
-
-            if mimetype_via_libmagic != mimetype_via_file_command:
+            if mimetype_via_python_magic != mimetype_via_file_command:
                 logger.info(
                     log_prefix_local
-                    + f"{mimetype_via_libmagic=} {mimetype_via_file_command=} (~Tim~)"
+                    + f"{server_reported_content_type=} {mimetype_via_python_magic=} {mimetype_via_file_command=} url={story_object.url} (~Tim~)"
                 )
 
         content_types_guessed_from_uri_extension = (
@@ -484,7 +488,7 @@ def asdfft2(item_id=None, pos_on_page=None):
 
         possible_content_types = []
         possible_content_types.append(server_reported_content_type)
-        possible_content_types.append(mimetype_via_libmagic)
+        possible_content_types.append(mimetype_via_python_magic)
         possible_content_types.append(mimetype_via_file_command)
         possible_content_types.append(mimetype_via_exiftool)
         possible_content_types.extend(content_types_guessed_from_uri_extension)
@@ -496,18 +500,31 @@ def asdfft2(item_id=None, pos_on_page=None):
 
         return
 
+        # 2024-02-01T15:51:12Z [new]     INFO     id 39216919: asdfft2(): possible cts: ['application/xhtml+xml', 'text/xml', 'application/xhtml+xml', 'application/xhtml+xml'] for url https://michael.orlitzky.com/articles/greybeards_tomb%3A_the_lost_treasure_of_language_design.xhtml
+        # 2024-02-01T17:17:12Z [new]     INFO     id 39218376: asdfft2(): possible cts: ['text/plain', 'application/json', 'text/x-c++src', 'text/x-c++src'] for url https://github.com/solvespace/solvespace/blob/7d379e7f3b045ae579537abd392d5b368a4117e5/src/render/gl3shader.cpp
+        # 2024-02-01T21:53:32Z [new]     INFO     id 39221641: asdfft2(): possible cts: ['text/html', 'application/octet-stream', None, None] for url https://www.oddlyspecificobjects.com/projects/openbook/
+        # 2024-02-01T22:39:08Z [new]     INFO     id 39221985: asdfft2(): possible cts: ['text/html', 'text/xml', 'text/html', None, None] for url https://arxiv.org/abs/2401.18079
+        # 2024-02-02T02:31:28Z [new]     INFO     id 39218318: asdfft2(): possible cts: ['text/plain', 'application/json', 'application/json', 'application/json', 'text/markdown', 'text/markdown'] for url https://github.com/manifold-systems/manifold/blob/master/manifold-deps-parent/manifold-sql/readme.md
+        # 2024-02-02T05:32:03Z [new]     INFO     id 39224326: asdfft2(): possible cts: ['text/plain', 'application/json', 'application/json', 'application/json', None, None] for url https://github.com/rosmur/notebooks/blob/main/fibonacci%20sequence%20code%20from%20multiple%20llms.ipynb
         # server_reported_content_type='application/xhtml+xml', magic_type='text/xml', content_type_guessed_from_uri_extension=[] for url https://www.devever.net/~hl/traintoilet
         # server_reported_content_type='text/html', magic_type='text/xml', content_type_guessed_from_uri_extension=[] for url https://akrl.sdf.org/#orgc15a10d
-
-        # 2024-02-01T22:39:08Z [new]     INFO     id 39221985: asdfft2(): possible cts: ['text/html', 'text/xml', 'text/html', None, None] for url https://arxiv.org/abs/2401.18079
-        # 2024-02-01T21:53:32Z [new]     INFO     id 39221641: asdfft2(): possible cts: ['text/html', 'application/octet-stream', None, None] for url https://www.oddlyspecificobjects.com/projects/openbook/
-        # 2024-02-02T03:22:33Z [new]     INFO     id 39224326: asdfft2(): possible cts: ['text/plain', 'application/json', 'application/json', 'application/json', None, None] for url https://github.com/rosmur/notebooks/blob/main/fibonacci%20sequence%20code%20from%20multiple%20llms.ipynb
-
-        # 2024-02-02T02:31:28Z [new]     INFO     id 39218318: asdfft2(): possible cts: ['text/plain', 'application/json', 'application/json', 'application/json', 'text/markdown', 'text/markdown'] for url https://github.com/manifold-systems/manifold/blob/master/manifold-deps-parent/manifold-sql/readme.md
-        # server_reported_content_type='text/plain', magic_type='application/json', content_type_guessed_from_uri_extension=['text/markdown'] for url https://github.com/wkjagt/apple2_pendulum_clock/blob/main/README.md
         # server_reported_content_type='text/plain', magic_type='application/json', content_type_guessed_from_uri_extension=['text/markdown'] for url https://github.com/icing/blog/blob/main/curl-h3-performance.md
-
+        # server_reported_content_type='text/plain', magic_type='application/json', content_type_guessed_from_uri_extension=['text/markdown'] for url https://github.com/wkjagt/apple2_pendulum_clock/blob/main/README.md
+        # 2024-02-02T06:48:12Z [new]     INFO     id 39225730: asdfft2(): possible cts: ['text/html', 'text/xml', 'text/xml', 'text/html', None, None] for url https://arxiv.org/abs/2202.01344
         cur_content_type = server_reported_content_type
+
+        # priorities: get ahold of page source for html pages so I can check for og:images and compute reading times
+        # (1) that means converting the following to text/html if applicable
+        # - application/json
+        # - application/octet-stream
+        # - text/plain
+        # - application/xhtml+xml
+        # - text/xhtml
+        # - text/xml
+
+        # (2) that means converting the following to application/pdf if applicable
+        # - application/octet-stream
+        # - inode/x-empty
 
         while True:
 
@@ -706,9 +723,7 @@ def asdfft2(item_id=None, pos_on_page=None):
                 pass
 
             if cur_content_type.startswith("image/"):
-
-                if cur_content_type == "image/jpg":
-                    cur_content_type = "image/jpeg"
+                # TODO: add avif and jpeg xl support in thumbs.py; might need to rebuild ImageMagick and/or install other packages
 
                 # handle animated images specially? (e.g., .apng, .gif, .webp)
 

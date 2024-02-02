@@ -494,7 +494,7 @@ def get_image_slug(story_object, img_loading="lazy"):
     if og_image_domains in domains_exempt_from_trim:
         no_trim = True
 
-    mimetype = utils_mimetypes_magic.get_mimetype_via_libmagic(
+    mimetype = utils_mimetypes_magic.get_mimetype_via_python_magic(
         story_object.downloaded_orig_thumb_full_path, log_prefix=log_prefix
     )
 

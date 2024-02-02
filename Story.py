@@ -2,7 +2,6 @@ from typing import List
 
 import utils_text
 import utils_time
-import url_utils
 from Item import Item
 
 
@@ -39,12 +38,12 @@ class Story(Item):
         (
             self.hostname["full"],
             self.hostname["minus_www"],
-        ) = url_utils.get_domains_from_url(url)
+        ) = utils_text.get_domains_from_url(url)
         self.hostname["for_hn_search"] = ""  # could include path after hostname
         self.hostname["for_display"] = ""
         self.hostname["for_display_addl_class"] = ""
         self.hostname["slug"] = ""
-        url_utils.create_domains_slug(self.hostname)
+        utils_text.create_domains_slug(self.hostname)
 
         self.descendants: int = int(descendants)
         self.descendants_display = utils_text.add_singular_plural(
@@ -124,7 +123,6 @@ class Story(Item):
         self.how_long_ago_human_readable_slug: str = ""
 
         self.story_object_version = "0.0.1"
-
 
         super().__init__(id, "story", text, by, time, kids)
 

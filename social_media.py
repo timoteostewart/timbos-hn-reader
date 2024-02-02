@@ -1,6 +1,4 @@
 import logging
-import sys
-from collections import Counter
 
 import requests
 import urllib3
@@ -8,7 +6,7 @@ from bs4 import BeautifulSoup
 
 import config
 import my_secrets
-import retrieve_by_url
+import utils_http
 import utils_text
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -457,7 +455,7 @@ def create_github_languages_slug(story_object):
 def get_github_repo_languages(driver=None, repo_url=None, story_id=None):
     log_prefix = f"id {story_id}: " if story_id else "n/a"
 
-    page_source = retrieve_by_url.get_page_source(
+    page_source = utils_http.get_page_source(
         # driver=driver,
         url=repo_url,
         log_prefix=log_prefix,
@@ -814,6 +812,7 @@ def get_youtube_channel_slug(youtube_url: str, story_object=None):
             "v=", "&", youtube_url, okay_to_elide_right_pattern=True
         )
 
+        # TODO: convert this to use my existing endpoint_query_via_requests() function
         api_query_url = f"https://youtube.googleapis.com/youtube/v3/videos?part=snippet&id={video_id}&key={my_secrets.GOOGLE_API_KEY}"
         try:
             with requests.get(
@@ -846,6 +845,7 @@ def get_youtube_channel_slug(youtube_url: str, story_object=None):
             okay_to_elide_right_pattern=True,
         )
 
+        # TODO: convert this to use my existing endpoint_query_via_requests() function
         api_query_url = f"https://youtube.googleapis.com/youtube/v3/channels?part=snippet&id={channel_id}&key={my_secrets.GOOGLE_API_KEY}"
         try:
             with requests.get(
@@ -875,6 +875,7 @@ def get_youtube_channel_slug(youtube_url: str, story_object=None):
             "list=", "&", youtube_url, okay_to_elide_right_pattern=True
         )
 
+        # TODO: convert this to use my existing endpoint_query_via_requests() function
         url = f"https://youtube.googleapis.com/youtube/v3/playlists?part=snippet&id={playlist_id}&key={my_secrets.GOOGLE_API_KEY}"
         try:
             with requests.get(

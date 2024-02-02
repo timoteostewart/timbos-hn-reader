@@ -71,7 +71,7 @@ def get_mimetype_via_file_command(local_file, log_prefix="") -> str:
     return res["mimetype"]
 
 
-def get_mimetype_via_libmagic(local_file, log_prefix="") -> str:
+def get_mimetype_via_python_magic(local_file, log_prefix="") -> str:
     log_prefix_local = log_prefix + "get_mimetype_via_libmagic(): "
     try:
         magic_type_as_mimetype = magic.from_file(local_file, mime=True)
@@ -114,7 +114,7 @@ def guess_mimetype_from_uri_extension(url):
         if guess_by_urlparse:
             guess_by_urlparse = guess_by_urlparse.lower()
 
-    # guess using mimetypes (anecdotally more slopppy than urlparse)
+    # guess using mimetypes (anecdotally more sloppy than urlparse)
     guess_by_mimetypes = None
     guess_by_mimetypes, _ = mimetypes.guess_type(url, strict=False)
 
@@ -130,12 +130,14 @@ def guess_mimetype_from_uri_extension(url):
         and paths_extension != "ai"
     ):
         guess_by_mimetypes = None
+    elif tld == "xyz" and guess_by_mimetypes == "chemical/x-xyz":
+        guess_by_mimetypes = None
     elif tld == "zip" and guess_by_mimetypes in [
         "application/x-zip-compressed",
         "application/zip",
         "application/x-zip",
     ]:
-        logger.info(f"guess_by_mimetypes(): {guess_by_mimetypes=} {tld=}")
+        logger.info(f"guess_by_mimetypes(): {guess_by_mimetypes=} {tld=} (~Tim~)")
 
     res = []
     res.append(guess_by_urlparse)
