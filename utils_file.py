@@ -5,12 +5,13 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-def delete_file(file_full_path):
+def delete_file(file_full_path, log_prefix=""):
+    log_prefix_local = log_prefix + "delete_file(): "
     try:
         p = Path(file_full_path)
         p.unlink(missing_ok=True)
     except Exception as e:
-        logger.error(f"file_utils.delete_file(): failed to delete {file_full_path}")
+        logger.error(log_prefix_local + f"failed to delete {file_full_path}")
 
 
 def save_response_content_to_disk(response, dest_local_file, log_prefix=""):

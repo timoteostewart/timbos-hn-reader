@@ -118,16 +118,16 @@ def guess_mimetype_from_uri_extension(url):
     guess_by_mimetypes = None
     guess_by_mimetypes, _ = mimetypes.guess_type(url, strict=False)
 
-    if guess_by_mimetypes == "application/x-msdos-program" and tld == "com":
+    if guess_by_mimetypes == "application/vnd.adobe.illustrator" and tld == "ai":
+        guess_by_mimetypes = None
+    elif guess_by_mimetypes == "application/x-msdos-program" and tld == "com":
         guess_by_mimetypes = None
     elif guess_by_mimetypes == "application/x-info" and tld == "info":
         guess_by_mimetypes = None
-    elif guess_by_mimetypes == "application/vnd.adobe.illustrator" and tld == "ai":
-        guess_by_mimetypes = None
     elif (
-        tld == "ai"
-        and guess_by_mimetypes == "application/postscript"
+        guess_by_mimetypes == "application/postscript"
         and paths_extension != "ai"
+        and tld == "ai"
     ):
         guess_by_mimetypes = None
     elif tld == "xyz" and guess_by_mimetypes == "chemical/x-xyz":
@@ -137,6 +137,9 @@ def guess_mimetype_from_uri_extension(url):
         "application/zip",
         "application/x-zip",
     ]:
+        logger.info(f"guess_by_mimetypes(): {guess_by_mimetypes=} {tld=} (~Tim~)")
+
+    elif guess_by_mimetypes == "application/vnd.lotus-organizer" and tld == "org":
         logger.info(f"guess_by_mimetypes(): {guess_by_mimetypes=} {tld=} (~Tim~)")
 
     res = []

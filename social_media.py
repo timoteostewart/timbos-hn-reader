@@ -448,7 +448,7 @@ def create_github_languages_slug(story_object):
 
     languages_list[-1] = languages_list[-1].replace("class=", 'id="#final-lang" class=')
     story_object.github_languages_slug = (
-        f'<tr><td><div class="languages-bar">{"".join(languages_list)}</div></td></tr>'
+        f'<div class="languages-bar">{"".join(languages_list)}</div>'
     )
 
 

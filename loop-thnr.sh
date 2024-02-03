@@ -7,7 +7,7 @@
 # set -o xtrace    # show commands being executed; same as set -x
 # set -o verbose   # verbose mode; same as set -v
 
-source ./functions.sh
+source /srv/timbos-hn-reader/functions.sh
 
 if ! am-root; then
     die "Please run as root."
@@ -167,6 +167,12 @@ cleanup_venv_temp_files() {
     # fi
 }
 
+cleanup_tmp_dir() {
+    TARGET_DIR="/tmp"
+    # Find and delete files and directories older than 4 hours
+    find "${TARGET_DIR}" -mindepth 1 -user "${UTILITY_ACCOUNT_USERNAME}" -mmin +240 -exec rm -rf {} +
+}
+
 CMD_INVOCATION="$0 $@"
 write_log_message loop info "${LOG_PREFIX_LOCAL} Starting with this invocation: ${CMD_INVOCATION}"
 
@@ -217,7 +223,9 @@ do
     fi
 
     cleanup_venv_temp_files
-    sleep 5
+    sleep 10
+    cleanup_tmp_dir
+    sleep 10
 
     # update APT packages
     for cur_package in ${apt_packages[@]}; do
@@ -283,7 +291,7 @@ do
             write_log_message loop info "${LOG_PREFIX_LOCAL} Exiting main.py for ${cur_story_type} after ${DURATION}"
         else
             write_log_message loop error "${LOG_PREFIX_LOCAL} Exiting main.py for ${cur_story_type} with error code ${MAIN_PY_ERROR_CODE} after ${DURATION}"
-            ./send-email.sh "THNR exited with error ${MAIN_PY_ERROR_CODE} after ${DURATION}" "$(tail -n 50 ${MAIN_PY_LOG_FILE})"
+            /srv/timbos-hn-reader/send-email.sh "THNR exited with error ${MAIN_PY_ERROR_CODE} after ${DURATION}" "$(tail -n 50 ${MAIN_PY_LOG_FILE})"
         fi
 
         # short pause between story types

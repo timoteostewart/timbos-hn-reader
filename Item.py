@@ -1,8 +1,6 @@
 import datetime
 from typing import List
 
-import utils_time
-
 
 class Item:
     id: int  # item ID (required attribute)
@@ -15,7 +13,6 @@ class Item:
     time: int  # in Unix time format
     publication_time_ISO_8601: str
     seconds_ago: int  # diff between time.time() and self.time
-    time_ago_display: str  # display formatted with various time units
     # score: int
 
     # parent: int  # item ID
@@ -29,25 +26,19 @@ class Item:
     parts: List[int]  # for polls; not implemented
 
     def __init__(
-        self, id: str, type: str, text: str, by: str, ztime: str, kids: List[str]
+        self, id: str, type: str, text: str, by: str, time_arg: str, kids: List[str]
     ) -> None:
-        self.id: int = int(id)
+        self.id: int = id
         self.type: str = type
         self.text: str = text
         self.by: str = by
 
-        self.time = int(ztime)
+        self.time = int(time_arg)
         self.publication_time_ISO_8601: str = datetime.datetime.utcfromtimestamp(
             self.time
         ).strftime(
             "%Y-%m-%dT%H:%M:%SZ"
         )  # note: in ISO 8601 in UTC
-
-        time_now = utils_time.get_time_now_in_epoch_seconds_int()
-        seconds_ago = time_now - ztime
-        self.time_ago_display = utils_time.convert_seconds_ago_to_human_readable(
-            seconds_ago
-        )
 
         self.kids: List[int]
         if kids:

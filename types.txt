@@ -1,0 +1,10 @@
+cts: ['text/html', None, None], mts: ['text/xml', 'text/xml', 'text/html'] for url https://akrl.sdf.org/#orgc15a10d
+cts: ['text/html', None, None], mts: ['text/xml', 'text/xml', 'text/html'] for url https://arxiv.org/abs/2205.13147
+cts: ['text/html', None, None], mts: ['text/xml', 'text/xml', 'text/html'] for url https://arxiv.org/abs/2401.09417
+cts: ['text/html', None, None], mts: ['text/xml', 'text/xml', 'text/html'] for url https://arxiv.org/abs/2401.14953
+cts: ['text/html', None, None], mts: ['text/xml', 'text/xml', 'text/html'] for url https://arxiv.org/abs/2401.17268
+cts: ['text/html', None, None], mts: ['text/xml', 'text/xml', 'text/html'] for url https://cybershow.uk/blog/posts/election-disinfo/
+cts: ['text/html', None, None], mts: ['text/xml', 'text/xml', 'text/html'] for url https://jme.bmj.com/content/early/2024/01/28/jme-2023-109651
+cts: ['text/plain', 'text/markdown', 'text/markdown'], mts: ['application/json', 'application/json', 'application/json'] for url https://github.com/icing/blog/blob/main/curl-h3-performance.md
+cts: ['text/plain', 'text/markdown', 'text/markdown'], mts: ['application/json', 'application/json', 'application/json'] for url https://github.com/wkjagt/apple2_pendulum_clock/blob/main/README.md
+cts: ['text/plain', 'text/plain', 'text/plain'], mts: ['text/plain', 'text/plain', 'text/plain'] for url https://www.qualys.com/2024/01/30/cve-2023-6246/syslog.txt

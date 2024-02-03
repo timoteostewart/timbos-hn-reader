@@ -41,13 +41,14 @@ badge_codes = {
     "classic": {"letter": "C", "sigil": "Ⓒ", "tooltip": "classic"},
 }
 
+
 skip_getting_content_type_via_head_request_for_domains = {
     "twitter.com",
     "bloomberg.com",
 }
 
 
-def asdfft1(item_id=None, pos_on_page=None):
+def asdfft1(item_id=None, pos_on_page=None, page_package=None):
     log_prefix_id = f"id {item_id}: "
     log_prefix_local = log_prefix_id + "asdfft1(): "
 
@@ -92,7 +93,16 @@ def asdfft1(item_id=None, pos_on_page=None):
             log_prefix_local + "item_factory(): failed to create story object"
         )
 
-    if not story_object.url:
+    story_object.time_of_last_firebaseio_query = (
+        utils_time.get_time_now_in_epoch_seconds_int()
+    )
+
+    # create badges slug if needed
+    story_object.badges_slug = create_badges_slug(
+        story_object.id, page_package.story_type, page_package.rosters
+    )
+
+    if not story_object.has_outbound_link:
         story_title = story_object.title
         story_title_fragment = story_title[:16]
         first_colon_index = story_title.find(":")
@@ -115,7 +125,7 @@ def asdfft1(item_id=None, pos_on_page=None):
             log_tb=False,
         )
 
-    else:  # there is a url
+    if story_object.has_outbound_link:
         _, domains = utils_text.get_domains_from_url(story_object.url)
         if domains in skip_getting_content_type_via_head_request_for_domains:
             logger.info(log_prefix_local + f"skip HEAD request for {domains}")
@@ -214,21 +224,16 @@ def asdfft1(item_id=None, pos_on_page=None):
 
             # get reading time
             try:
-                # logger.info(log_prefix + "before my_scrapers.get_reading_time")
                 reading_time = utils_text.get_reading_time(
                     page_source=page_source, log_prefix=log_prefix_local
                 )
-                # logger.info(log_prefix + "after my_scrapers.get_reading_time")
                 if reading_time:
                     story_object.reading_time = reading_time
-                # logger.info(log_prefix + f"reading time: {reading_time}")
             except Exception as exc:
                 logger.error(
                     log_prefix_local
                     + f"failed to get reading time: {str(exc)}: {traceback.format_exc(exc)}"
                 )
-
-            # logger.info(log_prefix + "after '# get reading time'")
 
             ## create a slug for the linked URL's social-media website channel, if necessary.
             ## use details encoded in the url or the html page source
@@ -244,10 +249,6 @@ def asdfft1(item_id=None, pos_on_page=None):
                     log_prefix_local + f"check_for_social_media_details: {exc}"
                 )
                 raise exc
-
-            if story_object.reading_time:
-                if story_object.reading_time > 0:
-                    create_reading_time_slug(story_object)
 
         elif story_object.linked_url_reported_content_type.startswith("image/"):
             story_object.linked_url_og_image_url_initial = story_object.url
@@ -301,16 +302,6 @@ def asdfft1(item_id=None, pos_on_page=None):
 
                 thumbs.get_image_slug(story_object, img_loading=img_loading_attr)
 
-                if story_object.pdf_page_count > 0:
-                    story_object.pdf_page_count_slug = (
-                        "<tr><td>"
-                        '<div class="reading-time-bar">'
-                        '<div class="estimated-reading-time">'
-                        f"📄 {utils_text.add_singular_plural(story_object.pdf_page_count, 'page', force_int=True)}"
-                        "</div>"
-                        "</div>"
-                        "</td></tr>"
-                    )
             elif res == False:
                 reason_to_use = (
                     story_object.reason_for_no_thumb
@@ -358,8 +349,6 @@ def asdfft1(item_id=None, pos_on_page=None):
 
     if not story_object.has_thumb:
         logger.info(log_prefix_local + "story card will not have a thumbnail")
-        # if we have no thumbnail, then make sure we don't include a `story_content_type_slug`
-        story_object.story_content_type_slug = utils_text.EMPTY_STRING
 
     # apply "[pdf]" label after title if it's not there but is probably applicable
     if (
@@ -375,10 +364,6 @@ def asdfft1(item_id=None, pos_on_page=None):
     ##
     ## build html for story card
     ##
-
-    story_object.how_long_ago_human_readable_slug = (
-        utils_time.how_long_ago_human_readable(story_object.time)
-    )
 
     create_story_card_html_from_story_object(story_object)
 
@@ -425,7 +410,7 @@ def asdfft2(item_id=None, pos_on_page=None):
         logger.error(log_prefix_local + err_msg)
         raise Exception(log_prefix_local + err_msg)
 
-    if story_object.url:
+    if story_object.has_outbound_link:
         # logger.info(log_prefix_local + f"linked url={story_object.url}")
 
         response_object = utils_http.get_response_object_via_hrequests2(
@@ -482,20 +467,25 @@ def asdfft2(item_id=None, pos_on_page=None):
                     + f"{server_reported_content_type=} {mimetype_via_python_magic=} {mimetype_via_file_command=} url={story_object.url} (~Tim~)"
                 )
 
+        # for now we delete the file, but as we continue to develop asdfft2(), we might keep it around for a little longer
+        utils_file.delete_file(local_file_response_content, log_prefix=log_prefix_local)
+
         content_types_guessed_from_uri_extension = (
             utils_mimetypes_magic.guess_mimetype_from_uri_extension(story_object.url)
         )
 
         possible_content_types = []
         possible_content_types.append(server_reported_content_type)
-        possible_content_types.append(mimetype_via_python_magic)
-        possible_content_types.append(mimetype_via_file_command)
-        possible_content_types.append(mimetype_via_exiftool)
         possible_content_types.extend(content_types_guessed_from_uri_extension)
+
+        possible_magic_types = []
+        possible_magic_types.append(mimetype_via_python_magic)
+        possible_magic_types.append(mimetype_via_file_command)
+        possible_magic_types.append(mimetype_via_exiftool)
 
         logger.info(
             log_prefix_local
-            + f"possible cts: {possible_content_types} for url {story_object.url}"
+            + f"cts: {possible_content_types}, mts: {possible_magic_types} for url {story_object.url}"
         )
 
         return
@@ -511,24 +501,39 @@ def asdfft2(item_id=None, pos_on_page=None):
         # server_reported_content_type='text/plain', magic_type='application/json', content_type_guessed_from_uri_extension=['text/markdown'] for url https://github.com/icing/blog/blob/main/curl-h3-performance.md
         # server_reported_content_type='text/plain', magic_type='application/json', content_type_guessed_from_uri_extension=['text/markdown'] for url https://github.com/wkjagt/apple2_pendulum_clock/blob/main/README.md
         # 2024-02-02T06:48:12Z [new]     INFO     id 39225730: asdfft2(): possible cts: ['text/html', 'text/xml', 'text/xml', 'text/html', None, None] for url https://arxiv.org/abs/2202.01344
+        # 2024-02-02T18:11:51Z [active]  INFO     id 39229755: asdfft2(): possible cts: ['text/html', 'text/xml', 'text/xml', 'text/html', None, None] for url https://arxiv.org/abs/2401.17505
+        # 2024-02-02T08:43:12Z [top]     INFO     id 39217000: asdfft2(): possible cts: ['text/plain', 'application/json', 'application/json', 'application/json', 'text/markdown', 'text/markdown'] for url https://github.com/highlight/highlight/blob/3cc29388f99716833055d1aaa4a53d938d9e786e/README.md
+
         cur_content_type = server_reported_content_type
 
         # priorities: get ahold of page source for html pages so I can check for og:images and compute reading times
         # (1) that means converting the following to text/html if applicable
         # - application/json
         # - application/octet-stream
-        # - text/plain
         # - application/xhtml+xml
+        # - text/plain
         # - text/xhtml
         # - text/xml
 
         # (2) that means converting the following to application/pdf if applicable
+        # - None
         # - application/octet-stream
         # - inode/x-empty
 
         while True:
 
-            # application/x-wine-extension-ini can be text/html
+            # content types:
+            # application/octet-stream can be text/html, image/*, application/pdf
+            # text/html can be image/*
+            # text/plain can be text/html
+            # text/xml can be application/xhtml+xml
+
+            # magic types:
+            # text/x-c++ can be text/html
+            # application/octet-stream can be text/html
+
+            # file extensions
+            # aspx might be detected as application/x-wine-extension-ini but actually be text/html
 
             if cur_content_type == "application/x-unknown-content-type":
                 pass
@@ -833,7 +838,6 @@ def create_badges_slug(story_id, story_type, rosters):
         badges += "C"
 
     if badges:
-        data_separator_slug = f'<div class="data-separator">{config.settings["SYMBOLS"]["DATA_SEPARATOR"]}</div>'
         # Ⓣ Ⓝ Ⓑ Ⓐ Ⓒ
         list_of_badges = []
         for each_story_type in ["top", "new", "best", "active", "classic"]:
@@ -844,72 +848,120 @@ def create_badges_slug(story_id, story_type, rosters):
         list_of_badges[-1] = list_of_badges[-1].replace(
             'class="', 'class="final-badge '
         )
-        badges_slug = f'<div class="badges-tray">{"".join(list_of_badges)}</div>{data_separator_slug}'
+        return '<div class="badges-tray">' + "".join(list_of_badges) + "</div>"
     else:
-        badges_slug = f""
-
-    return badges_slug
-
-
-def create_reading_time_slug(story_object):
-    story_object.reading_time_slug = (
-        "<tr><td>"
-        '<div class="reading-time-bar">'
-        '<div class="estimated-reading-time">'
-        f"⏱️ {utils_text.add_singular_plural(story_object.reading_time, 'minute', force_int=True)}"
-        "</div>"
-        "</div>"
-        "</td></tr>"
-    )
+        return ""
 
 
 def create_story_card_html_from_story_object(story_object):
-    title_slug_string = f'<a href="{story_object.url}">{story_object.title_slug}</a>'
-    story_object.title_slug_string = title_slug_string
-    score_slug_string = f'<div class="story-score">{story_object.score_display}</div>'
-    story_object.score_slug_string = score_slug_string
-    descendants_slug_string = f'<div class="story-descendants"><a href="{story_object.hn_comments_url}">{story_object.descendants_display}</a></div>'
-    story_object.descendants_slug_string = descendants_slug_string
+
+    # slugs must begin and end with <div> tags
 
     data_separator_slug = f'<div class="data-separator">{config.settings["SYMBOLS"]["DATA_SEPARATOR"]}</div>'
 
-    story_object.story_card_html = (
+    story_card_html = ""
+
+    story_card_html += (
         f'<tr data-story-id="{story_object.id}"><td>'
-        '<table class="story-details"><tbody class="story-details">'
-        "<tr><td>"
-        "<hr>"
-        f"{story_object.image_slug}"
-        "</td></tr>"
-        f"{story_object.github_languages_slug}"
-        "<tr><td>"
-        '<div class="title-and-domain-bar">'
-        f'<div class="title-part">{story_object.before_title_link_slug}'
-        f"{title_slug_string}"
-        f"{story_object.story_content_type_slug}</div>"
-        f'<div class="domain-part">{story_object.hostname["slug"]}</div>'
-        "</div>"
-        "</td></tr>"
-        "<tr><td>"
-        '<div class="badges-points-comments-time-author-bar">'
-        "<!-- badges_slug goes here -->"
-        f"{score_slug_string}"
-        f"{data_separator_slug}"
-        f"{descendants_slug_string}"
-        f"{data_separator_slug}"
-        f'<div class="story-time-ago" title="{story_object.publication_time_ISO_8601}">'
-        f"{story_object.how_long_ago_human_readable_slug}&nbsp;</div>"
-        f'<div class="story-byline">by <a href="https://news.ycombinator.com/user?id={story_object.by}">{story_object.by}</a></div>'
-        "</div>"
-        "</td></tr>"
-        f"{story_object.reading_time_slug}"
-        f"{story_object.pdf_page_count_slug}"
-        "</tbody></table>"
-        "</td></tr>"
+        + '<table class="story-details">'
+        + "<tr><td>"
+        + "<hr>"
     )
 
+    if story_object.image_slug:
+        story_card_html += story_object.image_slug
 
-def freshen_up(story_object=None):
-    # try to update title, score, comment count
+    story_card_html += "</td></tr>"
+
+    if story_object.github_languages_slug:
+        story_card_html += (
+            "<tr><td>" + story_object.github_languages_slug + "</td></tr>"
+        )
+
+    story_card_html += '<tr><td><div class="title-and-domain-bar">'
+    story_card_html += '<div class="title-part">'
+
+    story_card_html += (
+        f'<a href="{story_object.title_hyperlink}">'
+        + utils_text.insert_possible_line_breaks(story_object.title)
+        + "</a>"
+    )
+
+    if story_object.story_content_type_slug:
+        story_card_html += story_object.story_content_type_slug
+
+    story_card_html += "</div>"
+
+    if story_object.has_outbound_link:
+        story_card_html += (
+            '<div class="domain-part">' + story_object.hostname["slug"] + "</div>"
+        )
+
+    story_card_html += "</div></td></tr>"
+
+    story_card_html += '<tr><td><div class="badges-points-comments-time-author-bar">'
+
+    if story_object.badges_slug:
+        story_card_html += story_object.badges_slug + data_separator_slug
+
+    story_card_html += (
+        '<div class="story-score">'
+        + utils_text.add_singular_plural(story_object.score, "point")
+        + "</div>"
+        + data_separator_slug
+    )
+
+    story_card_html += (
+        '<div class="story-descendants">'
+        + f'<a href="{story_object.hn_comments_url}">'
+        + utils_text.add_singular_plural(story_object.descendants, "comment")
+        + "</a></div>"
+        + data_separator_slug
+    )
+
+    story_card_html += (
+        f'<div class="story-time-ago" title="{story_object.publication_time_ISO_8601}">'
+        + utils_time.how_long_ago_human_readable(story_object.time)
+        + "&nbsp;</div>"
+    )
+
+    story_card_html += (
+        f'<div class="story-byline">by <a href="https://news.ycombinator.com/user?id={story_object.by}">'
+        + story_object.by
+        + "</a></div>"
+    )
+
+    story_card_html += "</div></td></tr>"
+
+    if story_object.reading_time:
+        story_card_html += (
+            "<tr><td>"
+            + '<div class="reading-time-bar"><div class="estimated-reading-time">⏱️&nbsp;'
+            + utils_text.add_singular_plural(
+                story_object.reading_time, "minute", force_int=True
+            )
+            + "</div></div></tr></td>"
+        )
+
+    if story_object.pdf_page_count:
+        story_card_html += (
+            '<tr><td><div class="reading-time-bar">'
+            + '<div class="estimated-reading-time">📄&nbsp;'
+            + utils_text.add_singular_plural(
+                story_object.pdf_page_count, "page", force_int=True
+            )
+            + "</div></div></td></tr>"
+        )
+
+    story_card_html += "</table></td></tr>"
+
+    story_object.story_card_html = story_card_html
+
+
+def freshen_up(story_object=None, page_package=None):
+    log_prefix_local = f"id {story_object.id}: "
+
+    # try to update title, score, comment count, badges
 
     try:
         updated_story_data_as_dict = query_firebaseio_for_story_data(
@@ -917,13 +969,15 @@ def freshen_up(story_object=None):
         )
     except Exception as exc:
         logger.warning(
-            f"freshen_up(): query to hacker-news.firebaseio.com failed for story id {story_object.id} ; so re-using old story details"
+            log_prefix_local
+            + f"freshen_up(): query to hacker-news.firebaseio.com failed for story id {story_object.id} ; so re-using old story details"
         )
         raise exc
 
     if not updated_story_data_as_dict:
         logger.warning(
-            f"freshen_up(): query to hacker-news.firebaseio.com failed for story id {story_object.id} ; so re-using old story details"
+            log_prefix_local
+            + f"freshen_up(): query to hacker-news.firebaseio.com failed for story id {story_object.id} ; so re-using old story details"
         )
         raise exc
 
@@ -937,91 +991,57 @@ def freshen_up(story_object=None):
         new_title = updated_story_data_as_dict["title"]
 
         if old_title != new_title:
-            if "url" in updated_story_data_as_dict:
-                # old_url = story_object.url
-                new_url = updated_story_data_as_dict["url"]
-            else:
-                # old_url = story_object.url
-                new_url = f'https://news.ycombinator.com/item?id={updated_story_data_as_dict["id"]}'
-
-            old_title_slug_string = story_object.title_slug_string
-            new_title_slug_string = f'<a href="{new_url}">{utils_text.insert_possible_line_breaks(new_title)}</a>'
-
-            # pre = story_object.story_card_html
-            story_object.story_card_html = story_object.story_card_html.replace(
-                old_title_slug_string, new_title_slug_string, 1
-            )
-            # post = story_object.story_card_html
-            # if pre == post:
-            #     logger.error(
-            #         f"id {story_object.id}: failed to update title. old title slug string: {old_title_slug_string} ; new title slug string: {new_title_slug_string} ; old title: {old_title} ; new title: {new_title}"
-            #     )
-            #     logger.error(
-            #         f"id {story_object.id}: story_card_html: {story_object.story_card_html}"
-            #     )
-
-            # else:
-            story_object.title_slug_string = new_title_slug_string
             story_object.title = new_title
             logger.info(
-                f"id {story_object.id}: updated title from '{old_title}' to '{new_title}'"
+                log_prefix_local + f"updated title from '{old_title}' to '{new_title}'"
             )
-
     else:
         logger.info(
-            f"id {story_object.id}: no key for 'title' in updated_story_data_as_dict (story is probably dead)"
+            log_prefix_local
+            + f"no key for 'title' in updated_story_data_as_dict (story is probably dead)"
         )
+
+    # update URL if necessary
+    if "url" in updated_story_data_as_dict:
+        old_url = story_object.url
+        new_url = updated_story_data_as_dict["url"]
+        if old_url != new_url:
+            story_object.url = new_url
+            story_object.title_hyperlink = story_object.url
+            logger.info(log_prefix_local + f"updated url from {old_url} to {new_url}")
 
     # update score if needed
     if "score" in updated_story_data_as_dict:
         old_score = story_object.score
-        new_score = int(updated_story_data_as_dict["score"])
+        new_score = updated_story_data_as_dict["score"]
         if old_score != new_score:
-            # old_score_slug_string = (
-            #     f'<div class="story-score">{story_object.score_display}</div>'
-            # )
-            old_score_slug_string = story_object.score_slug_string
-            new_score_display = utils_text.add_singular_plural(new_score, "point")
-            new_score_slug_string = (
-                f'<div class="story-score">{new_score_display}</div>'
-            )
-            story_object.story_card_html = story_object.story_card_html.replace(
-                old_score_slug_string, new_score_slug_string, 1
-            )
-
-            story_object.score_slug_string = new_score_slug_string
             story_object.score = new_score
             logger.info(
-                f"id {story_object.id}: updated score from {old_score} to {new_score}"
+                log_prefix_local + f"updated score from {old_score} to {new_score}"
             )
-
     else:
-        logger.warning(
-            f"id {story_object.id}: no key for 'score' in updated_story_data_as_dict"
+        logger.info(
+            log_prefix_local + f"no key for 'score' in updated_story_data_as_dict"
         )
 
     # update comment count (i.e., "descendants") if needed
     if "descendants" in updated_story_data_as_dict:
         old_descendants = story_object.descendants
-        new_descendants = int(updated_story_data_as_dict["descendants"])
+        new_descendants = updated_story_data_as_dict["descendants"]
         if old_descendants != new_descendants:
-            # old_descendants_slug_string = f'<div class="story-descendants"><a href="{story_object.hn_comments_url}">{story_object.descendants_display}</a></div>'
-            old_descendants_slug_string = story_object.descendants_slug_string
-
-            new_descendants_display = utils_text.add_singular_plural(
-                new_descendants, "comment"
-            )
-            new_descendants_slug_string = f'<div class="story-descendants"><a href="{story_object.hn_comments_url}">{new_descendants_display}</a></div>'
-
-            story_object.story_card_html = story_object.story_card_html.replace(
-                old_descendants_slug_string, new_descendants_slug_string, 1
-            )
-
-            story_object.descendants_slug_string = new_descendants_slug_string
             story_object.descendants = new_descendants
             logger.info(
-                f"id {story_object.id}: updated comment count from {old_descendants} to {new_descendants}"
+                log_prefix_local
+                + f"updated comment count from {old_descendants} to {new_descendants}"
             )
+
+    # update badges slug if needed
+    new_badges_slug = create_badges_slug(
+        story_object.id, page_package.story_type, page_package.rosters
+    )
+    if story_object.badges_slug != new_badges_slug:
+
+        story_object.badges_slug = new_badges_slug
 
 
 def get_content_type_from_response(response):
@@ -1198,7 +1218,7 @@ def page_package_processor(page_package):
 
                 # attempt to update title, score, comment count
                 try:
-                    freshen_up(story_object=story_object)
+                    freshen_up(story_object=story_object, page_package=page_package)
                     repickling_log_detail = "re-pickling freshened story"
                 except Exception as exc:
                     repickling_log_detail = f"failed to freshen story: {exc}"
@@ -1212,64 +1232,12 @@ def page_package_processor(page_package):
                 # publication time ago and badges, since we have this info on hand
                 repickling_log_detail = "re-pickling re-used cached story"
 
-            # whether freshened or not, update pub_time_ago_display
-            # pub_time_ago_display = time_utils.how_long_ago_human_readable(
-            #     story_object.time
-            # )
-
-            # whether we freshed or not or tried to freshen and failed, we can still update the how_long_ago_human_readable_slug
-            old_how_long_ago_human_readable_slug = (
-                story_object.how_long_ago_human_readable_slug
-            )
-            new_how_long_ago_human_readable_slug = (
-                utils_time.how_long_ago_human_readable(story_object.time)
-            )
-            if (
-                old_how_long_ago_human_readable_slug
-                != new_how_long_ago_human_readable_slug
-            ):
-                story_object.how_long_ago_human_readable_slug = (
-                    new_how_long_ago_human_readable_slug
-                )
-                story_object.story_card_html = story_object.story_card_html.replace(
-                    old_how_long_ago_human_readable_slug,
-                    new_how_long_ago_human_readable_slug,
-                    1,
-                )
-                logger.info(
-                    f"id {story_object.id}: updated how_long_ago_human_readable_slug from '{old_how_long_ago_human_readable_slug}' to '{new_how_long_ago_human_readable_slug}'"
-                )
-                story_object.how_long_ago_human_readable_slug = (
-                    new_how_long_ago_human_readable_slug
-                )
-
             logger.info(log_prefix_id + f"{repickling_log_detail}")
 
             if repickling_log_detail.startswith("re-pickling"):
                 save_story_object_to_disk(
                     story_object=story_object, log_prefix=log_prefix_id
                 )
-
-                # with open(
-                #     os.path.join(
-                #         config.settings["CACHED_STORIES_DIR"],
-                #         get_pickle_filename(story_object.id),
-                #     ),
-                #     mode="wb",
-                # ) as file:
-                #     pickle.dump(story_object, file)
-
-                # with open(
-                #     os.path.join(
-                #         config.settings["CACHED_STORIES_DIR"],
-                #         f"id-{story_object.id}.json",
-                #     ),
-                #     mode="w",
-                #     encoding="utf-8",
-                # ) as f:
-                #     f.write(
-                #         json.dumps(story_object.to_dict(), indent=4, sort_keys=True)
-                #     )
 
             cur_story_card_html = story_object.story_card_html
 
@@ -1281,6 +1249,7 @@ def page_package_processor(page_package):
                 cur_story_card_html = asdfft1(
                     item_id=each_id,
                     pos_on_page=rank,
+                    page_package=page_package,
                 )
             except UnsupportedStoryType as exc:
                 exc_name = f"{exc.__class__.__module__}.{exc.__class__.__name__}"
@@ -1304,19 +1273,6 @@ def page_package_processor(page_package):
             logger.info(log_prefix_id + "couldn't get story details for some reason")
             logger.info(log_prefix_id + "discarding this story")
             continue  # to next each_id
-
-        # populate pub_time_ago_display
-        # cur_story_card_html = cur_story_card_html.replace(
-        #     "<!-- pub_time_ago_display goes here -->", pub_time_ago_display, 1
-        # )
-
-        # populate badges_slug placeholder
-        new_badges_slug = create_badges_slug(
-            each_id, page_package.story_type, page_package.rosters
-        )
-        cur_story_card_html = cur_story_card_html.replace(
-            "<!-- badges_slug goes here -->", new_badges_slug, 1
-        )
 
         page_html += cur_story_card_html
         page_html += "\n"  # so html source looks pretty
@@ -1411,7 +1367,6 @@ def page_package_processor(page_package):
     stories_channel_contents_bottom_section = "</table>\n</div>\n"
 
     html_generation_end_ts = utils_time.get_time_now_in_epoch_seconds_float()
-
     now_in_epoch_seconds = int(html_generation_end_ts)
     now_in_utc_readable = utils_time.convert_epoch_seconds_to_utc(now_in_epoch_seconds)
 

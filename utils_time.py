@@ -47,13 +47,11 @@ def convert_seconds_ago_to_human_readable(seconds_ago: int, force_int=False):
         unit = "year"
 
     if unit == "just now":
-        time_ago_display = unit
+        return unit
     else:
-        time_ago_display = (
+        return (
             utils_text.add_singular_plural(number, unit, force_int=force_int) + " ago"
         )
-
-    return time_ago_display
 
 
 def convert_time_duration_to_human_readable_v1(new_page_ts):
@@ -164,12 +162,12 @@ def get_hms_for_page_gen(new_page_ts):
     return h, m, s
 
 
-def get_time_now_in_epoch_seconds_int():
-    return int(time.time())
-
-
 def get_time_now_in_epoch_seconds_float():
     return time.time()
+
+
+def get_time_now_in_epoch_seconds_int():
+    return int(time.time())
 
 
 def how_long_ago_human_readable(past_time_seconds):

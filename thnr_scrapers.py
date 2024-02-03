@@ -18,23 +18,232 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-def download_og_image(story_object, alt_url=None):
+def download_og_image2(story_object, first_time=True, url_queue=None):
+    log_prefix_id = f"id {story_object.id}: "
+    log_prefix_local = log_prefix_id + f"d_og_i2(): "
+
+    if first_time:
+        url_queue = []
+        if story_object.linked_url_og_image_url_initial:
+            url_queue.append(story_object.linked_url_og_image_url_initial)
+
+    if not url_queue:
+        logger.info(log_prefix_local + "failed to download og:image")
+        return False
+
+    cur_url = url_queue.pop(0)
+
+    ## attempt to heal a few common URL problems
+
+    # TODO: eventually move these validations and healings to a separate function
+
+    # problems where the URLs start with two slashes
+    if cur_url[0:2] == "//" and cur_url[2:3] != "/":
+        pass
+
+        # URL starts with two slashes and then the host
+        # //example.com/images/foo.jpg
+        # //example.com
+
+        # URL starts with two slashes and then the path
+        # //images/foo.jpg
+        # //images
+
+    # problems where the URLs start with one slash
+    elif cur_url[0:1] == "/" and cur_url[1:2] != "/":
+        pass
+
+        # URL starts with one slash and then the host (the slash is a malformed scheme separator)
+        # /example.com/images/foo.jpg
+
+        # URL starts with one slash and then the path
+        # /images/foo.jpg
+
+    elif not cur_url.startswith("http://") and not cur_url.startswith("https://"):
+        pass
+
+        # URL starts with the host
+        # example.com/images/foo.jpg
+
+        # URL starts with the path but without the initial path separator (i.e., the root slash)
+        # images/foo.jpg
+
+        # idea: try adding "http://" and "https://" and trying to reach them to see if it works
+
+    # URL is any of various localhost development URLs
+    elif cur_url[:15] in [
+        "http://localhos",
+        "https://localho",
+        "http://192.168.",
+        "https://192.168",
+        "http://127.0.0.",
+        "https://127.0.0",
+    ]:
+        localhost_url = cur_url
+        healed_url = utils_text.heal_localhost_url(
+            localhost_url=localhost_url,
+            real_hostname=story_object.hostname["full"],
+        )
+
+        story_object.linked_url_og_image_url_initial = healed_url
+        cur_url = healed_url
+        logger.info(
+            log_prefix_local
+            + f"healed localhost og:image URL {localhost_url} to {healed_url} (~Tim~)"
+        )
+
+    # by now, we have somewhat validated and possibly healed the URL
+
+    get_response = None
+    try:
+        with requests.get(
+            url=cur_url,
+            allow_redirects=True,
+            verify=False,
+            timeout=config.settings["SCRAPING"]["REQUESTS_GET_TIMEOUT_S"],
+            headers={"User-Agent": config.settings["SCRAPING"]["UA_STR"]},
+        ) as response:
+            get_response = response
+            possibly_redirected_url = get_response.url
+
+    except requests.exceptions.MissingSchema as exc:
+        short_exc_name = exc.__class__.__name__
+        exc_name = exc.__class__.__module__ + "." + short_exc_name
+        exc_msg = str(exc)
+        exc_slug = f"{exc_name}: {exc_msg}"
+        tb_str = traceback.format_exc()
+        logger.error(
+            log_prefix_local
+            + "unexpected exception "
+            + exc_slug
+            + f" for url {cur_url}"
+        )
+        logger.error(log_prefix_local + tb_str)
+        return False
+
+    except Exception as exc:
+        handle_exception(
+            exc=exc,
+            log_prefix=log_prefix_local + "get(): ",
+            context={"url": cur_url},
+        )
+        return False
+
+    if not get_response or not story_object.linked_url_og_image_url_final:
+        # I think we won't enter this block, because an exception would have occurred to cause this situation
+        logger.error(
+            log_prefix_local
+            + "no get_response or linked_url_og_image_url_final (~Tim~)"
+        )
+        return False
+
+    story_object.og_image_filename_details_from_url = (
+        utils_text.get_filename_details_from_url(
+            story_object.linked_url_og_image_url_final
+        )
+    )
+
+    story_object.og_image_content_type = utils_http.get_content_type_via_head_request(
+        url=possibly_redirected_url, log_prefix=log_prefix_local
+    )
+    if story_object.og_image_content_type:
+        logger.info(
+            log_prefix_id
+            + f"content-type is {story_object.og_image_content_type}"
+            + f" for og:image uri {possibly_redirected_url}"
+        )
+    else:
+        logger.info(
+            log_prefix_id
+            + f"content-type unavailable for og:image uri {possibly_redirected_url}"
+        )
+
+    # download og:image
+    story_object.normalized_og_image_filename = f"orig-{story_object.id}"
+    story_object.downloaded_orig_thumb_full_path = os.path.join(
+        config.settings["TEMP_DIR"],
+        story_object.normalized_og_image_filename,
+    )
+    with open(story_object.downloaded_orig_thumb_full_path, "wb") as fout:
+        fout.write(get_response.content)
+
+    # determine magic type of downloaded og:image
+    story_object.downloaded_og_image_magic_result = magic.from_file(
+        story_object.downloaded_orig_thumb_full_path, mime=True
+    )
+
+    logger.info(
+        log_prefix_id
+        + f"magic type is {story_object.downloaded_og_image_magic_result}"
+        + f" for downloaded og:image"
+    )
+
+    return True
+
+
+def download_og_image(story_object, alt_url=None, use_url_queue=False, url_queue=None):
     log_prefix_id = f"id {story_object.id}: "
     log_prefix_local = log_prefix_id + f"d_og_i(): "
 
     # TODO: 2024-02-02T05:44:23Z [new]     INFO     id 39219609: asdfft1(): found og:image url http://localhost:3000/opengraph-image.jpeg?6a9141518aeca0a0
 
-    # if no URL, no thumbnail
-    if not story_object.linked_url_og_image_url_initial and not alt_url:
-        logger.info(
-            log_prefix_local + "no linked_url_og_image_url_initial or alt_url provided"
-        )
+    if not use_url_queue:
+        url_queue = []
+        if story_object.linked_url_og_image_url_initial:
+            url_queue.append(story_object.linked_url_og_image_url_initial)
+
+    if not url_queue:
+        logger.info(log_prefix_local + "failed to download og:image")
         return False
+
+    cur_url = url_queue.pop(0)
+
+    ## attempt to heal a few common URL problems
+
+    # URL is missing a scheme
+    # example.com/images/foo.jpg
+
+    # URL is missing a scheme and starts with two slashes
+    # //example.com/images/foo.jpg
+    # if cur_url[0:2] == "//":
+    #     schemeless_url = cur_url
+    #     healed_url = utils_text.heal_schemeless_url(
+    #         schemeless_url=schemeless_url,
+    #         real_scheme="https",
+    #     )
+
+    #     story_object.linked_url_og_image_url_initial = healed_url
+    #     cur_url = healed_url
+    #     logger.info(
+    #         log_prefix_local
+    #         + f"healed schemeless og:image URL {schemeless_url} to {healed_url} (~Tim~)"
+    #     )
+
+    # URL is missing a scheme and hostname and starts with one slash
+    # /images/foo.jpg
+
+    # URL is a dev URL using localhost
+    if cur_url[:16] in [
+        "http://localhost",
+        "https://localhos",
+    ]:
+        localhost_url = cur_url
+        possibly_healed_url = utils_text.heal_localhost_url(
+            localhost_url=localhost_url,
+            real_hostname=story_object.hostname["full"],
+        )
+
+        story_object.linked_url_og_image_url_initial = possibly_healed_url
+        cur_url = possibly_healed_url
+        logger.info(
+            log_prefix_local
+            + f"healed localhost og:image URL {localhost_url} to {possibly_healed_url} (~Tim~)"
+        )
 
     if alt_url:
         url_to_use = alt_url
     else:
-        url_to_use = story_object.linked_url_og_image_url_initial
+        url_to_use = cur_url
 
     get_response = None
     try:
@@ -54,28 +263,28 @@ def download_og_image(story_object, alt_url=None):
         exc_msg = str(exc)
         exc_slug = f"{exc_name}: {exc_msg}"
 
-        if (
-            story_object.linked_url_og_image_url_initial[0:2] == "//"
-            and story_object.linked_url_og_image_url_initial[2:3] != "/"
-        ):
-            possibly_fixed_url = f"http://{story_object.hostname['minus_www']}/{story_object.linked_url_og_image_url_initial[2:]}"
+        if cur_url[0:2] == "//" and cur_url[2:3] != "/":
+            possibly_healed_url = (
+                f"http://{story_object.hostname['minus_www']}/{cur_url[2:]}"
+            )
             logger.info(
                 log_prefix_local
                 + "get(): "
-                + f"attempting to heal and retry schemeless og:image URL {story_object.linked_url_og_image_url_initial} as {possibly_fixed_url}"
+                + f"attempting to heal and retry schemeless og:image URL {cur_url} as {possibly_healed_url}"
             )
-            return download_og_image(story_object, alt_url=possibly_fixed_url)
-        elif (
-            story_object.linked_url_og_image_url_initial[0:1] == "/"
-            and story_object.linked_url_og_image_url_initial[1:2] != "/"
-        ):
-            possibly_fixed_url = f"http://{story_object.hostname['minus_www']}/{story_object.linked_url_og_image_url_initial[1:]}"
+            return download_og_image(story_object, alt_url=possibly_healed_url)
+
+        elif cur_url[0:1] == "/" and cur_url[1:2] != "/":
+            possibly_healed_url = (
+                f"http://{story_object.hostname['minus_www']}/{cur_url[1:]}"
+            )
             logger.info(
                 log_prefix_local
                 + "get(): "
-                + f"attempting to heal and retry schemeless og:image URL {story_object.linked_url_og_image_url_initial} as {possibly_fixed_url}"
+                + f"attempting to heal and retry schemeless og:image URL {cur_url} as {possibly_healed_url}"
             )
-            return download_og_image(story_object, alt_url=possibly_fixed_url)
+            return download_og_image(story_object, alt_url=possibly_healed_url)
+
         else:
             logger.info(log_prefix_local + "get(): " + "failed to get og:image")
             logger.info(log_prefix_local + "get(): " + exc_slug)

@@ -7,7 +7,7 @@
 # set -o xtrace    # show commands being executed; same as set -x
 # set -o verbose   # verbose mode; same as set -v
 
-source ./functions.sh
+source /srv/timbos-hn-reader/functions.sh
 
 if ! am-root; then
     die "Please run as root."

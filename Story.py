@@ -18,48 +18,42 @@ class Story(Item):
         text: str,
         url: str,
     ) -> None:
-        if not url:
-            self.is_ask_show_tell_launch_hn: bool = True
-            self.url: str = f"https://news.ycombinator.com/item?id={id}"
-            self.url_content_type: str = ""
-        else:
-            self.is_ask_show_tell_launch_hn: bool = False
+
+        self.hn_comments_url: str = f"https://news.ycombinator.com/item?id={id}"
+
+        if url:
             self.url: str = url
+            self.has_outbound_link: bool = True
             self.url_content_type: str = ""
+            self.title_hyperlink = url
 
-        self.title: str = title
-        self.title_slug = utils_text.insert_possible_line_breaks(title)
-
-        self.text: str = text
-
-        self.url: str = url
+        else:
+            self.url: str = self.hn_comments_url
+            self.has_outbound_link: bool = False
+            self.url_content_type: str = ""
+            self.title_hyperlink = self.hn_comments_url
 
         self.hostname = {}
         (
             self.hostname["full"],
             self.hostname["minus_www"],
         ) = utils_text.get_domains_from_url(url)
+
         self.hostname["for_hn_search"] = ""  # could include path after hostname
         self.hostname["for_display"] = ""
         self.hostname["for_display_addl_class"] = ""
         self.hostname["slug"] = ""
         utils_text.create_domains_slug(self.hostname)
 
-        self.descendants: int = int(descendants)
-        self.descendants_display = utils_text.add_singular_plural(
-            self.descendants, "comment"
-        )
-        self.hn_comments_url: str = f"https://news.ycombinator.com/item?id={id}"
+        self.title: str = title
 
-        self.score: int = int(score)
-        self.score_display = utils_text.add_singular_plural(self.score, "point")
+        self.text: str = text
 
-        self.time_of_last_firebaseio_query: int = (
-            utils_time.get_time_now_in_epoch_seconds_int()
-        )  # TODO: don't initialize this here
+        self.descendants: int = descendants
 
-        # by analyzing self.text:
-        self.before_title_link_slug: str = ""
+        self.score: int = score
+
+        self.time_of_last_firebaseio_query: int
 
         self.linked_url_reported_content_type: str = ""
         self.linked_url_confirmed_content_type: str = ""
@@ -69,17 +63,17 @@ class Story(Item):
         self.gh_repo_lang_stats: str = ""
         self.github_languages_slug: str = ""
 
-        self.reading_time: int = 0
-        self.reading_time_slug: str = ""
+        self.reading_time = None
 
         self.pdf_page_count: int = 0
-        self.pdf_page_count_slug: str = ""
 
         self.story_content_type_slug: str = ""
 
         # while inside url_utils.get_data_via_requests()
         #   and promote_initial_og_image_url_to_final()
-        self.linked_url_og_image_url_final: str = ""
+        self.linked_url_og_image_url_final: str = (
+            ""  # rename to: linked_url_og_image_url_possibly_redirected
+        )
         self.og_image_content_type: str = ""
         self.normalized_og_image_filename: str = ""
         self.downloaded_orig_thumb_full_path: str = ""
@@ -113,14 +107,9 @@ class Story(Item):
         self.social_media["account_name_slug"] = ""
         self.social_media["hn_search_query"] = ""
 
-        # various things that will have to be computed anew periodically
         self.story_card_html: str = ""
 
-        self.title_slug_string = ""
-        self.score_slug_string = ""
-        self.descendants_slug_string = ""
-
-        self.how_long_ago_human_readable_slug: str = ""
+        self.badges_slug = ""
 
         self.story_object_version = "0.0.1"
 
@@ -128,11 +117,11 @@ class Story(Item):
 
     def __str__(self):
         res = ""
-        d = vars(self)
-        for ea_d in d:
-            res += ea_d
+        all_vars = vars(self)
+        for each in all_vars:
+            res += each
             res += ": "
-            res += str(d[ea_d])
+            res += str(all_vars[each])
             res += ", "
         return res
 

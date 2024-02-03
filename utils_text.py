@@ -1,8 +1,9 @@
 import inspect
-import re
 import logging
 import math
+import re
 import traceback
+from urllib.parse import unquote, urlparse
 
 from dateutil.tz import tzutc
 from goose3 import Goose
@@ -326,8 +327,8 @@ def get_reading_time_via_goose(page_source=None, log_prefix=""):
         g = Goose()
         article = g.extract(raw_html=page_source).cleaned_text
         if article:
-            reading_time = int(
-                utils_text.word_count(article) / config.reading_speed_words_per_minute
+            reading_time = (
+                utils_text.word_count(article) // config.reading_speed_words_per_minute
             )
         if reading_time:
             reading_time = max(reading_time, 1)
@@ -343,7 +344,6 @@ def get_reading_time_via_goose(page_source=None, log_prefix=""):
         logger.error(
             log_prefix + f"could not determine reading time due to error: {str(exc)}"
         )
-        # logger.error(log_prefix + f"{traceback.format_exc()}")
         return None
 
 
@@ -387,8 +387,6 @@ def get_text_between(
 
 
 def insert_possible_line_breaks(orig_title):
-
-    title_slug = ""
 
     words_by_spaces = orig_title.split(" ")
 
@@ -457,9 +455,7 @@ def insert_possible_line_breaks(orig_title):
                 intraword_tokens[j] = "".join(t_conv)
         words_by_spaces[i] = "".join(intraword_tokens)
 
-    title_slug = " ".join(words_by_spaces)
-
-    return title_slug
+    return " ".join(words_by_spaces)
 
 
 def parse_content_type_from_raw_header(content_type_header: str):
@@ -508,3 +504,103 @@ def split_domain_on_chars(domain_string: str):
 
 def word_count(text):
     return len(text.split(" "))
+
+
+
+
+
+
+def heal_localhost_url(localhost_url: str, real_hostname: str):
+
+    if not localhost_url:
+        return None
+
+    parsed_url = urlparse(localhost_url)
+
+    if parsed_url.scheme:
+        scheme_part = unquote(parsed_url.scheme)
+        if scheme_part:
+            scheme_part = scheme_part + "://"
+        else:
+            scheme_part = ""
+    else:
+        scheme_part = ""
+
+    if parsed_url.hostname:
+        hostname_part = unquote(parsed_url.hostname)
+        if not hostname_part:
+            hostname_part = ""
+    else:
+        hostname_part = ""
+
+    print(hostname_part)
+
+    port_number = parsed_url.port
+    if port_number:
+        port_number = ":" + str(port_number)
+    else:
+        port_number = ""
+
+    if parsed_url.path:
+        path_part = unquote(parsed_url.path)
+        if not path_part:
+            path_part = "/"
+    else:
+        path_part = "/"
+
+    if parsed_url.params:
+        params_part = unquote(parsed_url.params)
+        if params_part:
+            params_part = ";" + params_part
+        else:
+            params_part = ""
+    else:
+        params_part = ""
+
+    if parsed_url.query:
+        query_part = unquote(parsed_url.query)
+        if query_part:
+            query_part = "?" + query_part
+        else:
+            query_part = ""
+    else:
+        query_part = ""
+
+    if parsed_url.fragment:
+        fragment_part = unquote(parsed_url.fragment)
+        if fragment_part:
+            fragment_part = "#" + fragment_part
+        else:
+            fragment_part = ""
+    else:
+        fragment_part = ""
+
+    https_scheme_string = "https://"
+
+    possibly_healed_url = (
+        https_scheme_string
+        + real_hostname
+        + path_part
+        + params_part
+        + query_part
+        + fragment_part
+    )
+
+    return possibly_healed_url
+
+
+if __name__ == "__main__":
+    try:
+        res = heal_localhost_url(
+            localhost_url="http://xxxxxx:3000/aardvark/bear.jpeg;sorrowful?a=apple&b=banana#carrot",
+            real_hostname="shotune.com",
+        )
+        print(res)
+    except Exception as exc:
+        short_exc_name = exc.__class__.__name__
+        exc_name = exc.__class__.__module__ + "." + short_exc_name
+        exc_msg = str(exc)
+        exc_slug = f"{exc_name}: {exc_msg}"
+        tb_str = traceback.format_exc()
+        logger.error("unexpected exception: " + exc_slug)
+        logger.error(tb_str)
