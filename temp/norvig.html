@@ -1,0 +1,680 @@
+
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<link href="prettify.css" type="text/css" rel="stylesheet" />
+<script type="text/javascript" src="prettify.js"></script>
+<title>How to Write a Spelling Corrector</title>
+</head>
+
+<body onload="prettyPrint()"  style="max-width: 52em; margin-left: 2em">
+<div align=right><i>Feb 2007<br>to August 2016</i></div>
+
+<h1>How to Write a Spelling Corrector</h1>
+
+One week in 2007, two friends (Dean and Bill) independently told me
+they were amazed at Google's  spelling correction.  Type in a search like <a
+href="http://www.google.com/search?q=speling">[speling]</a> and Google
+instantly comes back with <b>Showing results for:
+<i><a
+href="http://www.google.com/search?q=spelling">spelling</a></i></b></font>.
+I thought Dean and Bill, being highly
+accomplished engineers and mathematicians, would have good intuitions
+about how this process works.  But they didn't, and come to think of it, why should they
+know about something so far outisde their specialty?
+
+<p>
+I figured they, and others, could benefit from an explanation.  The
+full details of an industrial-strength spell corrector are quite complex (you
+can read a little about it <a href="http://static.googleusercontent.com/external_content/untrusted_dlcp/research.google.com/en/us/pubs/archive/36180.pdf">here</a> or <a href="http://citeseerx.ist.psu.edu/viewdoc/download;jsessionid=52A3B869596656C9DA285DCE83A0339F?doi=10.1.1.146.4390&rep=rep1&type=pdf">here</a>).
+But I figured that in the course of a transcontinental plane ride I could write and explain a toy
+spelling corrector that achieves 80 or 90% accuracy at a processing
+speed of at least 10 words per second in about half a page of code.
+
+
+<p>And here it is (or see <a href="spell.py">spell.py</a>):
+
+<pre class="prettyprint">
+import re
+from collections import Counter
+
+def words(text): return re.findall(r'\w+', text.lower())
+
+WORDS = Counter(words(open('big.txt').read()))
+
+def P(word, N=sum(WORDS.values())): 
+    "Probability of `word`."
+    return WORDS[word] / N
+
+def correction(word): 
+    "Most probable spelling correction for word."
+    return max(candidates(word), key=P)
+
+def candidates(word): 
+    "Generate possible spelling corrections for word."
+    return (known([word]) or known(edits1(word)) or known(edits2(word)) or [word])
+
+def known(words): 
+    "The subset of `words` that appear in the dictionary of WORDS."
+    return set(w for w in words if w in WORDS)
+
+def edits1(word):
+    "All edits that are one edit away from `word`."
+    letters    = 'abcdefghijklmnopqrstuvwxyz'
+    splits     = [(word[:i], word[i:])    for i in range(len(word) + 1)]
+    deletes    = [L + R[1:]               for L, R in splits if R]
+    transposes = [L + R[1] + R[0] + R[2:] for L, R in splits if len(R)>1]
+    replaces   = [L + c + R[1:]           for L, R in splits if R for c in letters]
+    inserts    = [L + c + R               for L, R in splits for c in letters]
+    return set(deletes + transposes + replaces + inserts)
+
+def edits2(word): 
+    "All edits that are two edits away from `word`."
+    return (e2 for e1 in edits1(word) for e2 in edits1(e1))
+</pre>
+<p>
+The  function <tt>correction(word)</tt>  returns
+a likely spelling correction:
+<p><pre class="prettyprint">
+&gt;&gt;&gt; correction('speling')
+'spelling'
+
+&gt;&gt;&gt; correction('korrectud')
+'corrected'
+</pre>
+
+
+<h2>How It Works: Some Probability Theory</h2>
+
+<p>The call <tt>correction(w)</tt>
+tries to choose the most likely spelling correction for <tt>w</tt>. There is no way to
+know for sure (for example, should "lates" be corrected to "late" or
+"latest" or "lattes" or ...?), which suggests we use probabilities.  We 
+are trying to find the correction <i>c</i>, out of all possible candidate
+corrections, that maximizes the probability that <i>c</i> is the intended correction, given the
+original word <i>w</i>:
+<blockquote>
+argmax<sub><i>c &isin; candidates</i></sub> P(<i>c</i>|<i>w</i>)
+</blockquote>
+By <a href="http://en.wikipedia.org/wiki/Bayes'_theorem">Bayes' Theorem</a> this is equivalent 
+to:
+<blockquote>
+argmax<sub><i>c &isin; candidates</i></sub> P(<i>c</i>) P(<i>w</i>|<i>c</i>)  / P(<i>w</i>)
+</blockquote>
+Since P(<i>w</i>) is the same for every possible candidate <i>c</i>, we can factor it out, giving:
+<blockquote>
+argmax<sub><i>c &isin; candidates</i></sub> P(<i>c</i>) P(<i>w</i>|<i>c</i>) 
+</blockquote>
+
+The four parts of this expression are:
+
+<ol>
+  <li><b>Selection Mechanism</b>: argmax <br>
+  We choose the candidate with the highest combined probability.
+
+  <p><li> <b>Candidate Model</b>: <i>c &isin; candidates</i></sub><br>
+  This tells us which candidate corrections, <i>c</i>, to consider.
+
+
+  <p><li> <b>Language Model</b>: P(<i>c</i>)
+  <br>The probability that <i>c</i> appears as a word of English text.
+For example, occurrences of "the" make up about 7% of English text, so
+we should have P(<i>the</i>) = 0.07. 
+
+
+  <p><li> <b>Error Model</b>: P(<i>w</i>|<i>c</i>)<br>
+  The probability that <i>w</i> would be typed in a text when the
+  author meant <i>c</i>. For example, P(<i>teh</i>|<i>the</i>) is relatively high,
+but P(<i>theeexyz</i>|<i>the</i>) would be very low.
+</ol>
+
+<p>One obvious question is: why take a simple expression like P(<i>c</i>|<i>w</i>) and replace
+  it with a more complex expression involving two models rather than one? The answer is that
+  P(<i>c</i>|<i>w</i>) is <i>already</i> conflating two factors, and it is
+  easier to separate the two out and deal with them explicitly. Consider the misspelled word
+  <i>w</i>="thew" and the two candidate corrections <i>c</i>="the" and <i>c</i>="thaw".
+  Which has a higher P(<i>c</i>|<i>w</i>)?  Well, "thaw" seems good because the only change
+  is "a" to "e", which is a small change.  On the other hand, "the" seems good because "the" is a very
+  common word, and while adding a "w" seems like a larger, less probable change, perhaps the typist's finger slipped off the "e".  The point is that to
+  estimate P(<i>c</i>|<i>w</i>) we have to consider both the probability of <i>c</i> and the
+  probability of the change from <i>c</i> to <i>w</i> anyway, so it is cleaner to formally separate the
+  two factors.
+
+<h2>How It Works: Some Python</h2>
+
+The four parts of the program are:
+
+<ol>
+<li><b>Selection Mechanism</b>: In Python, <tt>max</tt> with a <tt>key</tt> argument does 'argmax'.
+
+<p><li> <b>Candidate Model</b>: 
+First a new concept: a <b>simple edit</b> to a word is a deletion (remove one letter), a transposition (swap two adjacent letters),
+a replacement (change one letter to another) or an insertion (add a letter).  The function
+<tt>edits1</tt> returns a set of all the edited strings (whether words or not) that can be made with one simple edit:
+
+<pre class="prettyprint">
+def edits1(word):
+    "All edits that are one edit away from `word`."
+    letters    = 'abcdefghijklmnopqrstuvwxyz'
+    splits     = [(word[:i], word[i:])    for i in range(len(word) + 1)]
+    deletes    = [L + R[1:]               for L, R in splits if R]
+    transposes = [L + R[1] + R[0] + R[2:] for L, R in splits if len(R)>1]
+    replaces   = [L + c + R[1:]           for L, R in splits if R for c in letters]
+    inserts    = [L + c + R               for L, R in splits for c in letters]
+    return set(deletes + transposes + replaces + inserts)
+</pre>
+
+<p>This can be a big set.  For a word of length <i>n</i>, there will
+be <i>n</i> deletions, <i>n</i>-1 transpositions, 26<i>n</i>
+alterations, and 26(<i>n</i>+1) insertions, for a total of
+54<i>n</i>+25 (of which a few are typically duplicates).  For example,
+
+<pre class="prettyprint">
+>>> len(edits1('somthing'))
+442
+</pre>
+
+However, if we restrict ourselves to words that are <i>known</i>&mdash;that is, 
+in the dictionary&mdash; then the set is much smaller:
+
+<pre class="prettyprint">
+def known(words): return set(w for w in words if w in WORDS)
+
+>>> known(edits1('somthing'))
+{'something', 'soothing'}
+</pre>
+
+We'll also consider corrections that require <i>two</i> simple edits. This generates a much bigger set of
+possibilities, but usually only a few of them are known words:
+
+<pre class="prettyprint">
+def edits2(word): return (e2 for e1 in edits1(word) for e2 in edits1(e1))
+
+>>> len(set(edits2('something'))
+90902
+
+>>> known(edits2('something'))
+{'seething', 'smoothing', 'something', 'soothing'}
+
+>>> known(edits2('somthing'))
+{'loathing', 'nothing', 'scathing', 'seething', 'smoothing', 'something', 'soothing', 'sorting'}
+</pre>
+
+We say that the results of <tt>edits2(w)</tt> have an <b>edit distance</b> of 2 from <tt>w</tt>.
+
+<p><li><b>Language Model</b>: 
+We  can estimate the probability of a word, <tt>P(word)</tt>, by counting
+the number of times each word appears in a text file of about a million words, <a
+  href="big.txt"><tt>big.txt</tt></a>.
+  It is a concatenation of public domain book excerpts from <a
+  href="http://www.gutenberg.org/wiki/Main_Page">Project Gutenberg</a>
+  and lists of most frequent words from <a
+  href="http://en.wiktionary.org/wiki/Wiktionary:Frequency_lists">Wiktionary</a>
+  and the <a href="http://www.kilgarriff.co.uk/bnc-readme.html">British
+  National Corpus</a>. The function <tt>words</tt> breaks text into words, then the
+  variable <tt>WORDS</tt> holds a Counter of how often each word appears, and <tt>P</tt>
+  estimates the probability of each word, based on this Counter:
+
+
+<pre class="prettyprint">
+def words(text): return re.findall(r'\w+', text.lower())
+
+WORDS = Counter(words(open('big.txt').read()))
+
+def P(word, N=sum(WORDS.values())): return WORDS[word] / N
+</pre>
+
+We can see that there are 32,192 distinct words, which together appear 1,115,504 times, with 'the' being the most common word, appearing 79,808 times
+(or a probability of about 7%) and other words being less probable:
+
+<pre class="prettyprint">
+>>> len(WORDS)
+32192
+
+>>> sum(WORDS.values())
+1115504
+
+>>> WORDS.most_common(10)
+[('the', 79808),
+ ('of', 40024),
+ ('and', 38311),
+ ('to', 28765),
+ ('in', 22020),
+ ('a', 21124),
+ ('that', 12512),
+ ('he', 12401),
+ ('was', 11410),
+ ('it', 10681),
+ ('his', 10034),
+ ('is', 9773),
+ ('with', 9739),
+ ('as', 8064),
+ ('i', 7679),
+ ('had', 7383),
+ ('for', 6938),
+ ('at', 6789),
+ ('by', 6735),
+ ('on', 6639)]
+
+>>> max(WORDS, key=P)
+'the'
+
+>>> P('the')
+0.07154434228832886
+
+>>> P('outrivaled')
+8.9645577245801e-07
+
+>>> P('unmentioned')
+0.0
+</pre>
+</pre>
+
+
+
+<li><b>Error Model</b>:
+When I started
+to write this program, sitting on
+a plane in 2007, I had no data on spelling errors, and no internet connection (I know
+that may be hard to imagine today). Without data I couldn't build a good spelling error model, so I
+took a shortcut: I defined a trivial, flawed error model that says all known words
+of edit distance 1 are infinitely more probable than known words of
+edit distance 2, and infinitely less probable than a known word of
+edit distance 0. So we can make <tt>candidates(word)</tt> produce the first non-empty list of candidates 
+in order of priority:
+<ol>
+<li> The original word, if it is known; otherwise
+<li> The list of known words at edit distance one away, if there are any; otherwise
+<li> The list of known words at edit distance two away, if there are any; otherwise
+<li> The original word, even though it is not known.
+</ol>
+Then we don't need to multiply by a P(<i>w</i>|<i>c</i>) factor, because every candidate
+at the chosen priority will have the same probability (according to our flawed model). That gives us:
+
+<pre class="prettyprint">
+def correction(word): return max(candidates(word), key=P)
+
+def candidates(word): 
+    return known([word]) or known(edits1(word)) or known(edits2(word)) or [word]
+</pre>
+
+</ol>
+
+
+
+<h2>Evaluation</h2>
+
+Now it is time to evaluate how well this program does. After my plane landed, I
+downloaded Roger Mitton's <a
+href="http://ota.ahds.ac.uk/texts/0643.html">Birkbeck spelling error
+corpus</a> from the Oxford Text Archive. From that I extracted two
+test sets of corrections. The first is for development, meaning I get
+to look at it while I'm developing the program. The second is a final
+test set, meaning I'm not allowed to look at it, nor change my program
+after evaluating on it. This practice of having two sets is good
+hygiene; it keeps me from fooling myself into thinking I'm doing
+better than I am by tuning the program to one specific set of
+tests. I also wrote some unit tests:
+
+<pre class="prettyprint">
+def unit_tests():
+    assert correction('speling') == 'spelling'              # insert
+    assert correction('korrectud') == 'corrected'           # replace 2
+    assert correction('bycycle') == 'bicycle'               # replace
+    assert correction('inconvient') == 'inconvenient'       # insert 2
+    assert correction('arrainged') == 'arranged'            # delete
+    assert correction('peotry') =='poetry'                  # transpose
+    assert correction('peotryy') =='poetry'                 # transpose + delete
+    assert correction('word') == 'word'                     # known
+    assert correction('quintessential') == 'quintessential' # unknown
+    assert words('This is a TEST.') == ['this', 'is', 'a', 'test']
+    assert Counter(words('This is a test. 123; A TEST this is.')) == (
+           Counter({'123': 1, 'a': 2, 'is': 2, 'test': 2, 'this': 2}))
+    assert len(WORDS) == 32192
+    assert sum(WORDS.values()) == 1115504
+    assert WORDS.most_common(10) == [
+     ('the', 79808),
+     ('of', 40024),
+     ('and', 38311),
+     ('to', 28765),
+     ('in', 22020),
+     ('a', 21124),
+     ('that', 12512),
+     ('he', 12401),
+     ('was', 11410),
+     ('it', 10681)]
+    assert WORDS['the'] == 79808
+    assert P('quintessential') == 0
+    assert 0.07 < P('the') < 0.08
+    return 'unit_tests pass'
+
+def spelltest(tests, verbose=False):
+    "Run correction(wrong) on all (right, wrong) pairs; report results."
+    import time
+    start = time.clock()
+    good, unknown = 0, 0
+    n = len(tests)
+    for right, wrong in tests:
+        w = correction(wrong)
+        good += (w == right)
+        if w != right:
+            unknown += (right not in WORDS)
+            if verbose:
+                print('correction({}) => {} ({}); expected {} ({})'
+                      .format(wrong, w, WORDS[w], right, WORDS[right]))
+    dt = time.clock() - start
+    print('{:.0%} of {} correct ({:.0%} unknown) at {:.0f} words per second '
+          .format(good / n, n, unknown / n, n / dt))
+    
+def Testset(lines):
+    "Parse 'right: wrong1 wrong2' lines into [('right', 'wrong1'), ('right', 'wrong2')] pairs."
+    return [(right, wrong)
+            for (right, wrongs) in (line.split(':') for line in lines)
+            for wrong in wrongs.split()]
+
+print(unit_tests())
+spelltest(Testset(open('<a href="spell-testset1.txt">spell-testset1.txt</a>'))) # Development set
+spelltest(Testset(open('<a href="spell-testset1.txt">spell-testset2.txt</a>'))) # Final test set
+</pre>
+
+<p>This gives the output:
+
+<pre class="prettyprint">
+unit_tests pass
+75% of 270 correct at 41 words per second
+68% of 400 correct at 35 words per second
+None</pre>
+
+<p>So on the development set we get 75% correct (processing words at a rate of 41 words/second), and on the final test set we get 68%
+correct (at 35 words/second).  In conclusion, I met my goals for brevity, development time, and runtime speed, but not for accuracy.
+Perhaps my test set was extra tough, or perhaps my simple model is just not good enough to get to 80% or 90% accuracy.
+
+<h2>Future Work</h2>
+
+Let's think about how we
+could do better. (I've developed the ideas some more in a <a href="http://norvig.com/ngrams/">separate chapter</a> for a book
+and in a <a href="http://nbviewer.jupyter.org/url/norvig.com/ipython/How%20to%20Do%20Things%20with%20Words.ipynb">Jupyter notebook</a>.)<ol>
+
+<li>P(<i>c</i>), the language model.  We can distinguish two sources
+of error in the language model.  The more serious is unknown words. In
+the development set, there are 15 unknown words, or 5%, and in the
+final test set, 43 unknown words or 11%. Here are some examples
+of the output of <tt>spelltest</tt> with <tt>verbose=True)</tt>:
+
+
+
+<pre class="prettyprint">
+correction('transportibility') => 'transportibility' (0); expected 'transportability' (0)
+correction('addresable') => 'addresable' (0); expected 'addressable' (0)
+correction('auxillary') => 'axillary' (31); expected 'auxiliary' (0)
+</pre>
+
+<p>In this output we show the call to <tt>correction</tt> and the actual and expected results
+(with the <tt>WORDS</tt> counts in parentheses).  
+Counts of (0) mean the target word was not in the dictionary, so we have no chance of getting it right.
+We could create a better language model by collecting more data, and perhaps by
+using a little English morphology (such as adding "ility" or "able" to the end of a word).
+
+
+<p>Another way to deal with unknown words is to allow the result of
+<tt>correction</tt> to be a word we have not seen. For example, if the
+input is "electroencephalographicallz", a good correction would be to
+change the final "z" to an "y", even though
+"electroencephalographically" is not in our dictionary.  We could
+achieve this with a language model based on components of words:
+perhaps on syllables or suffixes, but it is
+easier to base it on sequences of characters: common 2-, 3- and 4-letter
+sequences.
+
+<p><li>P(<i>w</i>|<i>c</i>), the error model. So far, the error model
+has been trivial: the smaller the edit distance, the smaller the
+error.  This causes some problems, as the examples below show.  First,
+some cases where <tt>correction</tt> returns a word at edit distance 1
+when it should return one at edit distance 2:
+
+<pre class="prettyprint">
+correction('reciet') => 'recite' (5); expected 'receipt' (14)
+correction('adres') => 'acres' (37); expected 'address' (77)
+correction('rember') => 'member' (51); expected 'remember' (162)
+correction('juse') => 'just' (768); expected 'juice' (6)
+correction('accesing') => 'acceding' (2); expected 'assessing' (1)
+</pre>
+
+<p>Why should "adres" be corrected to "address" rather than "acres"?
+The intuition is that the two edits from "d" to "dd" and "s" to "ss"
+should both be fairly common, and have high probability, while the
+single edit from "d" to "c" should have low probability.
+
+
+<p>Clearly we could use a better model of the cost of edits.  We could
+use our intuition to assign lower costs for doubling letters and
+changing a vowel to another vowel (as compared to an arbitrary letter
+change), but it seems better to gather data: to get a corpus of
+spelling errors, and count how likely it is to make each insertion,
+deletion, or alteration, given the surrounding characters.  We need a
+lot of data to do this well.  If we want to look at the change of one
+character for another, given a window of two characters on each side,
+that's 26<sup>6</sup>, which is over 300 million characters.  You'd
+want several examples of each, on average, so we need at least a
+billion characters of correction data; probably safer with at least 10
+billion.
+
+<p>Note there is a connection between the language model and the error model.
+The current program has such a simple error model (all edit distance 1 words
+before any edit distance 2 words) that it handicaps the language model: we are
+afraid to add obscure words to the model, because if one of those obscure words
+happens to be edit distance 1 from an input word, then it will be chosen, even if
+there is a very common word at edit distance 2.  With a better error model we
+can be more aggressive about adding obscure words to the dictionary.  Here are some
+examples where the presence of obscure words in the dictionary hurts us:
+
+<pre class="prettyprint">
+correction('wonted') => 'wonted' (2); expected 'wanted' (214)
+correction('planed') => 'planed' (2); expected 'planned' (16)
+correction('forth') => 'forth' (83); expected 'fourth' (79)
+correction('et') => 'et' (20); expected 'set' (325)
+</pre>
+
+<p><li>The enumeration of possible
+corrections, argmax<sub><i>c</i></sub>.  Our program enumerates all corrections within
+edit distance 2.  In the development set, only 3 words out of 270 are
+beyond edit distance 2, but in the final test set, there were 23 out
+of 400.  Here they are:
+
+<blockquote><pre>
+purple perpul
+curtains courtens
+minutes muinets
+
+successful sucssuful
+hierarchy heiarky
+profession preffeson
+weighted wagted
+inefficient ineffiect
+availability avaiblity
+thermawear thermawhere
+nature natior
+dissension desention
+unnecessarily unessasarily
+disappointing dissapoiting
+acquaintances aquantences
+thoughts thorts
+criticism citisum
+immediately imidatly
+necessary necasery
+necessary nessasary
+necessary nessisary
+unnecessary unessessay
+night nite
+minutes muiuets
+assessing accesing
+necessitates nessisitates
+</pre></blockquote>
+
+<p>We could consider extending the model by allowing a limited set of
+edits at edit distance 3. For example, allowing only the insertion of
+a vowel next to another vowel, or the replacement of a vowel for
+another vowel, or replacing close consonants like "c" to "s" would
+handle almost all these cases.
+
+<p><li>There's actually a fourth (and best) way to improve: change the
+interface to <tt>correction</tt> to look at more context. So far,
+<tt>correction</tt> only looks at one word at a time.  It turns out that
+in many cases it is difficult to make a decision based only on a
+single word.  This is most obvious when there is a word that appears
+in the dictionary, but the test set says it should be corrected to
+another word anyway:
+
+<pre class="prettyprint">
+correction('where') => 'where' (123); expected 'were' (452)
+correction('latter') => 'latter' (11); expected 'later' (116)
+correction('advice') => 'advice' (64); expected 'advise' (20)
+</pre>
+
+<p>We can't possibly know that <tt>correction('where')</tt> should be
+'were' in at least one case, but should remain 'where' in other cases.
+But if the query had been <tt>correction('They where going')</tt> then it
+seems likely that "where" should be corrected to "were".
+<p>
+The context of the surrounding words can help when there are obvious errors,
+but two or more good candidate corrections.  Consider:
+
+<pre class="prettyprint">
+correction('hown') => 'how' (1316); expected 'shown' (114)
+correction('ther') => 'the' (81031); expected 'their' (3956)
+correction('quies') => 'quiet' (119); expected 'queries' (1)
+correction('natior') => 'nation' (170); expected 'nature' (171)
+correction('thear') => 'their' (3956); expected 'there' (4973)
+correction('carrers') => 'carriers' (7); expected 'careers' (2)
+</pre>
+
+<p>Why should 'thear' be corrected as 'there' rather than 'their'?  It is
+difficult to tell by the single word alone, but if the query were
+<tt>correction('There's no there thear')</tt> it would be clear.
+
+
+
+<p>
+To build a model that looks at multiple words at a time, we will need a lot of data.
+Fortunately, Google has released
+a <a
+href="http://googleresearch.blogspot.com/2006/08/all-our-n-gram-are-belong-to-you.html">database
+of word counts</a> for all sequences up to five words long,
+gathered from a corpus of a <i>trillion</i> words.
+
+<p>I believe that a spelling corrector that scores 90% accuracy will
+<i>need</i> to use the context of the surrounding words to make a
+choice.  But we'll leave that for another day...
+
+<p>We could also decide what dialect we are trying to train for.  The
+following three errors are due to confusion about American versus
+British spelling (our training data contains both):
+
+<pre class="prettyprint">
+correction('humor') => 'humor' (17); expected 'humour' (5)
+correction('oranisation') => 'organisation' (8); expected 'organization' (43)
+correction('oranised') => 'organised' (11); expected 'organized' (70)
+</pre>
+
+
+<li>Finally, we could improve the implementation by making it much
+faster, without changing the results.  We could re-implement in a
+compiled language rather than an interpreted one.  We could cache the results of computations so
+that we don't have to repeat them multiple times.  One word of advice:
+before attempting any speed optimizations, profile carefully to see
+where the time is actually going.
+</ol>
+
+
+
+<h2>Further Reading</h2>
+
+<ul>
+<li>Roger Mitton has a <a href="http://www.dcs.bbk.ac.uk/~roger/spellchecking.html">survey article</a>
+on spell checking.
+
+<li>Jurafsky and Martin cover spelling correction well in their text 
+<i><a href="http://www.cs.colorado.edu/~martin/slp.html">Speech and Language Processing</a></i>.
+<li>Manning and Schutze
+cover statistical language models very well in their text
+<i><a href="http://nlp.stanford.edu/fsnlp/">Foundations of Statistical Natural Language Processing</a></i>,
+but they don't seem to cover spelling (at least it is not in the index).
+<li> The <a href="http://aspell.net">aspell</a> project has a lot of interesting material,
+including some <a href="http://aspell.net/test/">test data</a> that seems better than what I used.
+<li> The <a href="http://alias-i.com/lingpipe">LingPipe</a> project has a <a href="http://alias-i.com/lingpipe/demos/tutorial/querySpellChecker/read-me.html">spelling tutorial</a>.
+</ul>
+
+<h2>Acknowledgments</h2>
+
+Ivan Peev, Jay Liang, Dmitriy Ryaboy and Darius Bacon pointed out problems in <a href="https://web.archive.org/web/*/http://norvig.com/spell-correct.html">earlier versions</a>
+of this document.
+
+
+
+<h2>Other Computer Languages</h2>
+
+After I posted this article, various people wrote versions in
+different programming languages.  These
+may be interesting for those who like comparing
+languages, or for those who want to borrow an implementation in their
+desired target language:
+
+<p>
+<table border=1>
+<tr><th>Language<th>Lines<br>Code<th>Author<br>(and link to implementation)
+<tr><td>Awk<td>15<td><a href="http://pacman.blog.br/wiki/index.php?title=Um_Corretor_Ortogr%C3%A1fico_em_GAWK">Tiago "PacMan" Peczenyj</a>
+<tr><td>Awk<td>28<td><a href="http://feedback.exalead.com/feedbacks/191466-spell-checking">Gregory Grefenstette</a>
+<tr><td>C<td>184<td><a href="http://blog.marcelotoledo.org/2007/08/10/how-to-write-a-spelling-corrector/">Marcelo Toledo</a>
+<tr><td>C++<td>98<td><a href="http://scarvenger.wordpress.com/2007/12/11/how-to-write-a-spelling-corrector/">Felipe Farinon</a>
+<tr><td>C#<td>43<td><a href="https://github.com/lorenzo-stoakes/spell-correct">Lorenzo Stoakes</a>
+<tr><td>C#<td>69<td><a href="http://frederictorres.blogspot.com/2011/04/how-to-write-spelling-corrector-from.html">Frederic Torres</a>
+<tr><td>C#<td>160<td><a href="http://www.anotherchris.net/csharp/how-to-write-a-spelling-corrector-in-csharp/">Chris Small</a>
+<tr><td>C#<td>---<td><a href="https://github.com/joaocarvalhoopen/USB_SpellChecker_GUI_in_C_Sharp/blob/master/SpellChecker_GUI/SpellChecker_GUI/TweakedPeterNorvigSpellChecker.cs">João Nuno Carvalho</a>
+<tr><td>Clojure<td>18<td><a href="http://en.wikibooks.org/wiki/Clojure_Programming/Examples#Norvig.27s_Spelling_Corrector">Rich Hickey</a>
+<tr><td>Coffeescript<td>21<td><a href="https://metaphysicaldeveloper.wordpress.com/2011/03/31/354/">Daniel Ribeiro</a>
+<tr><td>D<td>23<td><a href="http://leonardo-m.livejournal.com/59589.html">Leonardo M</a>
+<tr><td>Erlang<td>87<td><a href="http://www.pixzone.com/blog/223/spell-corrector-aka-google-suggest-in-erlang-first-part/">Federico Feroldi</a>
+<tr><td>F#<td>16<td><a href="http://www.jelovic.com/weblog/?p=201">Dejan Jelovic</a>
+<tr><td>F#<td>34<td><a href="http://cs.hubfs.net/forums/thread/3085.aspx">Sebastian G</a>
+<tr><td>Go<td>57<td><a href="http://cxwangyi.wordpress.com/2012/02/15/peter-norvigs-spelling-corrector-in-go/">Yi Wang</a>
+<tr><td>Groovy<td>22<td><a href="http://raelcunha.com/spell-correct.php#groovy">Rael Cunha</a>
+<tr><td>Haskell<td>24<td><a href="http://pithekos.net/brainwave/">Grzegorz</a>
+<tr><td>Java 8<td>23<td><a href="https://github.com/unrelatedlabs/SpellingCorrector-Java8">Peter Kuhar</a>
+<tr><td>Java<td>35<td><a href="http://raelcunha.com/spell-correct.php">Rael Cunha</a>
+<tr><td>Java<td>372<td><a href="http://developer.gauner.org/jspellcorrect/">Dominik Schulz</a>
+<tr><td>Javascript<td>92<td><a href="http://stoi.wordpress.com/2012/12/31/jspell/">Shine Xavier</a>
+<tr><td>Javascript<td>53<td><a href="http://astithas.blogspot.com/2009/08/spell-checking-in-javascript.html">Panagiotis Astithas</a>
+<tr><td>Lisp<td>26<td> <a href="https://github.com/mikaelj/snippets/blob/master/lisp/spellcheck/spellcheck.lisp">Mikael Jansson</a>
+<tr><td>OCaml<td>148<td><a href="http://spacifico.org/programming/norvig-spell-corrector-ocaml">Stefano Pacifico</a>
+<tr><td>Perl<td>63<td><a href="http://www.riffraff.info/2007/5/20/a-spell-corrector-in-perl6-part-3">riffraff</a>
+<tr><td>PHP<td>68<td><a href="http://www.phpclasses.org/browse/package/4859.html">Felipe Ribeiro</a>
+<tr><td>PHP<td>103<td><a href="http://soundofemotion.com/spellcorrect.txt">Joe Sanders</a>
+<tr><td>R<td>2<td><a href="http://www.sumsar.net/blog/2014/12/peter-norvigs-spell-checker-in-two-lines-of-r/">Rasmus Bååth</a>
+<tr><td>Rebol<td>133<td><a href="http://www.rebol.cz/~cyphre/spell.r">Cyphre</a>
+<tr><td>Ruby<td>34<td><a href="http://lojic.com/blog/2008/09/04/how-to-write-a-spelling-corrector-in-ruby/">Brian Adkins</a>
+<tr><td>Scala<td>20<td><a href="https://gist.github.com/pathikrit/d5b26fe1c166a97e2162">Pathikrit Bhowmick</a>
+<tr><td>Scala<td>23<td><a href="http://theyougen.blogspot.com/2009/12/peter-norvigs-spelling-corrector-in.html">Thomas Jung</a>
+<tr><td>Scheme<td>45<td><a href="http://practical-scheme.net/wiliki/wiliki.cgi?Gauche%3aSpellingCorrection&amp;l=en">Shiro</a> 
+<tr><td>Scheme<td>89<td><a href="http://scheme.dk/blog/2007/04/writing-spelling-corrector-in-plt.html">Jens Axel</a>
+<tr><td>Swift<td>108<td><a href="http://airspeedvelocity.net/2015/05/02/spelling/"> Airspeed Velocity</>
+</table>
+
+<h2>Other Natural Languages</h2>
+
+This essay has been translated into:
+
+<ul>
+<li> <a href="http://blog.youxu.info/spell-correct.html">Simplified Chinese</a>
+by Eric You XU
+<li> <a href="http://www.aoky.net/articles/peter_norvig/spell-correct.htm">Japanese</a> by Yasushi Aoki
+<li> <a href="http://theyearlyprophet.com/spell-correct.html">Korean</a> by JongMan Koo
+<li> <a href="http://gmdidro.googlepages.com/Ru_HowtoWriteaSpellingCorrector.html">Russian</a> by Petrov Alexander
+
+</ul>
+<p>
+Thanks to all the authors for creating these implementations and translations.
+<p><hr>
+<address><a href="http://norvig.com"><i>Peter Norvig</i></a></address>
+
+
+</body> </html>
+

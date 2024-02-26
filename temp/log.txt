@@ -1,0 +1,10 @@
+[
+    {
+        "type": "CouldNotDeduceFormat",
+        "verbosity": "WARNING",
+        "extensions": [
+            ""
+        ],
+        "format": "markdown"
+    }
+]

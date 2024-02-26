@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+# debugging switches
+# set -o errexit   # abort on nonzero exitstatus; same as set -e
+# set -o nounset   # abort on unbound variable; same as set -u
+set -o pipefail  # don't hide errors within pipes
+# set -o xtrace    # show commands being executed; same as set -x
+# set -o verbose   # verbose mode; same as set -v
+
+source /srv/timbos-hn-reader/functions.sh
+source /srv/timbos-hn-reader/thnr_common_functions.sh
+
+KEYWORD=$1
+
+# gnl "discarding this story" | awk '{print substr($5, 1, length($5)-1)}' | xargs -n 1 nuke
+
+if [[ $# -eq 0 ]]; then
+    echo "grl: (G)rep (N)ewest combined (L)ogfile"
+    echo "Usage: gnl <keyword>"
+    exit 1
+fi
+
+RECENT_LOGFILE=$(get-last-filename '/srv/timbos-hn-reader/logs/thnr-combined-*.log')
+
+if [[ -n "$RECENT_LOGFILE" ]]; then
+    grep --color --perl-regexp --text "${KEYWORD}" "${RECENT_LOGFILE}"
+else
+    echo "No recent logfile found matching the criteria."
+fi

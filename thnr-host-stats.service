@@ -1,0 +1,10 @@
+[Unit]
+Description=THNR host stats logging
+
+[Service]
+ExecStart=/srv/timbos-hn-reader/thnr-host-stats.sh
+Restart=always
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target

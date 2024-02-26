@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+story_id=$1
+
+show_usage() {
+    printf "Show story info via HN's firebaseio.com api.\n"
+    printf "Usage: hnapi <story_id>\n"
+}
+
+if [[ -z "${story_id}" ]]; then
+    show_usage
+    exit 1
+fi
+
+url="https://hacker-news.firebaseio.com/v0/item/${story_id}.json?print=pretty"
+
+if ! curl "${url}"; then
+    printf "Failed to reach endpoint: %s\n" "${url}" >&2
+    exit 1
+fi

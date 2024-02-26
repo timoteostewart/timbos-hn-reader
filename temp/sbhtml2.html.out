@@ -1,0 +1,2685 @@
+!doctype
+	!DOCTYPE
+		start_index=7
+		attribs: None
+		empty attribs:
+			html
+body
+	body
+		start_index=23878
+		attribs:
+			style="word-wrap: break-word;"
+		empty attribs:
+			class=
+			logged-in env-production page-responsive
+head
+	head
+		start_index=195
+		attribs: None
+		empty attribs: None
+html
+	html
+		start_index=23
+		attribs:
+			data-color-mode="auto"
+			data-light-theme="light"
+			data-dark-theme="dark"
+			data-a11y-animated-images="system"
+			data-a11y-link-underlines="true"
+		empty attribs:
+			lang=
+			en
+meta
+	meta
+		start_index=206
+		attribs: None
+		empty attribs:
+			charset=
+			utf-8
+	meta
+		start_index=16432
+		attribs:
+			content="/:user_id/:repository/blob/*name(/*path)"
+		empty attribs:
+			name=
+			route-pattern
+			content=
+			/:user_id/:repository/blob/*name(/*path)
+			data-turbo-transient
+	meta
+		start_index=16534
+		attribs:
+			content="blob"
+		empty attribs:
+			name=
+			route-controller
+			data-turbo-transient
+	meta
+		start_index=16603
+		attribs:
+			content="show"
+		empty attribs:
+			name=
+			route-action
+			data-turbo-transient
+	meta
+		start_index=16670
+		attribs:
+			content="82c569b93da5c18ed649ebd4c2c79437db4611a6a1373e805a3cb001c64130b7"
+		empty attribs:
+			name=
+			current-catalog-service-hash
+	meta
+		start_index=16792
+		attribs:
+			content="F81D:47EB:50E6E4C:711F16B:65C83675"
+			data-turbo-transient="true"
+		empty attribs:
+			name=
+			request-id
+	meta
+		start_index=16891
+		attribs:
+			content="981130d239f06b8b80772d48145ce5cbcc5526cbbdcd03e463022ab645e1745d"
+			data-turbo-transient="true"
+		empty attribs:
+			name=
+			html-safe-nonce
+	meta
+		start_index=17025
+		attribs:
+			content="eyJyZWZlcnJlciI6bnVsbCwicmVxdWVzdF9pZCI6IkY4MUQ6NDdFQjo1MEU2RTRDOjcxMUYxNkI6NjVDODM2NzUiLCJ2aXNpdG9yX2lkIjoiMzIxODQzOTg0ODEwNzI1MjkwOCIsInJlZ2lvbl9lZGdlIjoiaWFkIiwicmVnaW9uX3JlbmRlciI6ImlhZCJ9"
+			data-turbo-transient="true"
+		empty attribs:
+			name=
+			visitor-payload
+	meta
+		start_index=17287
+		attribs:
+			content="ed9b3365caf3da09395dee6ff2e7a9db96c81384ae968b09bd09bdeae12e8e58"
+			data-turbo-transient="true"
+		empty attribs:
+			name=
+			visitor-hmac
+	meta
+		start_index=17425
+		attribs:
+			content="repository:61068959"
+		empty attribs:
+			name=
+			hovercard-subject-tag
+			data-turbo-transient
+	meta
+		start_index=17516
+		attribs:
+			content="repository,source-code,file-tree,copilot"
+			data-turbo-transient="true"
+		empty attribs:
+			name=
+			github-keyboard-shortcuts
+	meta
+		start_index=17641
+		attribs:
+			value="repo_source"
+		empty attribs:
+			name=
+			selected-link
+			data-turbo-transient
+	meta
+		start_index=17777
+		attribs:
+			content="c1kuD-K2HIVF635lypcsWPoD4kilo5-jA_wBFyT4uMY"
+		empty attribs:
+			name=
+			google-site-verification
+	meta
+		start_index=17872
+		attribs:
+			content="KT5gs8h0wvaagLKAVWq8bbeNwnZZK1r1XQysX3xurLU"
+		empty attribs:
+			name=
+			google-site-verification
+	meta
+		start_index=17967
+		attribs:
+			content="ZzhVyEFwb7w3e0-uOTltm8Jsck2F5StVihD0exw2fsA"
+		empty attribs:
+			name=
+			google-site-verification
+	meta
+		start_index=18062
+		attribs:
+			content="GXs5KoUUkNCoaAZn7wPN-t01Pywp9M3sEjnt_3_ZWPc"
+		empty attribs:
+			name=
+			google-site-verification
+	meta
+		start_index=18157
+		attribs:
+			content="Apib7-x98H0j5cPqHWwSMm6dNU4GmODRoqxLiDzdx9I"
+		empty attribs:
+			name=
+			google-site-verification
+	meta
+		start_index=18251
+		attribs:
+			content="https://collector.github.com/github/collect"
+		empty attribs:
+			name=
+			octolytics-url
+	meta
+		start_index=18335
+		attribs:
+			content="18272267"
+		empty attribs:
+			name=
+			octolytics-actor-id
+	meta
+		start_index=18389
+		attribs:
+			content="timoteostewart"
+		empty attribs:
+			name=
+			octolytics-actor-login
+	meta
+		start_index=18452
+		attribs:
+			content="9a05f236baa5b041a2f5ed51fba33d5e09e99226e1797466bee5ba0ec9e47762"
+		empty attribs:
+			name=
+			octolytics-actor-hash
+	meta
+		start_index=18568
+		attribs:
+			content="/&lt;user-name&gt;/&lt;repo-name&gt;/blob/show"
+			data-turbo-transient="true"
+		empty attribs:
+			name=
+			analytics-location
+	meta
+		start_index=18700
+		attribs:
+			content="timoteostewart"
+		empty attribs:
+			name=
+			user-login
+	meta
+		start_index=18810
+		attribs:
+			content="width=device-width"
+		empty attribs:
+			name=
+			viewport
+	meta
+		start_index=18869
+		attribs:
+			content="The Design of Bitboards for use in Connect Four. Contribute to denkspuren/BitboardC4 development by creating an account on GitHub."
+		empty attribs:
+			name=
+			description
+	meta
+		start_index=19232
+		attribs:
+			content="1401488693436528"
+		empty attribs:
+			property=
+			fb:app_id
+	meta
+		start_index=19291
+		attribs:
+			content="app-id=1477376905, app-argument=https://github.com/denkspuren/BitboardC4/blob/master/BitboardDesign.md"
+			app-argument="https:"
+		empty attribs:
+			name=
+			apple-itunes-app
+	meta
+		start_index=19443
+		attribs:
+			content="https://opengraph.githubassets.com/6935ea4cb62f544f224d4f5fdcedf61559206b3d41d9bb0211c173b90b303369/denkspuren/BitboardC4"
+		empty attribs:
+			name=
+			twitter:image:src
+	meta
+		start_index=19608
+		attribs:
+			content="@github"
+		empty attribs:
+			name=
+			twitter:site
+	meta
+		start_index=19654
+		attribs:
+			content="summary_large_image"
+		empty attribs:
+			name=
+			twitter:card
+	meta
+		start_index=19712
+		attribs:
+			content="BitboardC4/BitboardDesign.md at master · denkspuren/BitboardC4"
+		empty attribs:
+			name=
+			twitter:title
+	meta
+		start_index=19814
+		attribs:
+			content="The Design of Bitboards for use in Connect Four. Contribute to denkspuren/BitboardC4 development by creating an account on GitHub."
+		empty attribs:
+			name=
+			twitter:description
+	meta
+		start_index=19997
+		attribs:
+			content="https://opengraph.githubassets.com/6935ea4cb62f544f224d4f5fdcedf61559206b3d41d9bb0211c173b90b303369/denkspuren/BitboardC4"
+		empty attribs:
+			property=
+			og:image
+	meta
+		start_index=20157
+		attribs:
+			content="The Design of Bitboards for use in Connect Four. Contribute to denkspuren/BitboardC4 development by creating an account on GitHub."
+		empty attribs:
+			property=
+			og:image:alt
+	meta
+		start_index=20330
+		attribs:
+			content="1200"
+		empty attribs:
+			property=
+			og:image:width
+	meta
+		start_index=20379
+		attribs:
+			content="600"
+		empty attribs:
+			property=
+			og:image:height
+	meta
+		start_index=20428
+		attribs:
+			content="GitHub"
+		empty attribs:
+			property=
+			og:site_name
+	meta
+		start_index=20477
+		attribs:
+			content="object"
+		empty attribs:
+			property=
+			og:type
+	meta
+		start_index=20521
+		attribs:
+			content="BitboardC4/BitboardDesign.md at master · denkspuren/BitboardC4"
+		empty attribs:
+			property=
+			og:title
+	meta
+		start_index=20622
+		attribs:
+			content="https://github.com/denkspuren/BitboardC4/blob/master/BitboardDesign.md"
+		empty attribs:
+			property=
+			og:url
+	meta
+		start_index=20729
+		attribs:
+			content="The Design of Bitboards for use in Connect Four. Contribute to denkspuren/BitboardC4 development by creating an account on GitHub."
+		empty attribs:
+			property=
+			og:description
+	meta
+		start_index=21381
+		attribs:
+			content="github.com"
+		empty attribs:
+			name=
+			hostname
+	meta
+		start_index=21433
+		attribs:
+			content="all"
+		empty attribs:
+			name=
+			keyboard-shortcuts-preference
+	meta
+		start_index=21500
+		attribs:
+			content="github.com"
+		empty attribs:
+			name=
+			expected-hostname
+	meta
+		start_index=21557
+		attribs:
+			content="6db50342052faa2c8794bc07fe70cd07455dfe7e6c5f103ca86f2d4db50e715d"
+			data-turbo-track="reload"
+		empty attribs:
+			http-equiv=
+			x-pjax-version
+	meta
+		start_index=21695
+		attribs:
+			content="5dcfbec3488c5fd5a334e287ce6a17058b7d4beb91db2d4d184e4d55bbf1d7d7"
+			data-turbo-track="reload"
+		empty attribs:
+			http-equiv=
+			x-pjax-csp-version
+	meta
+		start_index=21837
+		attribs:
+			content="0a793dcef80159dfdecaf5e38c1e60b55f78b31cd74af6664471eed50a4794b5"
+			data-turbo-track="reload"
+		empty attribs:
+			http-equiv=
+			x-pjax-css-version
+	meta
+		start_index=21979
+		attribs:
+			content="b6b8867834a93820cbb7897bcc19ca7d0de06a00c21817871b74983242080b4e"
+			data-turbo-track="reload"
+		empty attribs:
+			http-equiv=
+			x-pjax-js-version
+	meta
+		start_index=22121
+		attribs:
+			content="no-preview"
+			data-turbo-transient=""
+		empty attribs:
+			name=
+			turbo-cache-control
+	meta
+		start_index=22207
+		attribs:
+			content="no-cache"
+		empty attribs:
+			name=
+			turbo-cache-control
+			data-turbo-transient
+	meta
+		start_index=22285
+		attribs: None
+		empty attribs:
+			data-hydrostats=
+			publish
+	meta
+		start_index=22321
+		attribs:
+			content="github.com/denkspuren/BitboardC4 git https://github.com/denkspuren/BitboardC4.git"
+		empty attribs:
+			name=
+			go-import
+	meta
+		start_index=22440
+		attribs:
+			content="4160411"
+		empty attribs:
+			name=
+			octolytics-dimension-user_id
+	meta
+		start_index=22502
+		attribs:
+			content="denkspuren"
+		empty attribs:
+			name=
+			octolytics-dimension-user_login
+	meta
+		start_index=22570
+		attribs:
+			content="61068959"
+		empty attribs:
+			name=
+			octolytics-dimension-repository_id
+	meta
+		start_index=22639
+		attribs:
+			content="denkspuren/BitboardC4"
+		empty attribs:
+			name=
+			octolytics-dimension-repository_nwo
+	meta
+		start_index=22722
+		attribs:
+			content="true"
+		empty attribs:
+			name=
+			octolytics-dimension-repository_public
+	meta
+		start_index=22791
+		attribs:
+			content="false"
+		empty attribs:
+			name=
+			octolytics-dimension-repository_is_fork
+	meta
+		start_index=22862
+		attribs:
+			content="61068959"
+		empty attribs:
+			name=
+			octolytics-dimension-repository_network_root_id
+	meta
+		start_index=22944
+		attribs:
+			content="denkspuren/BitboardC4"
+		empty attribs:
+			name=
+			octolytics-dimension-repository_network_root_nwo
+	meta
+		start_index=23046
+		attribs:
+			content="logged-in env-production page-responsive"
+		empty attribs:
+			name=
+			turbo-body-classes
+	meta
+		start_index=23134
+		attribs:
+			content="https://api.github.com/_private/browser/stats"
+		empty attribs:
+			name=
+			browser-stats-url
+	meta
+		start_index=23225
+		attribs:
+			content="https://api.github.com/_private/browser/errors"
+		empty attribs:
+			name=
+			browser-errors-url
+	meta
+		start_index=23692
+		attribs:
+			content="#1e2327"
+		empty attribs:
+			name=
+			theme-color
+	meta
+		start_index=23736
+		attribs:
+			content="light dark"
+		empty attribs:
+			name=
+			color-scheme
+	meta
+		start_index=411670
+		attribs: None
+		empty attribs:
+			data-hydrostats=
+			publish
+svg
+	svg
+		start_index=26838
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-three-bars Button-visual"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=28144
+		attribs:
+			height="24"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="24"
+			data-view-component="true"
+			class="octicon octicon-mark-github"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=29133
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-x"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=30526
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-home"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=31761
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-issue-opened"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=32720
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-git-pull-request"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=33966
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-table"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=35038
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-comment-discussion"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=36476
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-codespaces"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=38004
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-telescope"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=39485
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-gift"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=40659
+		attribs:
+			width="16"
+			height="16"
+			viewBox="0 0 16 16"
+			fill="none"
+			data-view-component="true"
+			class="anim-rotate"
+		empty attribs:
+			style=
+			box-sizing: content-box; color: var(--color-icon-primary);
+	svg
+		start_index=42704
+		attribs:
+			aria-hidden="true"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="32"
+			data-view-component="true"
+			class="octicon octicon-mark-github v-align-middle color-fg-default"
+		empty attribs:
+			height=
+			32
+	svg
+		start_index=45129
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-x"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=46205
+		attribs:
+			height="12"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="12"
+			data-view-component="true"
+			class="octicon octicon-person mr-1"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=47074
+		attribs:
+			height="12"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="12"
+			data-view-component="true"
+			class="octicon octicon-repo mr-1"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=50383
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-search"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=51064
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-search"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=52483
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-command-palette"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=54936
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-search FormControl-input-leadingVisual"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=56983
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-x-circle-fill Button-visual"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=57562
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-search"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=57949
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-code"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=58489
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-file-code"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=59353
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-history"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=59873
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-repo"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=60459
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-bookmark"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=60917
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-plus-circle"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=61337
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-dot-fill"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=61584
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-trash"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=62181
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-people"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=62848
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-project"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=63496
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-pencil"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=64096
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-copilot"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=66484
+		attribs:
+			height="12"
+			viewBox="0 0 12 12"
+			version="1.1"
+			width="12"
+			data-view-component="true"
+			class="octicon octicon-alert-fill"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=68830
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-x"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=71850
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-x"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=76240
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-plus"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=76590
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-triangle-down"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=78245
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-repo"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=79490
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-repo-push"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=80896
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-codespaces"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=82387
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-code"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=83744
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-organization"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=85492
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-issue-opened Button-visual"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=86496
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-git-pull-request Button-visual"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=88369
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-inbox Button-visual"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=92432
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-plus"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=92782
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-triangle-down"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=94427
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-repo"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=95672
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-repo-push"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=97078
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-codespaces"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=98569
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-code"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=99926
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-organization"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=101502
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-x"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=102813
+		attribs:
+			width="16"
+			height="16"
+			viewBox="0 0 16 16"
+			fill="none"
+			data-view-component="true"
+			class="anim-rotate"
+		empty attribs:
+			style=
+			box-sizing: content-box; color: var(--color-icon-primary);
+	svg
+		start_index=104098
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-person"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=105039
+		attribs:
+			width="16"
+			height="16"
+			viewBox="0 0 16 16"
+			fill="none"
+			data-view-component="true"
+			class="anim-rotate"
+		empty attribs:
+			style=
+			box-sizing: content-box; color: var(--color-icon-primary);
+	svg
+		start_index=106333
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-repo"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=107532
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-project"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=108700
+		attribs:
+			width="16"
+			height="16"
+			viewBox="0 0 16 16"
+			fill="none"
+			data-view-component="true"
+			class="anim-rotate"
+		empty attribs:
+			style=
+			box-sizing: content-box; color: var(--color-icon-primary);
+	svg
+		start_index=109859
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-star"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=111133
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-heart"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=112546
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-code-square"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=113931
+		attribs:
+			width="16"
+			height="16"
+			viewBox="0 0 16 16"
+			fill="none"
+			data-view-component="true"
+			class="anim-rotate"
+		empty attribs:
+			style=
+			box-sizing: content-box; color: var(--color-icon-primary);
+	svg
+		start_index=115005
+		attribs:
+			width="16"
+			height="16"
+			viewBox="0 0 16 16"
+			fill="none"
+			data-view-component="true"
+			class="anim-rotate"
+		empty attribs:
+			style=
+			box-sizing: content-box; color: var(--color-icon-primary);
+	svg
+		start_index=116079
+		attribs:
+			width="16"
+			height="16"
+			viewBox="0 0 16 16"
+			fill="none"
+			data-view-component="true"
+			class="anim-rotate"
+		empty attribs:
+			style=
+			box-sizing: content-box; color: var(--color-icon-primary);
+	svg
+		start_index=117228
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-gear"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=120475
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-book"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=121740
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-people"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=124522
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-code UnderlineNav-octicon d-none d-sm-inline"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=125953
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-issue-opened UnderlineNav-octicon d-none d-sm-inline"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=127198
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-git-pull-request UnderlineNav-octicon d-none d-sm-inline"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=128737
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-play UnderlineNav-octicon d-none d-sm-inline"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=130053
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-table UnderlineNav-octicon d-none d-sm-inline"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=131479
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-shield UnderlineNav-octicon d-none d-sm-inline"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=133202
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-graph UnderlineNav-octicon d-none d-sm-inline"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=134671
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-kebab-horizontal Button-visual"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=136402
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-code"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=137479
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-issue-opened"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=138386
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-git-pull-request"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=139572
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-play"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=140518
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-table"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=141550
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-shield"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=142911
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-graph"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=143770
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-alert"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=145063
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-x Button-visual"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=146145
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-x"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=150729
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-search color-fg-muted"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=151200
+		attribs:
+			class="anim-rotate"
+			viewBox="0 0 16 16"
+			fill="none"
+			width="16"
+			height="16"
+		empty attribs:
+			aria-label=
+			Loading
+	svg
+		start_index=154961
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-x-circle-fill"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=164426
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-alert"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=165478
+		attribs:
+			class="octicon octicon-arrow-right color-fg-muted"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			aria-hidden="true"
+		empty attribs:
+			height=
+			16
+	svg
+		start_index=165981
+		attribs:
+			class="octicon octicon-arrow-right color-fg-default"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			aria-hidden="true"
+		empty attribs:
+			height=
+			16
+	svg
+		start_index=166483
+		attribs:
+			class="octicon octicon-codespaces color-fg-muted"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			aria-hidden="true"
+		empty attribs:
+			height=
+			16
+	svg
+		start_index=167392
+		attribs:
+			class="octicon octicon-copy color-fg-muted"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			aria-hidden="true"
+		empty attribs:
+			height=
+			16
+	svg
+		start_index=168133
+		attribs:
+			class="octicon octicon-dash color-fg-muted"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			aria-hidden="true"
+		empty attribs:
+			height=
+			16
+	svg
+		start_index=168502
+		attribs:
+			class="octicon octicon-file color-fg-muted"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			aria-hidden="true"
+		empty attribs:
+			height=
+			16
+	svg
+		start_index=169147
+		attribs:
+			class="octicon octicon-gear color-fg-muted"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			aria-hidden="true"
+		empty attribs:
+			height=
+			16
+	svg
+		start_index=171765
+		attribs:
+			class="octicon octicon-lock color-fg-muted"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			aria-hidden="true"
+		empty attribs:
+			height=
+			16
+	svg
+		start_index=172339
+		attribs:
+			class="octicon octicon-moon color-fg-muted"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			aria-hidden="true"
+		empty attribs:
+			height=
+			16
+	svg
+		start_index=172838
+		attribs:
+			class="octicon octicon-person color-fg-muted"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			aria-hidden="true"
+		empty attribs:
+			height=
+			16
+	svg
+		start_index=173346
+		attribs:
+			class="octicon octicon-pencil color-fg-muted"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			aria-hidden="true"
+		empty attribs:
+			height=
+			16
+	svg
+		start_index=174027
+		attribs:
+			class="octicon octicon-issue-opened open"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			aria-hidden="true"
+		empty attribs:
+			height=
+			16
+	svg
+		start_index=174478
+		attribs:
+			class="octicon octicon-git-pull-request-draft color-fg-muted"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			aria-hidden="true"
+		empty attribs:
+			height=
+			16
+	svg
+		start_index=175180
+		attribs:
+			class="octicon octicon-search color-fg-muted"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			aria-hidden="true"
+		empty attribs:
+			height=
+			16
+	svg
+		start_index=175652
+		attribs:
+			class="octicon octicon-sun color-fg-muted"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			aria-hidden="true"
+		empty attribs:
+			height=
+			16
+	svg
+		start_index=176760
+		attribs:
+			class="octicon octicon-sync color-fg-muted"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			aria-hidden="true"
+		empty attribs:
+			height=
+			16
+	svg
+		start_index=177473
+		attribs:
+			class="octicon octicon-trash color-fg-muted"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			aria-hidden="true"
+		empty attribs:
+			height=
+			16
+	svg
+		start_index=178155
+		attribs:
+			class="octicon octicon-key color-fg-muted"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			aria-hidden="true"
+		empty attribs:
+			height=
+			16
+	svg
+		start_index=178995
+		attribs:
+			class="octicon octicon-comment-discussion color-fg-muted"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			aria-hidden="true"
+		empty attribs:
+			height=
+			16
+	svg
+		start_index=179910
+		attribs:
+			class="octicon octicon-bell color-fg-muted"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			aria-hidden="true"
+		empty attribs:
+			height=
+			16
+	svg
+		start_index=180741
+		attribs:
+			class="octicon octicon-bell-slash color-fg-muted"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			aria-hidden="true"
+		empty attribs:
+			height=
+			16
+	svg
+		start_index=181586
+		attribs:
+			class="octicon octicon-paintbrush color-fg-muted"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			aria-hidden="true"
+		empty attribs:
+			height=
+			16
+	svg
+		start_index=200793
+		attribs:
+			viewBox="0 0 32 32"
+			width="18"
+			height="18"
+			aria-hidden="true"
+		empty attribs:
+			class=
+			Toast--spinner
+	svg
+		start_index=201297
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-stop"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=202011
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-alert"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=202643
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-check"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=203119
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-info"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=412789
+		attribs:
+			focusable="false"
+			role="img"
+			class="octicon octicon-arrow-left"
+			viewBox="0 0 16 16"
+			width="16"
+			height="16"
+			fill="currentColor"
+			style="display:inline-block;user-select:none;vertical-align:text-bottom;overflow:visible"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=413719
+		attribs:
+			focusable="false"
+			role="img"
+			class="octicon octicon-sidebar-expand"
+			viewBox="0 0 16 16"
+			width="16"
+			height="16"
+			fill="currentColor"
+			style="display:inline-block;user-select:none;vertical-align:text-bottom;overflow:visible"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=415043
+		attribs:
+			focusable="false"
+			role="img"
+			class="octicon octicon-git-branch"
+			viewBox="0 0 16 16"
+			width="16"
+			height="16"
+			fill="currentColor"
+			style="display:inline-block;user-select:none;vertical-align:text-bottom;overflow:visible"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=415876
+		attribs:
+			focusable="false"
+			role="img"
+			class="octicon octicon-triangle-down"
+			viewBox="0 0 16 16"
+			width="16"
+			height="16"
+			fill="currentColor"
+			style="display:inline-block;user-select:none;vertical-align:text-bottom;overflow:visible"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=416693
+		attribs:
+			focusable="false"
+			role="img"
+			class="octicon octicon-plus"
+			viewBox="0 0 16 16"
+			width="16"
+			height="16"
+			fill="currentColor"
+			style="display:inline-block;user-select:none;vertical-align:text-bottom;overflow:visible"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=417255
+		attribs:
+			focusable="false"
+			role="img"
+			class="octicon octicon-search"
+			viewBox="0 0 16 16"
+			width="16"
+			height="16"
+			fill="currentColor"
+			style="display:inline-block;user-select:none;vertical-align:text-bottom;overflow:visible"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=418135
+		attribs:
+			focusable="false"
+			role="img"
+			class="octicon octicon-search"
+			viewBox="0 0 16 16"
+			width="16"
+			height="16"
+			fill="currentColor"
+			style="display:inline-block;user-select:none;vertical-align:text-bottom;overflow:visible"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=419933
+		attribs:
+			focusable="false"
+			role="img"
+			class="octicon octicon-file"
+			viewBox="0 0 16 16"
+			width="16"
+			height="16"
+			fill="currentColor"
+			style="display:inline-block;user-select:none;vertical-align:text-bottom;overflow:visible"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=421264
+		attribs:
+			focusable="false"
+			role="img"
+			class="octicon octicon-file"
+			viewBox="0 0 16 16"
+			width="16"
+			height="16"
+			fill="currentColor"
+			style="display:inline-block;user-select:none;vertical-align:text-bottom;overflow:visible"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=422587
+		attribs:
+			focusable="false"
+			role="img"
+			class="octicon octicon-file"
+			viewBox="0 0 16 16"
+			width="16"
+			height="16"
+			fill="currentColor"
+			style="display:inline-block;user-select:none;vertical-align:text-bottom;overflow:visible"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=424378
+		attribs:
+			focusable="false"
+			role="img"
+			class="octicon octicon-arrow-left"
+			viewBox="0 0 16 16"
+			width="16"
+			height="16"
+			fill="currentColor"
+			style="display:inline-block;user-select:none;vertical-align:text-bottom;overflow:visible"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=425308
+		attribs:
+			focusable="false"
+			role="img"
+			class="octicon octicon-sidebar-expand"
+			viewBox="0 0 16 16"
+			width="16"
+			height="16"
+			fill="currentColor"
+			style="display:inline-block;user-select:none;vertical-align:text-bottom;overflow:visible"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=426522
+		attribs:
+			focusable="false"
+			role="img"
+			class="octicon octicon-git-branch"
+			viewBox="0 0 16 16"
+			width="16"
+			height="16"
+			fill="currentColor"
+			style="display:inline-block;user-select:none;vertical-align:text-bottom;overflow:visible"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=427355
+		attribs:
+			focusable="false"
+			role="img"
+			class="octicon octicon-triangle-down"
+			viewBox="0 0 16 16"
+			width="16"
+			height="16"
+			fill="currentColor"
+			style="display:inline-block;user-select:none;vertical-align:text-bottom;overflow:visible"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=428445
+		attribs:
+			focusable="false"
+			role="img"
+			class="octicon octicon-kebab-horizontal"
+			viewBox="0 0 16 16"
+			width="16"
+			height="16"
+			fill="currentColor"
+			style="display:inline-block;user-select:none;vertical-align:text-bottom;overflow:visible"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=429959
+		attribs:
+			focusable="false"
+			role="img"
+			class="octicon octicon-copy"
+			viewBox="0 0 16 16"
+			width="16"
+			height="16"
+			fill="currentColor"
+			style="display:inline-block;user-select:none;vertical-align:text-bottom;overflow:visible"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=431939
+		attribs:
+			focusable="false"
+			role="img"
+			class="octicon octicon-copy"
+			viewBox="0 0 16 16"
+			width="16"
+			height="16"
+			fill="currentColor"
+			style="display:inline-block;user-select:none;vertical-align:text-bottom;overflow:visible"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=433337
+		attribs:
+			focusable="false"
+			role="img"
+			class="octicon octicon-kebab-horizontal"
+			viewBox="0 0 16 16"
+			width="16"
+			height="16"
+			fill="currentColor"
+			style="display:inline-block;user-select:none;vertical-align:text-bottom;overflow:visible"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=434923
+		attribs:
+			focusable="false"
+			role="img"
+			class="octicon octicon-history"
+			viewBox="0 0 16 16"
+			width="16"
+			height="16"
+			fill="currentColor"
+			style="display:inline-block;user-select:none;vertical-align:text-bottom;overflow:visible"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=436031
+		attribs:
+			focusable="false"
+			role="img"
+			class="octicon octicon-history"
+			viewBox="0 0 16 16"
+			width="16"
+			height="16"
+			fill="currentColor"
+			style="display:inline-block;user-select:none;vertical-align:text-bottom;overflow:visible"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=438432
+		attribs:
+			focusable="false"
+			role="img"
+			class="octicon octicon-arrow-up"
+			viewBox="0 0 16 16"
+			width="16"
+			height="16"
+			fill="currentColor"
+			style="display:inline-block;user-select:none;vertical-align:text-bottom;overflow:visible"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=441301
+		attribs:
+			focusable="false"
+			role="img"
+			class="octicon octicon-copy"
+			viewBox="0 0 16 16"
+			width="16"
+			height="16"
+			fill="currentColor"
+			style="display:inline-block;user-select:none;vertical-align:text-bottom;overflow:visible"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=442335
+		attribs:
+			focusable="false"
+			role="img"
+			class="octicon octicon-download"
+			viewBox="0 0 16 16"
+			width="16"
+			height="16"
+			fill="currentColor"
+			style="display:inline-block;user-select:none;vertical-align:text-bottom;overflow:visible"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=444153
+		attribs:
+			focusable="false"
+			role="img"
+			class="octicon octicon-pencil"
+			viewBox="0 0 16 16"
+			width="16"
+			height="16"
+			fill="currentColor"
+			style="display:inline-block;user-select:none;vertical-align:text-bottom;overflow:visible"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=445066
+		attribs:
+			focusable="false"
+			role="img"
+			class="octicon octicon-triangle-down"
+			viewBox="0 0 16 16"
+			width="16"
+			height="16"
+			fill="currentColor"
+			style="display:inline-block;user-select:none;vertical-align:text-bottom;overflow:visible"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=445755
+		attribs:
+			focusable="false"
+			role="img"
+			class="octicon octicon-list-unordered"
+			viewBox="0 0 16 16"
+			width="16"
+			height="16"
+			fill="currentColor"
+			style="display:inline-block;user-select:none;vertical-align:text-bottom;overflow:visible"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=446685
+		attribs:
+			focusable="false"
+			role="img"
+			class="octicon octicon-kebab-horizontal"
+			viewBox="0 0 16 16"
+			width="16"
+			height="16"
+			fill="currentColor"
+			style="display:inline-block;user-select:none;vertical-align:text-bottom;overflow:visible"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=447612
+		attribs:
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			height="16"
+			aria-hidden="true"
+		empty attribs:
+			class=
+			octicon octicon-link
+	svg
+		start_index=449851
+		attribs:
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			height="16"
+			aria-hidden="true"
+		empty attribs:
+			class=
+			octicon octicon-link
+	svg
+		start_index=450844
+		attribs:
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			height="16"
+			aria-hidden="true"
+		empty attribs:
+			class=
+			octicon octicon-link
+	svg
+		start_index=457000
+		attribs:
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			height="16"
+			aria-hidden="true"
+		empty attribs:
+			class=
+			octicon octicon-link
+	svg
+		start_index=457980
+		attribs:
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			height="16"
+			aria-hidden="true"
+		empty attribs:
+			class=
+			octicon octicon-link
+	svg
+		start_index=459546
+		attribs:
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			height="16"
+			aria-hidden="true"
+		empty attribs:
+			class=
+			octicon octicon-link
+	svg
+		start_index=462235
+		attribs:
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			height="16"
+			aria-hidden="true"
+		empty attribs:
+			class=
+			octicon octicon-link
+	svg
+		start_index=463909
+		attribs:
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			height="16"
+			aria-hidden="true"
+		empty attribs:
+			class=
+			octicon octicon-link
+	svg
+		start_index=466433
+		attribs:
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			height="16"
+			aria-hidden="true"
+		empty attribs:
+			class=
+			octicon octicon-link
+	svg
+		start_index=468413
+		attribs:
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			height="16"
+			aria-hidden="true"
+		empty attribs:
+			class=
+			octicon octicon-link
+	svg
+		start_index=469694
+		attribs:
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			height="16"
+			aria-hidden="true"
+		empty attribs:
+			class=
+			octicon octicon-link
+	svg
+		start_index=472449
+		attribs:
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			height="16"
+			aria-hidden="true"
+		empty attribs:
+			class=
+			octicon octicon-link
+	svg
+		start_index=474672
+		attribs:
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			height="16"
+			aria-hidden="true"
+		empty attribs:
+			class=
+			octicon octicon-link
+	svg
+		start_index=483050
+		attribs:
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			height="16"
+			aria-hidden="true"
+		empty attribs:
+			class=
+			octicon octicon-link
+	svg
+		start_index=486850
+		attribs:
+			focusable="false"
+			role="img"
+			class="octicon octicon-x"
+			viewBox="0 0 16 16"
+			width="16"
+			height="16"
+			fill="currentColor"
+			style="display:inline-block;user-select:none;vertical-align:text-bottom;overflow:visible"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=487726
+		attribs:
+			focusable="false"
+			role="img"
+			class="Octicon-sc-9kayk9-0"
+			viewBox="0 0 16 16"
+			width="16"
+			height="16"
+			fill="currentColor"
+			style="display:inline-block;user-select:none;vertical-align:text-bottom;overflow:visible"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=489394
+		attribs:
+			focusable="false"
+			role="img"
+			class="octicon octicon-chevron-down"
+			viewBox="0 0 12 12"
+			width="12"
+			height="12"
+			fill="currentColor"
+			style="display:inline-block;user-select:none;vertical-align:text-bottom;overflow:visible"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=490881
+		attribs:
+			focusable="false"
+			role="img"
+			class="octicon octicon-chevron-down"
+			viewBox="0 0 12 12"
+			width="12"
+			height="12"
+			fill="currentColor"
+			style="display:inline-block;user-select:none;vertical-align:text-bottom;overflow:visible"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=492447
+		attribs:
+			focusable="false"
+			role="img"
+			class="octicon octicon-chevron-down"
+			viewBox="0 0 12 12"
+			width="12"
+			height="12"
+			fill="currentColor"
+			style="display:inline-block;user-select:none;vertical-align:text-bottom;overflow:visible"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=494042
+		attribs:
+			focusable="false"
+			role="img"
+			class="octicon octicon-chevron-down"
+			viewBox="0 0 12 12"
+			width="12"
+			height="12"
+			fill="currentColor"
+			style="display:inline-block;user-select:none;vertical-align:text-bottom;overflow:visible"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=495654
+		attribs:
+			focusable="false"
+			role="img"
+			class="octicon octicon-chevron-down"
+			viewBox="0 0 12 12"
+			width="12"
+			height="12"
+			fill="currentColor"
+			style="display:inline-block;user-select:none;vertical-align:text-bottom;overflow:visible"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=497310
+		attribs:
+			focusable="false"
+			role="img"
+			class="octicon octicon-chevron-down"
+			viewBox="0 0 12 12"
+			width="12"
+			height="12"
+			fill="currentColor"
+			style="display:inline-block;user-select:none;vertical-align:text-bottom;overflow:visible"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=499043
+		attribs:
+			focusable="false"
+			role="img"
+			class="octicon octicon-chevron-down"
+			viewBox="0 0 12 12"
+			width="12"
+			height="12"
+			fill="currentColor"
+			style="display:inline-block;user-select:none;vertical-align:text-bottom;overflow:visible"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=500862
+		attribs:
+			focusable="false"
+			role="img"
+			class="octicon octicon-chevron-right"
+			viewBox="0 0 12 12"
+			width="12"
+			height="12"
+			fill="currentColor"
+			style="display:inline-block;user-select:none;vertical-align:text-bottom;overflow:visible"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=502796
+		attribs:
+			height="24"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="24"
+			data-view-component="true"
+			class="octicon octicon-mark-github"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=506746
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-alert"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=507319
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-x"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=508303
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-x"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=509432
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-copy js-clipboard-copy-icon m-2"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=510079
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-check js-clipboard-check-icon color-fg-success d-none m-2"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=510838
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-copy js-clipboard-copy-icon"
+		empty attribs:
+			aria-hidden=
+			true
+	svg
+		start_index=511481
+		attribs:
+			height="16"
+			viewBox="0 0 16 16"
+			version="1.1"
+			width="16"
+			data-view-component="true"
+			class="octicon octicon-check js-clipboard-check-icon color-fg-success d-none"
+		empty attribs:
+			aria-hidden=
+			true
+[('text/html', 4), ('text/html5', 2), ('image/svg+xml', 1), ('text/plain', 0), ('application/xml', 0), ('application/json', 0), ('text/markdown', 0), ('application/postscript', 0), ('image/x-eps', 0), ('application/pdf', 0), ('text/x-shellscript', 0), ('application/xhtml+xml', -inf)]
+text/html

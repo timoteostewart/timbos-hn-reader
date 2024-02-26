@@ -1,0 +1,93 @@
+#!/usr/bin/env bash
+
+local_or_url=$1
+file_path_or_url=$2
+
+show_usage() {
+    printf "Show magic/mimetype info for local file or remote resource.\n"
+    printf "Usage: getmt local <file>\n"
+    printf "Usage: getmt url <url>\n"
+}
+
+print_mime_details_for_local_file() {
+    local local_file=$1
+    local addl_json_slug=$2
+
+    file_info=$(file --brief "${local_file}")
+    mimetype_and_encoding=$(file --brief --mime-type --mime-encoding "${local_file}")
+    IFS=';' read -r mimetype mime_encoding <<< "${mimetype_and_encoding}"
+
+    mime_encoding=${mime_encoding# }
+
+    printf "{\n    %s\"file_info\": \"%s\",\n    \"mimetype\": \"%s\",\n    \"mime_encoding\": \"%s\"\n}\n" "${addl_json_slug}" "${file_info}" "${mimetype}" "${mime_encoding}"
+}
+
+if [[ "${local_or_url}" == "local" ]]; then
+    if [[ -z "${file_path_or_url}" ]]; then
+        printf "Local file argument is missing.\n" >&2
+        show_usage
+        exit 1
+    fi
+
+    local_file="${file_path_or_url}"
+
+    if [[ ! -f "${local_file}" ]]; then
+        printf "File %s was not found.\n" "${local_file}" >&2
+        show_usage
+        exit 1
+    fi
+
+    absolute_path=$(realpath ${local_file})
+    addl_json_slug="\"file_path\": \"${absolute_path}\",
+    "
+
+elif [[ "${local_or_url}" == "url" ]]; then
+    if [[ -z "${file_path_or_url}" ]]; then
+        printf "URL argument missing.\n" >&2
+        show_usage
+        exit 1
+    fi
+
+    url="${file_path_or_url}"
+
+    if ! [[ "${url}" =~ ^https?:// ]]; then
+        printf "URL must begin with http:// or https://.\n" >&2
+        show_usage
+        exit 1
+    fi
+
+    if ! temp_dir=$(mktemp -d /tmp/thnr.XXXXXXXXXXXX); then
+        printf "Failed to create temp directory.\n" >&2
+        exit 1
+    fi
+
+    # trap 'rm -rf "${temp_dir}"' EXIT
+
+    local_file="${temp_dir}/a"
+
+    if ! wget --output-document="${local_file}" --quiet "${url}"; then
+        printf "Failed to download file from URL: %s\n" "${url}" >&2
+        exit 1
+    fi
+
+    if [[ ! -f "${local_file}" ]]; then
+        printf "Downloaded file %s was not found.\n" "${local_file}" >&2
+        show_usage
+        exit 1
+    fi
+
+    absolute_path=$(realpath ${local_file})
+
+    addl_json_slug="\"url\": \"${url}\",
+    \"local_file_path\": \"${absolute_path}\",
+    "
+
+
+else
+    printf "Invalid arguments.\n" >&2
+    show_usage
+    exit 1
+fi
+
+print_mime_details_for_local_file "${local_file}" "${addl_json_slug}"
+exit 0

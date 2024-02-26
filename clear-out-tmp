@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+# Target directory
+TARGET_DIR="/tmp"
+USERNAME="tim"
+
+# Find and delete files and directories older than 4 hours
+find "${TARGET_DIR}" -mindepth 1 -user "${USERNAME}" -mmin +240 -exec rm -rf {} +

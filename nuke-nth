@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+
+if [[ -z "$1" ]]; then
+    echo "nuke-nth: Deletes every Nth file in the cached stories directory."
+    echo "Usage: nuke-nth <N>"
+    exit 1
+fi
+
+CACHED_STORIES_DIR=/srv/timbos-hn-reader/cached_stories/
+NTH=$1
+COUNTER=0
+
+if [[ ! -d "${CACHED_STORIES_DIR}" ]]; then
+    echo "Error: Cached stories directory does not exist."
+    exit 1
+fi
+
+delete_file() {
+    local file=$1
+    local file_display_name=$(basename "${file}")
+    if [[ -f "${file}" ]]; then
+        if rm --force "${file}"; then
+            echo "${file_display_name} deleted."
+        else
+            echo "${file_display_name} couldn't be deleted for some reason."
+            exit 1
+        fi
+    else
+        echo "${file_display_name} doesn't exist."
+    fi
+}
+
+find "${CACHED_STORIES_DIR}" -maxdepth 1 -type f -name "*.pickle" | sort | while read FILE; do
+    if (( ${COUNTER} == 0 )); then
+        delete_file "${FILE}"
+    fi
+
+    (( COUNTER += 1 ))
+    (( COUNTER %= NTH ))
+done

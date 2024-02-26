@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+KEYWORD=$1
+
+if [[ $# -eq 0 ]]; then
+    echo "grl: (G)rep (O)ld (L)ogfiles"
+    echo "Usage: gol <keyword>"
+    exit 1
+fi
+
+OLD_LOGS_DIR="/mnt/synology/logs/thnr2.home.arpa/"
+
+for file in "${OLD_LOGS_DIR}thnr-thnr-"*.log; do
+    grep --color --perl-regexp --text "${KEYWORD}" "${file}"
+done

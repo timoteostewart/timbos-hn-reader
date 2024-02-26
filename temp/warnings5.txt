@@ -1,0 +1,425 @@
+
+2023-01-04 09:32:50 CST [new]     WARNING  id 34246458: error getting channel details for YouTube URL https://www.youtube.com/channel/UCBvWPPieVSwyvfXvspW2vAg/community: 'items'
+2023-01-05 14:48:26 CST [new]     WARNING  id 34265972: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/NZode4AZy6c
+2023-01-09 07:41:24 CST [new]     WARNING  id 34310146: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/VwofJ3wkzn8
+2023-01-12 07:39:17 CST [top]     WARNING  id 34321135: get request failed for firebaseio.com/v0/item/34321135.json: 503 Server Error: Service Unavailable for url: https://hacker-news.firebaseio.com/v0/item/34321135.json
+2023-01-12 07:39:17 CST [top]     WARNING  id 34329988: get request failed for firebaseio.com/v0/item/34329988.json: 503 Server Error: Service Unavailable for url: https://hacker-news.firebaseio.com/v0/item/34329988.json
+2023-01-12 07:39:17 CST [top]     WARNING  id 34344634: get request failed for firebaseio.com/v0/item/34344634.json: 503 Server Error: Service Unavailable for url: https://hacker-news.firebaseio.com/v0/item/34344634.json
+2023-01-12 07:39:17 CST [top]     WARNING  id 34338777: get request failed for firebaseio.com/v0/item/34338777.json: 503 Server Error: Service Unavailable for url: https://hacker-news.firebaseio.com/v0/item/34338777.json
+2023-01-12 07:39:17 CST [top]     WARNING  id 34343113: get request failed for firebaseio.com/v0/item/34343113.json: 503 Server Error: Service Unavailable for url: https://hacker-news.firebaseio.com/v0/item/34343113.json
+2023-01-12 07:39:17 CST [top]     WARNING  id 34343928: get request failed for firebaseio.com/v0/item/34343928.json: 503 Server Error: Service Unavailable for url: https://hacker-news.firebaseio.com/v0/item/34343928.json
+2023-01-12 07:39:17 CST [top]     WARNING  id 34344902: get request failed for firebaseio.com/v0/item/34344902.json: 503 Server Error: Service Unavailable for url: https://hacker-news.firebaseio.com/v0/item/34344902.json
+2023-01-12 07:41:17 CST [new]     WARNING  id 34352361: get request failed for firebaseio.com/v0/item/34352361.json: 503 Server Error: Service Unavailable for url: https://hacker-news.firebaseio.com/v0/item/34352361.json
+2023-01-12 07:41:25 CST [new]     WARNING  id 34347588: get request failed for firebaseio.com/v0/item/34347588.json: 503 Server Error: Service Unavailable for url: https://hacker-news.firebaseio.com/v0/item/34347588.json
+2023-01-15 19:22:17 CST [new]     WARNING  id 34395618: failed to understand format or structure of YouTube URL: https://www.youtube.com/@axialxyz
+2023-01-19 02:56:19 CST [new]     INFO     after subprocess: CompletedProcess(args=['/usr/local/bin/gs', '-dBATCH', '-dNOPAUSE', '-dQUIET', '-sDEVICE=png16m', '-r600', '-sOutputFile=/tmp/pdf2png-34433869-1674118569.png', '/tmp/orig-34433869'], returncode=0, stdout=b'', stderr=b'WARNING: Image has unsupported ColorSpace (not a name)\n')
+2023-01-19 03:20:59 CST [new]     INFO     after subprocess: CompletedProcess(args=['/usr/local/bin/gs', '-dBATCH', '-dNOPAUSE', '-dQUIET', '-sDEVICE=png16m', '-r600', '-sOutputFile=/tmp/pdf2png-34433869-1674120046.png', '/tmp/orig-34433869'], returncode=0, stdout=b'', stderr=b'WARNING: Image has unsupported ColorSpace (not a name)\n')
+2023-01-19 04:14:21 CST [new]     INFO     after subprocess: CompletedProcess(args=['/usr/local/bin/gs', '-dBATCH', '-dNOPAUSE', '-dQUIET', '-sDEVICE=png16m', '-r600', '-sOutputFile=/tmp/pdf2png-34433869-1674123252.png', '/tmp/orig-34433869'], returncode=0, stdout=b'', stderr=b'WARNING: Image has unsupported ColorSpace (not a name)\n')
+2023-01-19 05:16:19 CST [new]     INFO     after subprocess: CompletedProcess(args=['/usr/local/bin/gs', '-dBATCH', '-dNOPAUSE', '-dQUIET', '-sDEVICE=png16m', '-r600', '-sOutputFile=/tmp/pdf2png-34433869-1674126961.png', '/tmp/orig-34433869'], returncode=0, stdout=b'', stderr=b'WARNING: Image has unsupported ColorSpace (not a name)\n')
+2023-01-19 08:39:04 CST [new]     INFO     after subprocess: CompletedProcess(args=['/usr/local/bin/gs', '-dBATCH', '-dNOPAUSE', '-dQUIET', '-sDEVICE=png16m', '-r600', '-sOutputFile=/tmp/pdf2png-34433869-1674139136.png', '/tmp/orig-34433869'], returncode=0, stdout=b'', stderr=b'WARNING: Image has unsupported ColorSpace (not a name)\n')
+2023-01-23 17:38:25 CST [new]     WARNING  id 34496467: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/TDA4HbuEcxM
+2023-01-26 13:37:19 CST [new]     WARNING  id 34537420: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/v4vGGHeYtbg
+2023-01-26 17:30:15 CST [top]     WARNING  id 34540189: failed to understand format or structure of YouTube URL: https://www.youtube.com/@adibhanna
+2023-01-27 05:13:36 CST [new]     WARNING  id 34544791: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/_yDi1YgyVN4
+2023-01-27 08:51:46 CST [new]     WARNING  id 34546478: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/pwOvCtfYxas
+2023-01-28 12:21:30 CST [new]     WARNING  id 34559746: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/JZ_5-O_rxf4
+2023-01-29 14:15:32 CST [new]     WARNING  id 34572113: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/i_51uZ0VMqA
+2023-01-29 17:44:56 CST [new]     WARNING  id 34573938: failed to understand format or structure of YouTube URL: https://www.youtube.com/@swiftreality
+2023-01-31 11:41:21 CST [new]     WARNING  id 34598043: failed to understand format or structure of YouTube URL: https://www.youtube.com/@NumentaTheory
+2023-02-03 09:35:06 CST [new]     WARNING  id 34642220: get request failed for firebaseio.com/v0/item/34642220.json: 502 Server Error: Bad Gateway for url: https://hacker-news.firebaseio.com/v0/item/34642220.json
+2023-02-04 11:33:31 CST [new]     WARNING  Multiple definitions in dictionary at byte 0x3ce008 for key /ViewerPreferences
+2023-02-05 16:26:59 CST [new]     WARNING  id 34670080: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/tuoexQccCk8
+2023-02-05 21:00:22 CST [new]     WARNING  Object 3 0 not defined.
+2023-02-08 20:07:44 CST [active]  WARNING  id 34716802: failed to understand format or structure of YouTube URL: https://www.youtube.com/clip/Ugkx_kdE2NKVjHJI4a1IP7HA8OmP5I_3xH2A
+2023-02-09 07:26:55 CST [new]     WARNING  id 34718007: failed to understand format or structure of YouTube URL: https://www.youtube.com/
+2023-02-10 03:43:47 CST [new]     WARNING  id 34737550: failed to understand format or structure of YouTube URL: https://www.youtube.com/clip/UgkxuwLMaVgPKsVD7UGFozjnrSwDwVfeCPyi
+2023-02-11 21:40:20 CST [new]     WARNING  id 34759449: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/gMtqyANQyFY
+2023-02-13 01:32:33 CST [new]     WARNING  id 34771048: failed to understand format or structure of YouTube URL: https://www.youtube.com/@walidhossaini
+2023-02-13 04:52:10 CST [new]     WARNING  id 34772029: failed to understand format or structure of YouTube URL: https://www.youtube.com/post/UgkxZUornLhv6O1q9jnxzH5NQXSd61u5D7a9
+2023-02-13 15:37:57 CST [new]     WARNING  incorrect startxref pointer(1)
+2023-02-13 15:40:04 CST [new]     WARNING  Alternative language extractor failed to extract a known language
+2023-02-15 02:09:30 CST [new]     WARNING  id 34801139: failed to understand format or structure of YouTube URL: https://www.youtube.com/@Mosfilm_eng
+2023-02-15 21:01:48 CST [new]     WARNING  id 34812178: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/hWgD58tdGNM
+2023-02-18 16:13:03 CST [new]     WARNING  id 34851519: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/kNu_VGf_lVs
+2023-02-20 19:53:30 CST [new]     WARNING  id 34875455: failed to understand format or structure of YouTube URL: https://www.youtube.com/
+2023-02-22 02:13:37 CST [new]     WARNING  id 34892530: failed to understand format or structure of YouTube URL: https://www.youtube.com/@Intermation
+2023-02-22 23:34:20 CST [new]     WARNING  id 34907079: failed to understand format or structure of YouTube URL: https://www.youtube.com/null
+2023-02-23 18:29:03 CST [new]     WARNING  id 34917691: failed to understand format or structure of YouTube URL: https://www.youtube.com/null
+2023-02-26 11:32:36 CST [new]     WARNING  id 34947370: failed to understand format or structure of YouTube URL: https://www.youtube.com/watch?app=desktop&v=GVT3WUa-48Y
+2023-02-28 17:08:51 CST [new]     WARNING  id 34976201: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/igjg9wDEMxk
+2023-03-03 16:56:11 CST [new]     WARNING  id 35015742: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/vPl7_lT6rKM
+2023-03-04 16:46:43 CST [new]     WARNING  id 35025174: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/gxNUJx53ZnE
+2023-03-05 17:22:15 CST [new]     WARNING  id 35035189: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/GzgEMM-yBdI
+2023-03-09 22:38:37 CST [new]     WARNING  Overwriting cache for 0 12277
+2023-03-10 09:00:28 CST [new]     WARNING  id 35094550: failed to understand format or structure of YouTube URL: https://www.youtube.com/@dr.michaelsugrue
+2023-03-12 06:22:13 CDT [new]     WARNING  incorrect startxref pointer(1)
+2023-03-13 11:35:34 CDT [new]     WARNING  id 35137948: failed to understand format or structure of YouTube URL: https://www.youtube.com/@TheOtherSideNDEYT
+2023-03-14 12:40:19 CDT [new]     WARNING  Multiple definitions in dictionary at byte 0x44a for key /ToUnicode
+2023-03-14 18:30:32 CDT [new]     WARNING  id 35161033: failed to understand format or structure of YouTube URL: https://www.youtube.com/@cgtimemachine1257/videos
+2023-03-15 23:34:13 CDT [new]     WARNING  id 35178157: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/mtOKbmWngnw
+2023-03-16 07:53:18 CDT [new]     WARNING  id 35181164: failed to understand format or structure of YouTube URL: https://www.youtube.com/@Spotcon_2023
+2023-03-16 12:22:59 CDT [new]     WARNING  Multiple definitions in dictionary at byte 0x1144 for key /Length
+2023-03-21 10:41:35 CDT [new]     WARNING  incorrect startxref pointer(3)
+2023-03-22 01:11:34 CDT [new]     WARNING  id 35257383: failed to understand format or structure of YouTube URL: https://www.youtube.com/@axialxyz/featured
+2023-03-23 05:41:37 CDT [top]     WARNING  id 35272584: failed to understand format or structure of YouTube URL: https://www.youtube.com/linustechtips
+2023-03-23 05:56:52 CDT [top]     WARNING  id 35272684: failed to understand format or structure of YouTube URL: https://www.youtube.com/@temporaryhandle
+2023-03-23 06:28:00 CDT [new]     WARNING  id 35273034: failed to understand format or structure of YouTube URL: https://www.youtube.com/@temporaryhandle/featured
+2023-03-23 07:15:42 CDT [new]     WARNING  id 35273433: failed to understand format or structure of YouTube URL: https://www.youtube.com/@tesla-ltt
+2023-03-23 10:56:40 CDT [new]     WARNING  id 35276489: failed to understand format or structure of YouTube URL: https://www.youtube.com/clip/Ugkx4fMxSvR-MDCEAsr_laxtOyh6EmZwIUaJ
+2023-03-23 12:20:54 CDT [new]     WARNING  id 35277997: failed to understand format or structure of YouTube URL: https://www.youtube.com/@universityofutah/streams
+2023-03-23 13:41:12 CDT [new]     WARNING  id 35279185: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/IXr-VEpQ1lg
+2023-03-24 15:25:01 CDT [new]     WARNING  Object 53 0 not defined.
+2023-03-24 17:52:15 CDT [new]     ERROR    get_page_source_noproxy_helper: url http://codef.namwollem.co.uk/TEST/SC68amp/webSC68amp.html: Alert Text: WARNING! Non mobile device detected. Appearance and performance may not operate as planned.
+Message: unexpected alert open: {Alert text : WARNING! Non mobile device detected. Appearance and performance may not operate as planned.}
+2023-03-24 17:52:15 CDT [new]     ERROR    get_page_source_noproxy: url http://codef.namwollem.co.uk/TEST/SC68amp/webSC68amp.html: Alert Text: WARNING! Non mobile device detected. Appearance and performance may not operate as planned.
+Message: unexpected alert open: {Alert text : WARNING! Non mobile device detected. Appearance and performance may not operate as planned.}
+Message: unexpected alert open: {Alert text : WARNING! Non mobile device detected. Appearance and performance may not operate as planned.}
+2023-03-24 17:52:23 CDT [new]     WARNING  id 35296683: failed to understand format or structure of YouTube URL: https://www.youtube.com/@ai-talks-charp
+2023-03-25 17:54:28 CDT [new]     WARNING  id 35308304: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/uWgEofct9Rw
+2023-03-26 16:35:13 CDT [new]     WARNING  Multiple definitions in dictionary at byte 0xaab41 for key /ToUnicode
+2023-03-26 16:35:13 CDT [new]     WARNING  Multiple definitions in dictionary at byte 0xaaf83 for key /ToUnicode
+2023-03-28 09:01:48 CDT [new]     WARNING  id 35340712: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/g3sFeo4zARw
+2023-03-30 07:18:32 CDT [new]     WARNING  id 35371361: failed to understand format or structure of YouTube URL: https://www.youtube.com/@nevertoosmall
+2023-03-30 22:49:08 CDT [new]     WARNING  id 35382259: failed to understand format or structure of YouTube URL: https://www.youtube.com/@songxytr
+2023-03-31 10:28:55 CDT [new]     WARNING  Object 3 0 not defined.
+2023-04-01 08:16:47 CDT [new]     WARNING  id 35399851: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/PDGts5jFczs
+2023-04-02 10:11:56 CDT [new]     WARNING  id 35411327: failed to understand format or structure of YouTube URL: https://www.youtube.com/results?search_query=jon+stewart+central+bank+money+theory
+2023-04-02 19:34:33 CDT [new]     WARNING  id 35416884: failed to understand format or structure of YouTube URL: https://www.youtube.com/results?search_query=john+stewart+central+bank+money+theory
+2023-04-06 03:48:27 CDT [new]     WARNING  id 35463498: failed to understand format or structure of YouTube URL: https://www.youtube.com/@thang010146
+2023-04-08 11:03:47 CDT [new]     WARNING  Alternative language extractor failed to extract a known language
+2023-04-10 02:36:03 CDT [new]     WARNING  id 35510015: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/uL47bvuubwk
+2023-04-11 13:12:21 CDT [new]     WARNING  id 35528711: failed to understand format or structure of YouTube URL: https://www.youtube.com/null
+2023-04-11 23:15:15 CDT [new]     WARNING  id 35534930: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/vAgLmxkuKLo
+2023-04-14 15:52:32 CDT [new]     WARNING  id 35574399: failed to understand format or structure of YouTube URL: https://www.youtube.com/@hacksummit1860/videos
+2023-04-16 08:26:20 CDT [new]     WARNING  id 35589665: failed to understand format or structure of YouTube URL: https://www.youtube.com/results?search_query=slaughterbots
+2023-04-16 13:57:51 CDT [new]     INFO     after subprocess: CompletedProcess(args=['/usr/local/bin/gs', '-dBATCH', '-dNOPAUSE', '-dQUIET', '-sDEVICE=png16m', '-r600', '-sOutputFile=/tmp/pdf2png-35592935-1681671469.png', '/tmp/orig-35592935'], returncode=0, stdout=b'', stderr=b'WARNING: Image has unsupported ColorSpace (not a name)\nWARNING: Image has unsupported ColorSpace (not a name)\nWARNING: Image has unsupported ColorSpace (not a name)\nWARNING: Image has unsupported ColorSpace (not a name)\nWARNING: Image has unsupported ColorSpace (not a name)\nWARNING: Image has unsupported ColorSpace (not a name)\nWARNING: Image has unsupported ColorSpace (not a name)\nWARNING: Image has unsupported ColorSpace (not a name)\nWARNING: Image has unsupported ColorSpace (not a name)\nWARNING: Image has unsupported ColorSpace (not a name)\nWARNING: Image has unsupported ColorSpace (not a name)\nWARNING: Image has unsupported ColorSpace (not a name)\nWARNING: Image has unsupported ColorSpace (not a name)\nWARNING: Image has unsupported ColorSpace (not a name)\nWARNING: Image has unsupported ColorSpace (not a name)\nWARNING: Image has unsupported ColorSpace (not a name)\nWARNING: Image has unsupported ColorSpace (not a name)\nWARNING: Image has unsupported ColorSpace (not a name)\n')
+2023-04-17 21:55:47 CDT [new]     WARNING  id 35609285: failed to understand format or structure of YouTube URL: https://www.youtube.com/@timhunkin1/playlists
+2023-04-19 09:21:20 CDT [new]     WARNING  id 35627732: failed to understand format or structure of YouTube URL: https://www.youtube.com/clip/UgkxV3E3GQp9qLduj9864TkkDgDr2tUrJTIp
+2023-04-20 12:58:29 CDT [new]     WARNING  id 35643474: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/S_OrgajKZYs
+2023-04-21 22:22:38 CDT [new]     WARNING  id 35662976: failed to understand format or structure of YouTube URL: https://www.youtube.com/@FallofCivilizations
+2023-04-23 13:44:03 CDT [new]     WARNING  id 35678966: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/cJwJWDoByV8
+2023-04-24 06:50:48 CDT [new]     WARNING  id 35686432: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/SBHKPv8RQAs
+2023-04-25 10:55:36 CDT [new]     WARNING  id 35702221: failed to understand format or structure of YouTube URL: https://www.youtube.com/watch?app=desktop&v=YoVek79LFe0&feature=youtu.be
+2023-04-26 05:13:13 CDT [active]  WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/active_stories_page_6_lm.html; will retry
+2023-04-26 05:13:14 CDT [active]  WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/active_stories_page_3_lm.html; will retry
+2023-04-26 05:13:14 CDT [active]  WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/active_stories_page_4_lm.html; will retry
+2023-04-26 05:13:14 CDT [active]  WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/active_stories_page_5_lm.html; will retry
+2023-04-26 05:13:16 CDT [active]  WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/active_stories_page_1_lm.html; will retry
+2023-04-26 05:13:19 CDT [active]  WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/active_stories_page_2_lm.html; will retry
+2023-04-26 05:14:58 CDT [active]  WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/active_stories_page_4_lm.html; will retry
+2023-04-26 05:15:00 CDT [active]  WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/active_stories_page_5_lm.html; will retry
+2023-04-26 05:15:00 CDT [active]  WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/active_stories_page_6_lm.html; will retry
+2023-04-26 05:15:02 CDT [active]  WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/active_stories_page_1_lm.html; will retry
+2023-04-26 05:15:05 CDT [active]  WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/active_stories_page_3_lm.html; will retry
+2023-04-26 05:15:07 CDT [active]  WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/active_stories_page_2_lm.html; will retry
+2023-04-26 05:16:47 CDT [active]  WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/active_stories_page_4_lm.html; will retry
+2023-04-26 05:16:48 CDT [active]  WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/active_stories_page_6_lm.html; will retry
+2023-04-26 05:16:51 CDT [active]  WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/active_stories_page_1_lm.html; will retry
+2023-04-26 05:16:51 CDT [active]  WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/active_stories_page_3_lm.html; will retry
+2023-04-26 05:16:53 CDT [active]  WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/active_stories_page_5_lm.html; will retry
+2023-04-26 05:16:56 CDT [active]  WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/active_stories_page_2_lm.html; will retry
+2023-04-26 05:20:20 CDT [active]  WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/active_stories_page_7_lm.html; will retry
+2023-04-26 05:20:24 CDT [active]  WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/active_stories_page_8_lm.html; will retry
+2023-04-26 05:20:24 CDT [active]  WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/active_stories_page_9_lm.html; will retry
+2023-04-26 05:20:36 CDT [active]  WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/active_stories_page_10_lm.html; will retry
+2023-04-26 05:22:11 CDT [active]  WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/active_stories_page_7_lm.html; will retry
+2023-04-26 05:22:13 CDT [active]  WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/active_stories_page_8_lm.html; will retry
+2023-04-26 05:22:15 CDT [active]  WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/active_stories_page_9_lm.html; will retry
+2023-04-26 05:22:27 CDT [active]  WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/active_stories_page_10_lm.html; will retry
+2023-04-26 05:23:59 CDT [active]  WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/active_stories_page_7_lm.html; will retry
+2023-04-26 05:24:01 CDT [active]  WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/active_stories_page_9_lm.html; will retry
+2023-04-26 05:24:06 CDT [active]  WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/active_stories_page_8_lm.html; will retry
+2023-04-26 05:24:19 CDT [active]  WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/active_stories_page_10_lm.html; will retry
+2023-05-02 11:19:19 CDT [new]     INFO     after subprocess: CompletedProcess(args=['/usr/local/bin/gs', '-dBATCH', '-dNOPAUSE', '-dQUIET', '-sDEVICE=png16m', '-r600', '-sOutputFile=/tmp/pdf2png-35789827-1683044358.png', '/tmp/orig-35789827'], returncode=0, stdout=b'', stderr=b'WARNING: Image has unsupported ColorSpace (not a name)\n')
+2023-05-06 12:17:48 CDT [new]     WARNING  id 35843001: failed to understand format or structure of YouTube URL: https://www.youtube.com/@WorstPractices
+2023-05-11 13:57:40 CDT [new]     WARNING  id 35905520: failed to understand format or structure of YouTube URL: https://www.youtube.com/@gifetwg/videos
+2023-05-16 00:59:55 CDT [new]     WARNING  id 35958068: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/xn5CiPwIh9g
+2023-05-17 00:22:56 CDT [new]     WARNING  id 35971356: failed to understand format or structure of YouTube URL: https://www.youtube.com/@fluidsin4k719/videos
+2023-05-19 05:48:53 CDT [new]     WARNING  id 35999867: failed to understand format or structure of YouTube URL: https://www.youtube.com/clip/UgkxhgwuFDeCX9dyoX2D6eQ4jIcy8v2B4xSt
+2023-05-24 21:07:24 CDT [new]     WARNING  id 36066182: failed to understand format or structure of YouTube URL: https://www.youtube.com/results?search_query=moire+superlattice
+2023-05-25 07:52:51 CDT [new]     WARNING  id 36069971: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/sQKTv4ulj_0
+2023-05-27 07:49:30 CDT [new]     WARNING  id 36094304: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/xMeAUkiHkIc
+2023-05-28 14:47:31 CDT [new]     WARNING  id 36106996: failed to understand format or structure of YouTube URL: https://www.youtube.com/@CainOnGames
+2023-05-30 11:36:29 CDT [new]     WARNING  id 36126502: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/ehLQnY44Rnk
+2023-05-31 13:12:06 CDT [top]     WARNING  id 36141445: failed to understand format or structure of YouTube URL: https://www.youtube.com/@CainOnGames
+2023-06-04 14:47:42 CDT [new]     WARNING  id 36188774: failed to understand format or structure of YouTube URL: https://www.youtube.com/@PuraJaddSe
+2023-06-12 05:30:20 CDT [new]     WARNING  id 36291132: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/__WmyEuJlAY
+2023-06-13 13:12:25 CDT [new]     WARNING  Overwriting cache for 0 16200
+2023-06-14 02:10:25 CDT [new]     WARNING  Overwriting cache for 0 16200
+2023-06-16 22:10:56 CDT [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/top_stories_page_16_dm.html; will retry
+2023-06-16 22:10:56 CDT [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/top_stories_page_20_dm.html; will retry
+2023-06-16 22:10:57 CDT [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/top_stories_page_17_lm.html; will retry
+2023-06-16 22:10:58 CDT [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/top_stories_page_23_lm.html; will retry
+2023-06-16 22:11:21 CDT [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/top_stories_page_18_lm.html; will retry
+2023-06-16 22:12:40 CDT [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/top_stories_page_16_dm.html; will retry
+2023-06-16 22:12:41 CDT [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/top_stories_page_20_dm.html; will retry
+2023-06-16 22:12:41 CDT [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/top_stories_page_17_lm.html; will retry
+2023-06-16 22:12:44 CDT [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/top_stories_page_23_lm.html; will retry
+2023-06-16 22:13:08 CDT [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/top_stories_page_18_lm.html; will retry
+2023-06-16 22:13:10 CDT [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/top_stories_page_21_lm.html; will retry
+2023-06-18 10:23:53 CDT [new]     WARNING  id 36380953: failed to understand format or structure of YouTube URL: https://www.youtube.com/@thinkingmathematically
+2023-06-22 13:11:32 CDT [new]     WARNING  id 36435955: failed to understand format or structure of YouTube URL: https://www.youtube.com/c/ALLABOUTELECTRONICS/playlists?app=desktop
+2023-06-22 23:19:07 CDT [new]     WARNING  upload_file_to_s3: EndpointConnectionError uploading thumbs/thumb-36442659-medium.webp; will retry
+2023-06-22 23:20:51 CDT [new]     WARNING  upload_file_to_s3: EndpointConnectionError uploading thumbs/thumb-36442659-medium.webp; will retry
+2023-06-22 23:22:36 CDT [new]     WARNING  upload_file_to_s3: EndpointConnectionError uploading thumbs/thumb-36442659-medium.webp; will retry
+2023-06-22 23:26:18 CDT [new]     WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/new_stories_page_1_lm.html; will retry
+2023-06-22 23:28:08 CDT [new]     WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/new_stories_page_1_lm.html; will retry
+2023-06-22 23:29:59 CDT [new]     WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/new_stories_page_1_lm.html; will retry
+2023-06-25 09:05:58 CDT [new]     WARNING  id 36468071: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/otSh7kMqgIM
+2023-06-26 11:43:36 CDT [new]     WARNING  id 36481856: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/ZZBE87LVkmY
+2023-06-26 12:56:38 CDT [new]     WARNING  id 36482932: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/PFWbh3lMYXA
+2023-07-03 07:38:53 CDT [new]     WARNING  id 36572001: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/8QS5ma3dNEQ
+2023-07-06 10:57:58 CDT [top]     WARNING  id 36617518: failed to understand format or structure of YouTube URL: https://www.youtube.com/@MoneyMattersPod
+2023-07-08 01:37:41 CDT [new]     WARNING  id 36641819: failed to understand format or structure of YouTube URL: https://www.youtube.com/@CodeAesthetic
+2023-07-08 23:01:32 CDT [new]     WARNING  id 36651337: failed to understand format or structure of YouTube URL: https://www.youtube.com/@NoclipArchive/videos
+2023-07-10 05:54:36 CDT [new]     WARNING  Alternative language extractor failed to extract a known language
+2023-07-11 02:56:23 CDT [new]     WARNING  id 36677773: failed to understand format or structure of YouTube URL: https://www.youtube.com/@isqg423
+2023-07-11 04:09:06 CDT [new]     WARNING  id 36678140: error getting video details for YouTube URL https://www.youtube.com/watch?v=SAWVPCO575k: HTTPSConnectionPool(host='youtube.googleapis.com', port=443): Read timed out. (read timeout=16)
+2023-07-12 00:04:55 CDT [new]     WARNING  id 36690611: failed to understand format or structure of YouTube URL: https://www.youtube.com/@YAPCNA/videos
+2023-07-13 03:19:46 CDT [new]     WARNING  id 36706298: failed to understand format or structure of YouTube URL: https://www.youtube.com/@mathmajor?app=desktop
+2023-07-14 11:32:44 CDT [new]     WARNING  id 36726174: failed to understand format or structure of YouTube URL: https://www.youtube.com/@MattVidPro/videos
+2023-07-15 13:24:09 CDT [new]     WARNING  id 36739494: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/4tKPmLc7TxE
+2023-07-18 09:55:14 CDT [new]     WARNING  id 36772627: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/MKlZOZcqQ6E
+2023-07-18 22:10:03 CDT [new]     WARNING  Overwriting cache for 0 351
+2023-07-20 15:03:41 CDT [new]     WARNING  Received response with both Content-Length and Transfer-Encoding set. This is expressly forbidden by RFC 7230 sec 3.3.2. Ignoring Content-Length and attempting to process response as Transfer-Encoding: chunked.
+2023-07-21 10:21:40 CDT [new]     INFO     id 36814586: found og:image url https://www.stripes.com/incoming/bgyg4q-240723nk-warningphoto01.jpg/alternates/LANDSCAPE_480/240723NK-WARNINGphoto01.jpg
+2023-07-21 10:21:48 CDT [new]     INFO     id 36814586: og:image file has magic type image/jpeg ; URL: https://www.stripes.com/incoming/bgyg4q-240723nk-warningphoto01.jpg/alternates/LANDSCAPE_480/240723NK-WARNINGphoto01.jpg
+2023-07-22 09:08:05 CDT [new]     WARNING  Invalid stream (index 2) within object 148 0: Stream has ended unexpectedly
+2023-07-23 03:32:13 CDT [new]     WARNING  id 36833411: failed to understand format or structure of YouTube URL: https://www.youtube.com/@JupyterCon/videos
+2023-07-25 13:49:00 CDT [new]     WARNING  id 36867129: error getting video details for YouTube URL https://www.youtube.com/watch?v=xC-cyrIq-qI: 'items'
+2023-07-29 01:14:49 CDT [new]     WARNING  Alternative language extractor failed to extract a known language
+2023-07-29 09:17:25 CDT [new]     WARNING  id 36920428: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/BcZrTunuq-w
+2023-08-04 00:02:43 CDT [best]    WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/best_stories_page_8_dm.html; will retry
+2023-08-04 00:02:44 CDT [best]    WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/best_stories_page_7_lm.html; will retry
+2023-08-04 00:02:45 CDT [best]    WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/best_stories_page_1_dm.html; will retry
+2023-08-04 00:02:49 CDT [best]    WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/best_stories_page_3_lm.html; will retry
+2023-08-04 00:02:49 CDT [best]    WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/best_stories_page_2_lm.html; will retry
+2023-08-04 00:02:51 CDT [best]    WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/best_stories_page_6_lm.html; will retry
+2023-08-04 00:02:51 CDT [best]    WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/best_stories_page_5_dm.html; will retry
+2023-08-04 00:03:09 CDT [best]    WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/best_stories_page_4_lm.html; will retry
+2023-08-04 00:04:27 CDT [best]    WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/best_stories_page_8_dm.html; will retry
+2023-08-04 00:04:28 CDT [best]    WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/best_stories_page_7_lm.html; will retry
+2023-08-04 00:04:38 CDT [best]    WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/best_stories_page_5_dm.html; will retry
+2023-08-04 00:04:38 CDT [best]    WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/best_stories_page_3_lm.html; will retry
+2023-08-04 00:04:38 CDT [best]    WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/best_stories_page_1_dm.html; will retry
+2023-08-04 00:04:39 CDT [best]    WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/best_stories_page_2_lm.html; will retry
+2023-08-04 00:04:41 CDT [best]    WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/best_stories_page_6_lm.html; will retry
+2023-08-04 00:04:52 CDT [best]    WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/best_stories_page_4_lm.html; will retry
+2023-08-04 00:06:13 CDT [best]    WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/best_stories_page_7_lm.html; will retry
+2023-08-04 00:06:18 CDT [best]    WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/best_stories_page_8_dm.html; will retry
+2023-08-04 00:06:23 CDT [best]    WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/best_stories_page_1_dm.html; will retry
+2023-08-04 00:06:27 CDT [best]    WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/best_stories_page_5_dm.html; will retry
+2023-08-04 00:06:29 CDT [best]    WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/best_stories_page_3_lm.html; will retry
+2023-08-04 00:06:32 CDT [best]    WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/best_stories_page_2_lm.html; will retry
+2023-08-04 00:06:32 CDT [best]    WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/best_stories_page_6_lm.html; will retry
+2023-08-04 00:06:36 CDT [best]    WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/best_stories_page_4_lm.html; will retry
+2023-08-04 00:09:45 CDT [best]    WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/best_stories_page_9_lm.html; will retry
+2023-08-04 00:10:15 CDT [best]    WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/best_stories_page_10_lm.html; will retry
+2023-08-04 00:11:34 CDT [best]    WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/best_stories_page_9_lm.html; will retry
+2023-08-04 00:12:06 CDT [best]    WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/best_stories_page_10_lm.html; will retry
+2023-08-04 00:13:22 CDT [best]    WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/best_stories_page_9_lm.html; will retry
+2023-08-04 00:13:51 CDT [best]    WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/best_stories_page_10_lm.html; will retry
+2023-08-07 05:10:30 CDT [new]     WARNING  id 37032430: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/L-zBk3j403Y
+2023-08-11 18:31:56 CDT [new]     WARNING  FloatObject (b'0.00-12951228') invalid; use 0.0 instead
+2023-08-11 18:31:56 CDT [new]     WARNING  FloatObject (b'0.000-72850664') invalid; use 0.0 instead
+2023-08-11 18:31:56 CDT [new]     WARNING  FloatObject (b'0.00-12951228') invalid; use 0.0 instead
+2023-08-11 18:31:56 CDT [new]     WARNING  FloatObject (b'0.000-72850664') invalid; use 0.0 instead
+2023-08-17 03:31:36 CDT [new]     WARNING  id 37157338: failed to understand format or structure of YouTube URL: https://www.youtube.com/post/UgkxcaG94-7je6fAHRiBeRuSWhBLbbRW956B
+2023-08-17 17:18:17 CDT [new]     WARNING  Alternative language extractor failed to extract a known language
+2023-08-18 14:46:30 CDT [top]     WARNING  id 37180894: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/fLEOiQdDkzk
+2023-08-22 10:21:38 CDT [new]     WARNING  id 37223680: error getting channel details for YouTube URL https://www.youtube.com/channel/UCtMqalrP6-uP2DDz9KXnPfQ: 'channelId'
+2023-08-22 20:43:17 CDT [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/top_stories_page_3_lm.html; will retry
+2023-08-23 09:12:10 CDT [new]     WARNING  id 37235865: failed to understand format or structure of YouTube URL: https://www.youtube.com/@ClicketyClack?app=desktop
+2023-08-30 00:24:36 CDT [new]     WARNING  id 37317820: failed to understand format or structure of YouTube URL: https://www.youtube.com/@thang010146/videos
+2023-09-01 16:11:37 CDT [new]     WARNING  id 37355938: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/R7qPiDoZRsA
+2023-09-02 03:54:01 CDT [new]     WARNING  id 37359520: error getting channel details for YouTube URL https://www.youtube.com/channel/UC3P6PrEBAVH1UaiPOzZ-u-w: 'channelId'
+2023-09-02 19:55:13 CDT [new]     WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/new_stories_page_1_lm.html; will retry
+2023-09-02 19:57:04 CDT [new]     WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/new_stories_page_1_lm.html; will retry
+2023-09-02 19:58:53 CDT [new]     WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/new_stories_page_1_lm.html; will retry
+2023-09-03 13:52:54 CDT [new]     WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/new_stories_page_1_lm.html; will retry
+2023-09-03 13:54:46 CDT [new]     WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/new_stories_page_1_lm.html; will retry
+2023-09-03 13:56:35 CDT [new]     WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/new_stories_page_1_lm.html; will retry
+2023-09-06 09:13:23 CDT [new]     WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/new_stories_page_1_dm.html; will retry
+2023-09-06 09:15:12 CDT [new]     WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/new_stories_page_1_dm.html; will retry
+2023-09-06 09:16:58 CDT [new]     WARNING  upload_file_to_s3: EndpointConnectionError uploading hn_stories/new_stories_page_1_dm.html; will retry
+2023-09-06 13:33:01 CDT [new]     WARNING  id 37408825: error getting channel details for YouTube URL https://www.youtube.com/channel/UC3P6PrEBAVH1UaiPOzZ-u-w: 'channelId'
+2023-09-06 19:36:25 CDT [new]     WARNING  Object 43 0 not defined.
+2023-09-08 18:50:09 CDT [new]     WARNING  Multiple definitions in dictionary at byte 0x25a9 for key /ViewerPreferences
+2023-09-08 18:50:09 CDT [new]     WARNING  Multiple definitions in dictionary at byte 0x25b2 for key /Lang
+2023-09-09 00:02:10 CDT [new]     WARNING  id 37442408: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/SYsiZ7sy9gg
+2023-09-12 06:28:30 CDT [new]     WARNING  Invalid stream (index 11) within object 2708 0: Stream has ended unexpectedly
+2023-09-12 15:16:51 CDT [new]     WARNING  id 37486622: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/bDJjtULbDgw
+2023-09-13 17:18:03 CDT [new]     WARNING  id 37502361: failed to understand format or structure of YouTube URL: https://www.youtube.com/@lecturesbywalterlewin.they9259
+2023-09-15 11:49:55 CDT [new]     WARNING  Alternative language extractor failed to extract a known language
+2023-09-16 20:44:48 CDT [new]     WARNING  id 37540604: failed to understand format or structure of YouTube URL: https://www.youtube.com/@skycorphomevideo?si=kp0MpnH3ZniaADkt
+2023-09-17 14:54:07 CDT [new]     WARNING  Overwriting cache for 0 1129
+2023-09-18 21:46:08 CDT [new]     WARNING  id 37564799: failed to understand format or structure of YouTube URL: https://www.youtube.com/@LKLogic/videos
+2023-09-19 16:11:11 CDT [new]     WARNING  id 37576302: failed to understand format or structure of YouTube URL: https://www.youtube.com/results?search_query=CNC+plasma+cutting+table
+2023-09-19 16:12:59 CDT [new]     WARNING  id 37576089: failed to understand format or structure of YouTube URL: https://www.youtube.com/@will_it_kimchi
+2023-10-01 07:01:01 CDT [new]     WARNING  id 37725085: failed to understand format or structure of YouTube URL: https://www.youtube.com/post/Ugkx_-7kqTa-ZgURmdHjZGdDvUiThXIzodwX
+2023-10-01 10:06:18 CDT [new]     WARNING  id 37726252: failed to understand format or structure of YouTube URL: https://www.youtube.com/clip/UgkxS1r4ky1SjlNjtLtB2lnYDK67HNddjxPG
+2023-10-01 10:43:30 CDT [new]     WARNING  id 37726634: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/LgKulg2YVZo
+2023-10-02 16:20:32 CDT [new]     WARNING  id 37744226: failed to understand format or structure of YouTube URL: https://www.youtube.com/
+2023-10-03 05:47:27 CDT [new]     WARNING  id 37749958: failed to understand format or structure of YouTube URL: https://www.youtube.com/@RoelVandePaar/videos
+2023-10-08 08:02:39 CDT [new]     WARNING  id 37810010: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/6QJfV1OZx5s
+2023-10-10 03:17:41 CDT [new]     WARNING  upload_file_to_s3: EndpointConnectionError uploading new_stories_page_1_lm.html; will retry
+2023-10-10 03:19:26 CDT [new]     WARNING  upload_file_to_s3: EndpointConnectionError uploading new_stories_page_1_lm.html; will retry
+2023-10-10 17:27:20 CDT [new]     WARNING  id 37838129: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/8l32HDWMvPg
+2023-10-11 14:18:25 CDT [new]     WARNING  id 37848631: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/oCOia4FvrCU
+2023-10-12 21:52:24 CDT [new]     WARNING  id 37865869: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/WdwFJe_kIwE
+2023-10-20 05:17:18 CDT [new]     WARNING  id 37954103: error getting channel details for YouTube URL https://www.youtube.com/channel/UC3tsdoecMUCS61YmR3CP3iAA: 'items'
+2023-10-21 01:48:15 CDT [new]     WARNING  id 37964608: failed to understand format or structure of YouTube URL: https://www.youtube.com/@Ground-Effect/videos
+2023-10-21 18:20:00 CDT [new]     WARNING  Multiple definitions in dictionary at byte 0x1a3d for key /ToUnicode
+2023-10-21 18:20:00 CDT [new]     WARNING  Multiple definitions in dictionary at byte 0x1b02 for key /ToUnicode
+2023-10-23 22:28:11 CDT [new]     WARNING  id 37994579: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/jcdzl8bXu_g
+2023-10-24 10:21:16 CDT [new]     WARNING  Multiple definitions in dictionary at byte 0x10f4 for key /Length
+2023-10-25 11:26:09 CDT [new]     WARNING  upload_file_to_s3: EndpointConnectionError uploading new_stories_page_3_lm.html; will retry
+2023-10-25 11:26:39 CDT [new]     WARNING  upload_file_to_s3: EndpointConnectionError uploading new_stories_page_2_lm.html; will retry
+2023-10-26 04:45:17 CDT [new]     WARNING  id 38023363: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/OBowqNM_l_E
+2023-10-27 09:40:16 CDT [new]     WARNING  id 38038760: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/VVRoW6kei2g
+2023-10-31 12:44:10 CDT [new]     WARNING  Overwriting cache for 0 402
+2023-11-04 15:22:53 CDT [new]     WARNING  id 38144565: failed to understand format or structure of YouTube URL: https://www.youtube.com/user/MoooJvM
+2023-11-07 04:49:53 CST [classic] WARNING  upload_file_to_s3: EndpointConnectionError uploading classic_stories_page_2_lm.html; will retry
+2023-11-07 04:49:53 CST [classic] WARNING  upload_file_to_s3: EndpointConnectionError uploading classic_stories_page_6_lm.html; will retry
+2023-11-07 04:49:53 CST [classic] WARNING  upload_file_to_s3: EndpointConnectionError uploading classic_stories_page_4_dm.html; will retry
+2023-11-07 04:49:53 CST [classic] WARNING  upload_file_to_s3: EndpointConnectionError uploading classic_stories_page_7_dm.html; will retry
+2023-11-07 04:49:53 CST [classic] WARNING  upload_file_to_s3: EndpointConnectionError uploading classic_stories_page_3_lm.html; will retry
+2023-11-13 08:45:13 CST [new]     WARNING  id 38250620: error getting channel details for YouTube URL https://www.youtube.com/channel/UCZ9oDWliqkUxGHsKVbkwQOw: 'channelId'
+2023-11-13 13:06:40 CST [active]  WARNING  upload_file_to_s3: EndpointConnectionError uploading active_stories_page_9_dm.html; will retry
+2023-11-15 09:35:18 CST [new]     WARNING  Overwriting cache for 0 1903
+2023-11-15 20:44:36 CST [new]     WARNING  id 38285143: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/srxWXqIJy5M
+2023-11-16 13:37:10 CST [new]     WARNING  id 38293992: error getting video details for YouTube URL https://www.youtube.com/watch?v=3qjzupllOt8: list index out of range
+2023-11-17 20:00:02 CST [new]     WARNING  id 38313824: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/X0xMTsArEIc
+2023-11-17 20:00:18 CST [new]     WARNING  id 38313738: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/EGDYO_WGzbw
+2023-11-17 20:00:26 CST [new]     WARNING  id 38313707: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/86zk6M6chtU
+2023-11-21 22:58:14 CST [new]     WARNING  id 38374727: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/scX7pGmVo7Q
+2023-11-22 15:48:48 CST [new]     WARNING  id 38385397: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/Q8Gd4ZxdGrU
+2023-11-25 21:37:17 CST [new]     WARNING  id 38418901: failed to understand format or structure of YouTube URL: https://www.youtube.com/@vintagetoiletspittsburgh/featured
+2023-11-26 06:12:58 CST [new]     WARNING  id 38420974: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/w0pr5h9hfu4
+2023-11-30 12:06:36 CST [new]     WARNING  id 38476340: failed to understand format or structure of YouTube URL: https://www.youtube.com/@xkcd_whatif
+2023-12-01 10:38:25 CST [new]     WARNING  id 38488522: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/-KFDe-yn8xE
+2023-12-02 09:24:30 CST [new]     WARNING  id 38499165: failed to understand format or structure of YouTube URL: https://www.youtube.com/@karakurist
+2023-12-03 10:38:11 CST [new]     WARNING  Multiple definitions in dictionary at byte 0x1018 for key /Length
+2023-12-03 18:57:16 CST [new]     WARNING  id 38512286: failed to understand format or structure of YouTube URL: https://www.youtube.com/@USCSB
+2023-12-04 03:38:44 CST [new]     WARNING  Multiple definitions in dictionary at byte 0x1018 for key /Length
+2023-12-05 01:05:58 CST [new]     WARNING  id 38527760: failed to understand format or structure of YouTube URL: https://www.youtube.com/@SpecialBooksbySpecialKids
+2023-12-06 14:55:15 CST [new]     WARNING  id 38548955: failed to understand format or structure of YouTube URL: https://www.youtube.com/@xkcd_whatif
+2023-12-08 06:13:23 CST [new]     WARNING  id 38568023: failed to understand format or structure of YouTube URL: https://www.youtube.com/@xkcd_whatif?app=desktop
+2023-12-13 05:30:03 CST [new]     WARNING  id 38625760: failed to understand format or structure of YouTube URL: https://www.youtube.com/@8bitbearmusic/videos
+2023-12-15 15:06:48 CST [new]     WARNING  id 38658809: failed to understand format or structure of YouTube URL: https://www.youtube.com/?v=URfCwT3UQy4
+2023-12-16 13:54:36 CST [new]     WARNING  id 38667169: failed to understand format or structure of YouTube URL: https://www.youtube.com/watch?si=09sIYTtvk1C9UobX&v=-y37tXoBDx0&feature=youtu.be
+2023-12-17 02:37:55 CST [new]     WARNING  Multiple definitions in dictionary at byte 0x1018 for key /Length
+2023-12-18 09:54:14 CST [new]     WARNING  id 38684093: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/E5r0wacVjLY
+2023-12-18 21:40:43 CST [new]     WARNING  id 38691371: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/I1ZpVEn29Po
+2023-12-22 09:49:59 CST [new]     WARNING  id 38735206: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/RuGyy-tOzlM
+2023-12-22 11:47:09 CST [new]     WARNING  id 38736573: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/uFuQS9aOo38
+2023-12-27 11:08:47 CST [new]     WARNING  id 38783870: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/j1b4whvmIOc
+2023-12-28 19:32:17 CST [new]     WARNING  id 38800714: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/3hSMXh-G2xY
+2024-01-01 12:00:39 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_3_lm.html; will retry
+2024-01-01 12:00:39 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_7_lm.html; will retry
+2024-01-01 12:00:41 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading thumbs/thumb-38833497-medium.webp; will retry
+2024-01-01 12:00:42 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading thumbs/thumb-38833504-medium.webp; will retry
+2024-01-01 12:00:42 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_5_dm.html; will retry
+2024-01-01 12:00:43 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_8_dm.html; will retry
+2024-01-01 12:00:43 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_4_lm.html; will retry
+2024-01-01 12:00:46 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_6_lm.html; will retry
+2024-01-01 12:02:24 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading thumbs/thumb-38833497-medium.webp; will retry
+2024-01-01 12:02:26 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_8_dm.html; will retry
+2024-01-01 12:02:27 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_3_lm.html; will retry
+2024-01-01 12:02:29 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_7_lm.html; will retry
+2024-01-01 12:02:31 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_5_dm.html; will retry
+2024-01-01 12:02:34 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading thumbs/thumb-38833504-medium.webp; will retry
+2024-01-01 12:02:36 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_4_lm.html; will retry
+2024-01-01 12:02:38 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_6_lm.html; will retry
+2024-01-01 12:04:11 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading thumbs/thumb-38833497-medium.webp; will retry
+2024-01-01 12:04:11 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_3_lm.html; will retry
+2024-01-01 12:04:12 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_8_dm.html; will retry
+2024-01-01 12:04:17 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading thumbs/thumb-38833504-medium.webp; will retry
+2024-01-01 12:04:20 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_5_dm.html; will retry
+2024-01-01 12:04:21 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_7_lm.html; will retry
+2024-01-01 12:04:27 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_4_lm.html; will retry
+2024-01-01 12:04:28 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_6_lm.html; will retry
+2024-01-01 12:07:48 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_1_lm.html; will retry
+2024-01-01 12:07:52 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_2_lm.html; will retry
+2024-01-01 12:07:54 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_10_lm.html; will retry
+2024-01-01 12:08:04 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_14_lm.html; will retry
+2024-01-01 12:08:08 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_9_lm.html; will retry
+2024-01-01 12:08:18 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_11_lm.html; will retry
+2024-01-01 12:08:25 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_12_lm.html; will retry
+2024-01-01 12:08:31 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_13_lm.html; will retry
+2024-01-01 12:09:39 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_10_lm.html; will retry
+2024-01-01 12:09:41 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_1_lm.html; will retry
+2024-01-01 12:09:42 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_2_lm.html; will retry
+2024-01-01 12:09:53 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_14_lm.html; will retry
+2024-01-01 12:09:55 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_9_lm.html; will retry
+2024-01-01 12:10:07 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_11_lm.html; will retry
+2024-01-01 12:10:19 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_13_lm.html; will retry
+2024-01-01 12:10:19 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_12_lm.html; will retry
+2024-01-01 12:11:28 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_10_lm.html; will retry
+2024-01-01 12:11:28 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_2_lm.html; will retry
+2024-01-01 12:11:34 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_1_lm.html; will retry
+2024-01-01 12:11:46 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_9_lm.html; will retry
+2024-01-01 12:11:46 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_14_lm.html; will retry
+2024-01-01 12:11:54 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_11_lm.html; will retry
+2024-01-01 12:12:03 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_12_lm.html; will retry
+2024-01-01 12:12:10 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_13_lm.html; will retry
+2024-01-01 12:15:14 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_17_lm.html; will retry
+2024-01-01 12:15:19 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_15_lm.html; will retry
+2024-01-01 12:15:24 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_16_lm.html; will retry
+2024-01-01 12:15:30 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_20_lm.html; will retry
+2024-01-01 12:15:40 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_22_lm.html; will retry
+2024-01-01 12:15:41 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_18_lm.html; will retry
+2024-01-01 12:15:46 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_19_lm.html; will retry
+2024-01-01 12:15:56 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_21_lm.html; will retry
+2024-01-01 12:17:00 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_17_lm.html; will retry
+2024-01-01 12:17:09 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_16_lm.html; will retry
+2024-01-01 12:17:09 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_15_lm.html; will retry
+2024-01-01 12:17:23 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_20_lm.html; will retry
+2024-01-01 12:17:29 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_18_lm.html; will retry
+2024-01-01 12:17:30 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_22_lm.html; will retry
+2024-01-01 12:17:38 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_19_lm.html; will retry
+2024-01-01 12:17:44 CST [top]     WARNING  upload_file_to_s3: EndpointConnectionError uploading top_stories_page_21_lm.html; will retry
+2024-01-04 11:01:48 CST [new]     WARNING  id 38869065: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/tFYkGyaXCw0
+2024-01-05 22:21:03 CST [new]     WARNING  Multiple definitions in dictionary at byte 0xab8 for key /Length
+2024-01-07 00:14:47 CST [new]     INFO     after subprocess: CompletedProcess(args=['/usr/local/bin/gs', '-dBATCH', '-dNOPAUSE', '-dQUIET', '-sDEVICE=png16m', '-r600', '-sOutputFile=/tmp/pdf2png-38898861-1704608085.png', '/tmp/orig-38898861'], returncode=0, stdout=b'', stderr=b'WARNING: pdfi_create_indexed() got 576 values, expected at least 579 values\nWARNING: Image has unsupported ColorSpace (not a name)\nWARNING: pdfi_create_indexed() got 579 values, expected at least 582 values\nWARNING: Image has unsupported ColorSpace (not a name)\nWARNING: pdfi_create_indexed() got 579 values, expected at least 582 values\nWARNING: Image has unsupported ColorSpace (not a name)\nWARNING: pdfi_create_indexed() got 561 values, expected at least 564 values\nWARNING: Image has unsupported ColorSpace (not a name)\n')
+2024-01-07 17:43:19 CST [new]     WARNING  id 38906227: failed to understand format or structure of YouTube URL: https://www.youtube.com/@physicschannel1
+2024-01-09 22:45:26 CST [new]     WARNING  id 38936083: failed to understand format or structure of YouTube URL: https://www.youtube.com/@ycombinator
+2024-01-10 00:37:10 CST [new]     WARNING  id 38936083: failed to understand format or structure of YouTube URL: https://www.youtube.com/@ycombinator
+2024-01-10 03:45:33 CST [new]     WARNING  id 38938248: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/I4Xs8KetS_A
+2024-01-14 06:55:25 CST [new]     WARNING  id 38989912: failed to understand format or structure of YouTube URL: https://www.youtube.com/live/Bqudj0x0POA?feature=shared
+2024-01-14 14:41:20 CST [new]     WARNING  id 38989912: failed to understand format or structure of YouTube URL: https://www.youtube.com/live/Bqudj0x0POA?feature=shared
+2024-01-17 09:30:35 CST [new]     WARNING  id 39023681: failed to understand format or structure of YouTube URL: https://www.youtube.com/post/UgkxB1i8N8-O3VdP1_cIhNzPto664s6hu7IC
+2024-01-17 09:32:56 CST [new]     WARNING  id 39024039: error getting channel details for YouTube URL https://www.youtube.com/channel/UCjRkUtHQ774mTg1vrQ6uA5A: 'channelId'
+2024-01-17 18:34:36 CST [new]     WARNING  id 39035735: error getting channel details for YouTube URL https://www.youtube.com/channel/UCgijUpaux8X4Nvjx3TmrHhg: 'channelId'
+2024-01-19 13:46:29 CST [new]     WARNING  id 39060125: failed to understand format or structure of YouTube URL: https://www.youtube.com/user/MoooJvM
+2024-01-20 01:15:52 CST [new]     WARNING  Alternative language extractor failed to extract a known language
+2024-01-20 01:49:47 CST [new]     WARNING  id 39062563: error getting video details for YouTube URL https://www.youtube.com/watch?v=tWzA1a1tczo: list index out of range
+2024-01-20 01:56:57 CST [new]     WARNING  id 39060125: failed to understand format or structure of YouTube URL: https://www.youtube.com/user/MoooJvM
+2024-01-23 20:21:11 CST [new]     INFO     id 39112605: found og:image url https://komonews.com/resources/media/f0e7b7d9-6276-49ae-aefe-266273c5be8a-large16x9_RENTONSTALKINGWARNING_1.10.1.jpg
+2024-01-26 08:05:44 CST [new]     WARNING  id 39142622: problem querying https://hacker-news.firebaseio.com/v0/item/39142622.json: HTTPSConnectionPool(host='hacker-news.firebaseio.com', port=443): Max retries exceeded with url: /v0/item/39142622.json (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x7f738c1d0140>: Failed to resolve 'hacker-news.firebaseio.com' ([Errno -2] Name or service not known)")) ; will delay 60 seconds and try again ; retries left 3
+2024-01-27 08:53:24 CST [new]     WARNING  id 39155805: failed to understand format or structure of YouTube URL: https://www.youtube.com/@DanielPageCSLectures/videos
+2024-01-28 13:41:58 CST [new]     WARNING  id 39168900: get_response_headers() returned no headers for https://www.agenciasinc.es/en/News/Antarctic-fungi-survive-Martian-conditions-on-the-International-Space-Station
+2024-01-28 14:53:28 CST [new]     WARNING  id 39169524: get_response_headers() returned no headers for https://www.mcclatchy-partners.com/detour/all-markets/article275264631.html
+2024-01-29T03:23:10Z [new]     WARNING  id 39172349: get_response_headers() returned no headers for https://www.agenciasinc.es/en/News/The-measurements-of-the-expansion-of-the-universe-don-t-add-up
+2024-01-29T03:54:48Z [new]     WARNING  id 39172506: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/WhUqfLA2Htw
+2024-01-29T07:38:21Z [new]     WARNING  id 39173649: get_response_headers() returned no headers for https://vdwaa.nl/gnome-upower-charge-thresholds.html
+2024-01-29T11:51:21Z [active]  WARNING  id 39173848: problem querying https://hacker-news.firebaseio.com/v0/item/39173848.json: HTTPSConnectionPool(host='hacker-news.firebaseio.com', port=443): Max retries exceeded with url: /v0/item/39173848.json (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x7f4151484f50>: Failed to resolve 'hacker-news.firebaseio.com' ([Errno -2] Name or service not known)")) ; will delay 16 seconds and retry (retries left 3)
+2024-01-29T13:13:17Z [new]     WARNING  id 39175675: get_response_headers() returned no headers for https://www.miamiherald.com/news/local/environment/climate-change/article284533695.html
+2024-01-29T13:14:06Z [new]     WARNING  id 39175675: get_response_headers() returned no headers for https://www.miamiherald.com/latest-news/u84b14/picture284535580/alternates/LANDSCAPE_1140/EV%20Garage%20-3.jpg
+2024-01-29T18:03:04Z [new]     WARNING  id 39179426: get_response_headers() returned no headers for https://phys.org/news/2024-01-cormorant-disaster-columbia-worse.html
+2024-01-29T21:22:22Z [new]     WARNING  id 39182230: get_response_headers() returned no headers for http://hn.demo.timeplus.com/d/d299c092-7bda-4a37-ba1d-5f484fa4db72/hackernews-live-dashboard?orgId=1&refresh=5s
+2024-01-29T22:01:08Z [new]     WARNING  id 39183190: get_response_headers() returned no headers for https://media.springernature.com/m685/springer-static/image/art%3A10.1038%2Fs41591-023-02729-2/MediaObjects/41591_2023_2729_Fig1_HTML.png
+2024-01-30T02:58:09Z [active]  WARNING  id 39183534: failed to understand format or structure of YouTube URL: https://www.youtube.com/user/matthiaswandel
+2024-01-30T05:18:29Z [top]     WARNING  id 39186346: asdfft(): Exception: requests.head() failed on https://www.star-telegram.com/news/state/texas/article284595930.html: ReadTimeout: HTTPSConnectionPool(host='www.star-telegram.com', port=443): Read timed out. (read timeout=16)
+2024-01-30T05:18:29Z [top]     WARNING  id 39186346: asdfft(): no headers returned for https://www.star-telegram.com/news/state/texas/article284595930.html
+2024-01-30T05:19:12Z [top]     WARNING  id 39186346: d_og_i(): Exception: requests.head() failed on https://www.star-telegram.com/news/state/texas/m0kbat/picture284597300/alternates/LANDSCAPE_1140/gavel_approved.jpg: ReadTimeout: HTTPSConnectionPool(host='www.star-telegram.com', port=443): Read timed out. (read timeout=16)
+2024-01-30T05:19:12Z [top]     WARNING  id 39186346: d_og_i(): no headers returned for https://www.star-telegram.com/news/state/texas/m0kbat/picture284597300/alternates/LANDSCAPE_1140/gavel_approved.jpg
+2024-02-03T21:12:56Z [new]     WARNING  XRef object at 945422 can not be read, some object may be missing
+2024-02-04T09:02:28Z [new]     WARNING  XRef object at 945422 can not be read, some object may be missing
+2024-02-05T01:58:04Z [new]     WARNING  id 39256253: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/TlkzcIel_pY
+2024-02-06T08:30:47Z [new]     WARNING  id 39272052: failed to understand format or structure of YouTube URL: https://www.youtube.com/@rshosai
+2024-02-06T08:32:39Z [new]     WARNING  id 39271996: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/NR9yM_S0Z1g
+2024-02-06T22:02:01Z [new]     WARNING  id 39281152: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/iUZx_dKki-I
+2024-02-10T23:49:52Z [new]     WARNING  id 39330888: failed to understand format or structure of YouTube URL: https://www.youtube.com/post/UgkxlGZ4aB-2undtcH5NqDpjONHcfSIeap40
+2024-02-10T23:53:42Z [new]     WARNING  id 39331103: failed to understand format or structure of YouTube URL: https://www.youtube.com/results?search_query=veritasium+blue+led
+2024-02-12T17:46:54Z [new]     WARNING  id 39347871: failed to understand format or structure of YouTube URL: https://www.youtube.com/shorts/eohPmR-wCAA

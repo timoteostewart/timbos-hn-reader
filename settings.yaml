@@ -1,0 +1,96 @@
+ABOUT_HTML_URL:
+  DM:
+    owl: file:///D:/var/www/thnr.net/public_html/about-dm.html
+    thnr: https://www.thnr.net/about-dm.html
+  LM:
+    owl: file:///D:/var/www/thnr.net/public_html/about.html
+    thnr: https://www.thnr.net/about.html
+CANONICAL_URL:
+  DM:
+    owl: https://www.thnr.net/
+    thnr: https://www.thnr.net/
+  LM:
+    owl: https://www.thnr.net/
+    thnr: https://www.thnr.net/
+DELEGATES:
+  GHOSTSCRIPT_BINARY:
+    owl: L:/utils/gs/bin/gswin64c.exe
+    thnr: /usr/local/bin/gs
+HEADER_HYPERLINK:
+  DM:
+    owl: file:///D:/var/www/thnr.net/hn_stories/top_stories_page_1_dm.html
+    thnr: https://www.thnr.net/
+  LM:
+    owl: file:///D:/var/www/thnr.net/hn_stories/top_stories_page_1.html
+    thnr: https://www.thnr.net/
+MINUTES_BEFORE_REFRESHING_STORY_METADATA: 60
+OG_IMAGE:
+  MIN_DIM_PX: 250
+PAGES:
+  NUM_STORIES_PER_PAGE: 20
+SCRAPING:
+  FIREBASEIO_RETRY_DELAY: 8
+  NUM_RETRIES_FOR_HN_FEEDS: 3
+  # PATH_TO_CHROMEDRIVER: /srv/timbos-hn-reader/bin/chromedriver/121.0.6167.85/chromedriver-linux64/chromedriver
+  # PATH_TO_CHROME_BROWSER: /usr/bin/google-chrome-stable
+  PERMITTED_STORY_TYPES:
+  - top
+  - new
+  - best
+  - active
+  - classic
+  REQUESTS_GET_TIMEOUT_S: 30
+  STORY_ROSTERS:
+  - top
+  - new
+  - best
+  - active
+  - classic
+  UA_STR: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36
+SHORT_URL_DISPLAY:
+  owl: thnr.net
+  thnr: thnr.net
+SLUGS:
+  CHAR_LENGTH_FOR_LINEWRAPPING_DOMAINS: 20
+  MAX_SUBSTRING_LENGTH: 32
+STATIC_URL:
+  owl: D:/var/www/thnr.net/static/
+  thnr: /static/
+STORIES_URL:
+  owl: D:/var/www/thnr.net/hn_stories/
+  thnr: https://www.thnr.net/
+SYMBOLS:
+  DATA_SEPARATOR: "\xB7"
+  DOUBLE_OBLIQUE_HYPHEN: '&#11799;'
+  NONBREAKING_HYPHEN: '&#8209;'
+TEMP_DIR:
+  owl: D:/temp/thnr/
+  thnr: /tmp/
+THNR_BASE_DIR:
+  owl: D:/timbos-hn-reader/
+  thnr: /srv/timbos-hn-reader/
+THUMBS:
+  BG_COLOR_FOR_TRANSPARENT_THUMBS: '#FFFFFF'
+  CLIENT_MIN_WIDTH_PX:
+    FOR_EXTRALARGE: 768
+    FOR_LARGE: 768
+    FOR_MEDIUM: 575
+    FOR_SMALL: 375
+  COMP_QUAL:
+    EXTRALARGE: 50
+    LARGE: 50
+    MEDIUM: 65
+    SMALL: 80
+  WIDTH_PX:
+    EXTRALARGE: 1400
+    LARGE: 1050
+    MEDIUM: 700
+    SMALL: 350
+THUMBS_URL:
+  owl: https://thnrcdn.com/thumbs/
+  thnr: https://thnrcdn.com/thumbs/
+WAND:
+  BORDER_EXPANSION_PCT: 5
+  FUZZ_FACTOR_PCT: 0
+  MIN_DIM_FOR_SQUARE_ASPECT_PX: 720
+  RATIO_TOLERANCE_PCT: 22

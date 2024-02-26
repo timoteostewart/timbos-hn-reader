@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en-US">
+    <head>
+        <meta charset="utf-8" />
+        <title>Timbo’s Hacker News Reader</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="author" content="https://www.texastim.dev" />
+        <meta property="og:title" content="Timbo’s “Hacker News” Reader" />
+        <meta property="og:site_name" content="Timbo’s “Hacker News” Reader" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="{{ canonical_url }}" />
+        <meta property="og:description" content="a 3rd-party interface to the Hacker News stories" />
+        <meta name="description" content="a 3rd-party interface to the Hacker News stories" />
+        <meta property="og:locale" content="en_US" />
+        <meta name="apple-mobile-web-app-title" content="Timbo’s Hacker News Reader" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="icon" href="/favicon.ico" />
+        <link rel="stylesheet" href="{{ static_css_url }}" />
+    </head>
+    <body>
+        <div class="about-link">
+            <a href="{{ about_url }}">❓</a>
+        </div>
+        <div class="banner">
+            <p>
+                <a href="{{ header_hyperlink }}">Timbo’s “Hacker News” Reader</a><br />
+                {{ short_url_display }}
+            </p>
+        </div>
+        <div id="stories-channel">{{ stories }}</div>
+        <script>
+            function updateTime() {
+                const now = Math.floor(Date.now() / 1000) // Current time in epoch seconds
+                const elem = document.querySelector('#html-generation-time')
+                const generatedTime = parseInt(elem.getAttribute('data-html-generation-time-in-epoch-seconds'), 10)
+                const diffSeconds = now - generatedTime
+            
+                const hours = Math.floor(diffSeconds / 3600)
+                const minutes = Math.floor((diffSeconds % 3600) / 60)
+                const seconds = diffSeconds % 60
+            
+                let readableString = ''
+                if (hours > 0) {
+                    readableString += `${hours} hour${hours > 1 ? 's' : ''} `
+                }
+                if (minutes > 0 || hours > 0) {
+                    readableString += `${minutes} minute${minutes !== 1 ? 's' : ''} `
+                }
+                if (seconds > 0 && hours === 0) {
+                    readableString += `${seconds} second${seconds !== 1 ? 's' : ''} `
+                }
+                readableString += 'ago'
+            
+                document.getElementById('how-long-ago').innerHTML = ',<br>which was ' + readableString.trim()
+            
+                scheduleNextUpdate()
+            }
+            
+            function scheduleNextUpdate() {
+                // wait anywhere between 2 and 5 minutes
+                const minDelay = 2 * 60 * 1000
+                const maxDelay = 5 * 60 * 1000
+                const delay = Math.random() * (maxDelay - minDelay) + minDelay
+            
+                setTimeout(updateTime, delay)
+            }
+            
+            updateTime()
+        </script>
+    </body>
+</html>

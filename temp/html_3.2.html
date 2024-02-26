@@ -1,0 +1,1668 @@
+
+<BASE HREF="file:/u/montulli/webroot/projects/client/dogbert/styles.html">
+
+    <BASE HREF="file:/u/converse/specs/netscape/styles.html">
+
+    <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+    <HTML>
+    <HEAD>
+       <TITLE>JavaScript-Based Style Sheets
+    </TITLE>
+       <META NAME="GENERATOR" CONTENT="Mozilla/3.0b8Gold (X11; I; IRIX 5.3 IP22) [Netscape]">
+    </HEAD>
+    <BODY>
+
+    <P><!-- Changed by: Donna Converse, 22-Aug-1996 --></P>
+
+    <H1 ALIGN=CENTER>JavaScript-Based Style Sheets</H1>
+
+    <H3 ALIGN=CENTER>&quot;JSSS&quot;<BR>
+    Initial Proposal</H3>
+
+    <DL>
+    <DT>Authors:</DT>
+
+    <DD>Lou Montulli montulli@netscape.com</DD>
+
+    <DD>Brendan Eich brendan@netscape.com</DD>
+
+    <DD>Scott Furman fur@netscape.com</DD>
+
+    <DD>Donna Converse converse@netscape.com</DD>
+
+    <DD>Troy Chevalier troy@netscape.com</DD>
+
+    <DT>Date:</DT>
+
+    <DD>Aug 19, 1996</DD>
+
+    <DD>Aug 22, 1996</DD>
+    </DL>
+
+    <P>
+    <HR></P>
+
+    <H2>Abstract</H2>
+
+    <P>This document specifies a method to attach styles to HTML documents
+    using the existing property-based language JavaScript. This document
+    does not attempt to explain the JavaScript syntax. JavaScript documentation
+    can be found at <A HREF="http://home.netscape.com/comprod/products/navigator/version_2.0/script/script_info/index.html">http://home.netscape.com/comprod/products/navigator/version_2.0/script/script_info/index.html</A>.</P>
+
+    <H2>1 &nbsp;&nbsp; Basic Concepts</H2>
+
+    <P>Designing simple style sheets is easy. One only needs to know a little
+    HTML and some simple JavaScript assignment statements. For example, to
+    set the text color of 'H1' elements to blue, one can say:</P>
+
+    <PRE>   document.tags.H1.color = &quot;blue&quot;
+    </PRE>
+
+    <P>The example above is a simple example of using JavaScript to set the
+    color property of all 'H1' tags to &quot;blue&quot;. While the example
+    influences only one of manyproperties used in rendering an HTML document,
+    it qualifies as an independent style sheet. Combined with other style sheets
+    it will determine the final presentation of the document. </P>
+
+    <P>Further examples within this specification assume &quot;document&quot;
+    is implicitly scoped. Therefore the above example would read:</P>
+
+    <PRE>    tags.h1.color = &quot;blue&quot;</PRE>
+
+    <H3>1.1 &nbsp;&nbsp; Containment in HTML</H3>
+
+    <P>In order for style sheets to influence presentation, the user agent
+    (UA) must be aware of their existence. Another W3C working draft, <A HREF="http://www.w3.org/pub/WWW/TR/WD-style.html"><I>HTML3
+    and Style Sheets</I> [4]</A>, describes how to link HTML with style sheets:</P>
+
+    <PRE>&lt;HTML&gt;
+      &lt;HEAD&gt;
+        &lt;TITLE&gt;title&lt;/TITLE&gt;
+        &lt;LINK REL=STYLESHEET TYPE=&quot;text/Javascript&quot;
+          HREF=&quot;http://style.com/cool&quot; TITLE=&quot;Cool&quot;&gt;
+        &lt;STYLE TYPE=&quot;text/javascript&quot;&gt;
+          tags.H1.color = &quot;blue&quot;
+        &lt;/STYLE&gt;
+      &lt;/HEAD&gt;
+      &lt;BODY&gt;
+        &lt;H1&gt;Headline is blue&lt;/H1&gt;
+        &lt;P STYLE=&quot;color = 'green'&quot;&gt;While the paragraph is green.
+      &lt;/BODY&gt;
+    &lt;/HTML&gt;
+    </PRE>
+
+    <P>The example shows three ways to combine style directives and HTML:</P>
+
+    <LI>the 'LINK' element to link an external style sheet</LI>
+
+    <LI>a 'STYLE' element inside the 'HEAD' element</LI>
+
+    <LI>and a 'STYLE' attribute on an element inside 'BODY'. This option mixes
+    style with content with a corresponding loss of the advantages of traditional
+    style sheets</LI>
+
+    <P>The 'LINK' element references alternative style sheets that the reader
+    can select, while imported style sheets are automatically merged with the
+    rest of the style sheet.</P>
+
+    <P>Traditionally, UAs have silently ignored unknown tags. As as result,
+    old UAs will ignore the 'STYLE' element, but its content will be treated
+    as part of the document body, and rendered as such. During a transition
+    phase, 'STYLE' element content may be hidden using SGML comments:</P>
+
+    <PRE>  &lt;STYLE&gt;&lt;!--
+        tags.H1.color = &quot;blue&quot;
+      --&gt;&lt;/STYLE&gt;
+    </PRE>
+
+    <P>Since the 'STYLE' element is declared as &quot;CDATA&quot; in the DTD
+    (as defined in [4]), conformant SGML parsers will not consider the above
+    style sheet to be a comment that is to be removed.</P>
+
+    <H3>1.2 &nbsp;&nbsp; Inheritance</H3>
+
+    <P>In the first example, the color of 'H1' elements was set to blue. Suppose
+    we have an 'H1' element with an emphasized element inside:</P>
+
+    <PRE>  &lt;H1&gt;The headline &lt;EM&gt;is&lt;/EM&gt; important!&lt;/H1&gt;
+    </PRE>
+
+    <P>If no color has been assigned to 'EM', the emphasized &quot;is&quot;
+    will inherit the color of the parent element, so it will also appear in
+    blue. Other style properties are likewise inherited.</P>
+
+    <P>Inheritance starts at the oldest ancestor, at the top-level element.
+    In HTML, this is the 'HTML' element which is followed by the 'BODY' element.
+    In order to set a &quot;default&quot; style property, one can use 'BODY'
+    as selector:</P>
+
+    <PRE>  with(tags.BODY) {
+        color = &quot;black&quot;;
+        bgColor = &quot;white&quot;;
+      }
+    </PRE>
+
+    <P>This will be effective even when the author has omitted the 'BODY' tag
+    (which is legal) since the parser will infer the missing tag. The example
+    above sets the text color to be black and the background color to white.</P>
+
+    <P>Some style properties are not inherited from the parent element to the
+    child element. Most often it is intuitive why this is not the case. For
+    example, the <A HREF="#background">'background'</A> property does not inherit,
+    but the parent element's background will shine through by default.</P>
+
+    <H3>1.3 &nbsp;&nbsp; Class as Selector</H3>
+
+    <P>To increase the granularity of control over elements, HTML3 proposes
+    a new attribute: 'CLASS'. All elements inside the 'BODY' element can be
+    classed and the class can be addressed in the style sheet.  The
+    keyword 'all' is used to specify that all tags within the class
+    are effected by the style property:</P>
+
+    <PRE>&lt;HTML&gt;
+     &lt;HEAD&gt;
+      &lt;TITLE&gt;Title&lt;/TITLE&gt;
+      &lt;STYLE TYPE=&quot;text/javascript&quot;&gt;
+        classes.punk.all.color = &quot;#00FF00&quot;
+      &lt;/STYLE&gt;
+     &lt;/HEAD&gt;
+     &lt;BODY&gt;
+      &lt;H1 CLASS=punk&gt;Way too green&lt;/H1&gt;
+     &lt;/BODY&gt;
+    &lt;/HTML&gt;
+    </PRE>
+
+    <P>The normal inheritance rules apply to classed elements; they inherit
+    values from their ancestors in the document structure.</P>
+
+    <P>Only one class can be specified per selector. 'classes.punk.rap' is
+    therefore an invalid selector. (Contextual selectors, described below,
+    can have one class per simple selector.)</P>
+
+    <H3>1.4 &nbsp;&nbsp; ID as Selector</H3>
+
+    <P>HTML3 also introduces the 'ID' attribute which is guaranteed to have
+    a unique value over the document. It can therefore be of special importance
+    as a style sheet selector. The 'ID' attribute allows particular stylistic
+    exceptions to be expressed.</P>
+
+    <PRE>  ids.z098y.letterSpacing = &quot;0.3em&quot;
+
+      &lt;P ID=z098y&gt;Wide text&lt;/P&gt;
+    </PRE>
+
+    <H3>1.5 Combining Classes and IDs as Selectors</H3>
+
+    <P>It is sometimes desirable to reference only those tags that are within
+    a particular set defined by a class. By specifying the tag name
+    instead of using the 'all' keyword, only those tags matching the name
+    and within the class will be effected.</p>
+
+    <PRE>&lt;style type=&quot;text/javascript&quot;&gt;
+    classes.foo.H1.color = &quot;red&quot;
+    &lt;/style&gt;
+    &lt;h1 class=&quot;foo&quot;&gt;This should be red&lt;/h1&gt;
+    &lt;h1&gt;This should be in the normal document color&lt;/h1&gt;</PRE>
+
+    <P><BR>
+    This example sets all 'H1' tags that belong to the class &quot;foo&quot;
+    to the color red.</P>
+
+    <H3>1.6 &nbsp;&nbsp; Contextual Selectors</H3>
+
+    <P>Inheritance saves designers typing. Instead of setting all style properties,
+    one can create defaults and then list the exceptions. To give 'EM' elements
+    a different color, one may specify:</P>
+
+    <PRE>  with(tags) {
+    &nbsp;&nbsp;  H1.color = &quot;blue&quot;;
+      &nbsp;&nbsp;EM.color = &quot;red&quot;;
+      }</PRE>
+
+    <P>When this style sheet is in effect, all emphasized sections within or
+    outside 'H1' will turn red. Perhaps one only wanted 'EM' elements within
+    'H1' to turn red; this can be specified with a native JavaScript method
+    that assigns a search pattern, based on arguments, to a function called
+    &quot;contextual&quot;:</P>
+
+    <PRE>  contextual(tags.H1, tags.EM).color = &quot;red&quot;</PRE>
+
+    <P>The selector is now a search pattern on the stack of open elements.
+    This type of selector is referred to as a &quot;contextual selector&quot;.
+    Contextual selectors consist of several simple selectors as arguments to
+    the &quot;contextual&quot; function. Only elements that match the last
+    simple selector (in this case the 'EM' element) are addressed, and only
+    so if the search pattern matches. Contextual selectors look for ancestor
+    relationships, but other relationships (e.g. parent-child) may be introduced
+    in later revisions. In the example above the search pattern matches if
+    'EM' is a descendant of 'H1'; that is, if 'EM' is inside an 'H1' element.</P>
+
+    <PRE>  with(tags) {
+          contextual(UL, LI).color = &quot;red&quot;;
+          contextual(UL, UL, LI).color = &quot;blue&quot;;
+      }</PRE>
+
+    <P>Here, the first selector matches 'LI' elements with at least one 'UL'
+    ancestor. The second selector matches a subset of the first: 'LI' elements
+    with at least two 'UL' ancestors. The conflict is resolved by the second
+    selector being more specific due to the longer search pattern.</P>
+
+    <P>Contextual selectors can look for tags, classes, IDs or combinations
+    of these:</P>
+
+    <PRE>  contextual(tags.DIV, tags.P).color = &quot;green&quot;;
+      contextual(classes.reddish.all, tags.H1).color = &quot;red&quot;;
+      contextual(ids.x78y, tags.CODE).background = &quot;blue&quot;;</PRE>
+
+    <P>The first selector matchies all P tags within a DIV tag. The second
+    selector matches all H1 elements with an ancestor class 'reddish'. The
+    third selector matches all 'CODE' elements that are descendants of the
+    element with 'ID=x78y'.</P>
+
+    <H3>1.7 &nbsp;&nbsp; Comments</H3>
+
+    <P>Textual comments are defined by JavaScript and are similar to those
+    in the C and C++ programming language:</P>
+
+    <PRE>  tags.EM.color = &quot;red&quot;;  /* red, really red!! */
+      tags.B.color = &quot;blue&quot;; &nbsp;// blue, really blue</PRE>
+
+    <P>Comments cannot be nested.</P>
+
+    <H2><A NAME="typographical-pseudo-elements"></A>2.0 &nbsp;&nbsp; Typographical
+    Elements</H2>
+
+    <P>Some common typographic effects are associated not with structural elements
+    but rather typographical items as formatted on the canvas. Here we attempt
+    to demonstrate some common effects.</P>
+
+    <H3><A NAME="the-first-line-pseudo-element"></A>2.1 &nbsp;&nbsp; The 'firstLine'
+    Style</H3>
+
+    <P>The following is used to apply special styles to the first line as formatted
+    on the canvas:</P>
+
+    <PRE>  &lt;STYLE TYPE=&quot;text/javascript&quot;&gt;
+        tags.P.firstLine.fontStyle = &quot;small-caps&quot;;
+      &lt;/STYLE&gt;
+
+      &lt;P&gt;The first line of an article in Newsweek.
+    </PRE>
+
+    <P>On an text-based UA, this could be formatted as:</P>
+
+    <PRE>  THE FIRST LINE OF AN
+      article in Newsweek.
+    </PRE>
+
+    <P>(In the above example, the UA chose to replace small-caps text with
+    capital letters since small-caps fonts were not available. This specification
+    does not describe how UAs should render documents when the necessary resources,
+    such as colors and fonts, are not available.)</P>
+
+    <P>The lines array can be indexed to apply a style to any particular line
+    within a block element.</P>
+
+    <H3>2.2 &nbsp;&nbsp; The 'firstLetter' Style</H3>
+
+    <P>The 'firstLetter' style is used for &quot;initial caps&quot; and &quot;drop
+    caps&quot; which are common typographic effects. This is how you could
+    make a dropcap initial letter span two lines:</P>
+
+    <PRE>&lt;HTML&gt;
+     &lt;HEAD&gt;
+      &lt;TITLE&gt;Title&lt;/TITLE&gt;
+      &lt;STYLE TYPE=&quot;text/javascript&quot;&gt;
+     &nbsp;&nbsp;with(tags){
+       &nbsp;&nbsp;P.fontSize = &quot;12pt&quot;;
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;P.lineHeight = &quot;12pt&quot;;
+       &nbsp;&nbsp;P.firstLetter.fontSize *= 2;  // 200%
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;P.firstLetter.float = &quot;left&quot;;
+       &nbsp;&nbsp;SPAN.textTransform = &quot;uppercase&quot;;
+    &nbsp;&nbsp;&nbsp;}
+      &lt;/STYLE&gt;
+     &lt;/HEAD&gt;
+     &lt;BODY&gt;
+      &lt;P&gt;&lt;SPAN&gt;The first&lt;/SPAN&gt; few words of an article in The Economist.&lt;/P&gt;
+     &lt;/BODY&gt;
+    &lt;/HTML&gt;
+    </PRE>
+
+    <P>(The 'SPAN' element is being proposed as a new character-level element
+    for HTML3.)</P>
+
+    <P>If a text-based UA supports the 'firstLetter' style, the above could
+    be formatted as:</P>
+
+    <PRE>  ___
+       | HE FIRST few words
+       | of an article in the
+      Economist..</PRE>
+
+    <P>The 'firstLetter' style can be attached only to a block-level element.</P>
+
+    <H2>3.0 &nbsp;&nbsp; Using Programming Language Constructs in Style Sheets</H2>
+
+    <P>JavaScript is a powerful programming language. It can therefore be used
+    to do things ordinary style sheet languages could not. For instance, functions
+    and assigned values may be used to make the expression of style information
+    easier for the style sheet creator. In addition, complex calculations and
+    the querying of external properties reflected into the JavaScript scope
+    maybe used to calculate property values in new and unique ways.</P>
+
+    <H3>3.1 &nbsp;&nbsp; Assigning Style-Evaluating Functions</H3>
+
+    <P>To assign a style function to a tag, one can use the &quot;apply&quot;
+    property. The function assigned to the &quot;apply&quot; property will
+    be run each time the tag is encountered:</P>
+
+    <PRE>&lt;style type=text/javascript&gt;</PRE>
+
+    <PRE>evaluate_style() {</PRE>
+
+    <PRE> if (color == &quot;red&quot;){
+      &nbsp;color = &quot;blue&quot;;
+    &nbsp;&nbsp; fontStyle&nbsp;=&nbsp;&quot;italic&quot;;
+     } else if (color == &quot;blue&quot;){
+     &nbsp; color = &quot;green&quot;;
+    &nbsp;&nbsp; fontWeight&nbsp;=&nbsp;&quot;bold&quot;;
+    &nbsp;&nbsp; fontStyle&nbsp;=&nbsp;&quot;normal&quot;;
+     } else if (color == &quot;green&quot;) {
+    &nbsp;&nbsp;&nbsp;color = &quot;red&quot;;
+    &nbsp;&nbsp; fontStyle&nbsp;=&nbsp;&quot;medium&quot;;
+     }
+    }</PRE>
+
+    <PRE>tag.UL.color = &quot;green&quot;;
+    tag.UL.apply = evaluate_style();</PRE>
+
+    <PRE>&lt;/style&gt;</PRE>
+
+    <P>This style when applied to a nested list can have the following effect:</P>
+
+    <UL>
+    <LI><I><FONT COLOR="#FF0000">First nesting</FONT></I></LI>
+
+    <UL>
+    <LI><B><FONT COLOR="#0000FF">second nesting</FONT></B></LI>
+
+    <UL>
+    <LI><FONT COLOR="#008040">third nesting</FONT></LI>
+
+    <UL>
+    <LI><I><FONT COLOR="#FF0000">fourth nesting</FONT></I></LI>
+
+    <UL>
+    <LI><B><FONT COLOR="#0000FF">etc...</FONT></B></LI>
+    </UL>
+    </UL>
+    </UL>
+    </UL>
+    </UL>
+
+    <P><FONT COLOR="#000000">Functions can be assigned to any addressable tag
+    as follows:</FONT></P>
+
+    <UL>
+    <PRE><FONT COLOR="#000000">tags.DIV.apply = evaluate_style();
+    classes.foo.all.apply = evaluate_style();
+    ids.foo.apply = evaluate_style();
+    contextual(tags.DIV, tags.H1).apply = evaluate_style();</FONT></PRE>
+    </UL>
+
+    <P><FONT COLOR="#000000">Much more complicated and/or useful examples can
+    be imagined.</FONT></P>
+
+    <H3>3.2 Evaluating Expressions for Property Values</H3>
+
+    <P>Any property can be assigned the result of a JavaScript expression.
+    JavaScript expressions can be used to calculate complicated values and
+    to query other properties which may be reflected.</P>
+
+    <P>Here is an example:</P>
+
+    <PRE>tags.IMG.width = (500 * 4/3) * .3;
+    tags.IMG.width = .50 * document.width;
+    if(visual.colorDepth &gt; 2) {
+      body.bgColor = &quot;white&quot;;
+      body.color = &quot;blue&quot;;
+    } else {
+      body.bgColor = &quot;black&quot;;
+      body.color = &quot;white&quot;;
+    }</PRE>
+
+    <P>As more properties are reflected into JavaScript, the expressive power
+    increases dramatically. Style sheets will be able to customize the document
+    to the user's particular environment.</P>
+
+    <H3>3.3 Simplifying Assignment Using Methods</H3>
+
+    <P>Methods can be used to simplify the assignment of some values. For instance
+    the assignment of margins can be made easier as follows:</P>
+
+    <PRE>    // manual assignment
+        with(tags.P) {
+            topMargin = 30;
+            bottomMargin = 30;
+            rightMargin = 30;
+            leftMargin = 30;
+        }
+
+        // assignment using a method
+        tags.P.margins(30, 30, 30, 30);
+    </PRE>
+
+    <H2>4 &nbsp;&nbsp; Precedence Rules</H2>
+
+    <P>More than one style sheet can influence the presentation simultaneously.
+    There are two main reasons for this feature: modularity and author/reader
+    balance.</P>
+
+    <DL>
+    <UL>
+    <LI>modularity</LI>
+    </UL>
+
+    <DD>A style sheet designer can combine several (partial) style sheets to
+    reduce redundancy:</DD>
+
+    <PRE>  &lt;style src=&quot;http://www.style.org/punk&quot;&gt;&lt;/style&gt;
+      &lt;style src=&quot;http://www.style.org/funk&quot;&gt;&lt;/style&gt;
+     &nbsp;
+      &lt;style language=text/javascript&gt;
+     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;tags.H1.color = &quot;red&quot;     /* override imported sheets */
+      &lt;/style&gt;</PRE>
+
+    <UL>
+    <LI>author/reader balance</LI>
+    </UL>
+
+    <DD>Both readers and authors can influence the presentation through style
+    sheets. To do so, they use the same style sheet language thus reflecting
+    a fundamental feature of the web: everyone can become a publisher. The
+    UA is free to choose the mechanism for referencing personal style sheets.</DD>
+    </DL>
+
+    <P>Sometimes conflicts will arise between the style sheets which influence
+    the presentation. The order in which styles are read in defines the precedence
+    order with the last style taking precedence. The exception to that rule
+    is that reader's style sheets always take precedence over author's style
+    sheets. Both reader and author rules override UA's default values.</P>
+
+    <H3>4.1 &nbsp;&nbsp; Precedence Order for Tags, ID's and Classes</H3>
+
+    <P>To find the value for an element/property combination, the following
+    algorithm should be followed:</P>
+
+    <OL>
+    <LI>Find all declarations that apply to the element/property in question.
+    Declarations apply if the selector matches the element in question. If
+    no declarations apply, the inherited value is used. If there is no inherited
+    value (this is the case on the root element and for properties that do
+    not inherit), the initial value is used.</LI>
+
+    <LI>Sort the declarations by explicit weight.</LI>
+
+    <LI>Sort by origin: the reader's style sheets override the author's style
+    sheets which override the UA's default values.</LI>
+
+    <LI>Sort by specificity of selector: more specific selectors will override
+    more general ones. To find the specificity, count the number of ID attributes
+    in the selector (a), the number of CLASS attributes in the selector (b),
+    and the number of tag names in the selector (c). Concatenating the three
+    numbers (in a number system with a large base) gives the specificity. Some
+    examples:</LI>
+
+    <PRE>
+      tags.LI                    /* a=0 b=0 c=1 -&gt; specificity =   1 */
+      contextual(UL LI)<sup>*</sup>         /* a=0 b=0 c=2 -&gt; specificity =   2 */
+      contextual(UL OL LI)<sup>*</sup>      /* a=0 b=0 c=3 -&gt; specificity =   3 */
+      classes.foo.all            /* a=0 b=1 c=0 -&gt; specificity =  10 */
+      classes.foo.LI             /* a=0 b=1 c=1 -&gt; specificity =  11 */
+      ids.x34y                   /* a=1 b=0 c=0 -&gt; specificity = 100 */
+
+    <font size="-1">*arguments have been shortened for these examples.  UL == tags.UL, etc.</font>
+    </PRE>
+
+
+    <LI>Sort by order specified: if two rules have the same weight, the latter
+    specified should live.</LI>
+    </OL>
+
+    <P>The search for the property value can be terminated whenever one rule
+    has a higher weight than the other rules that apply to the same element/property
+    combination.</P>
+
+    <P>A 'STYLE' attribute on an element should be considered as if an ID attribute
+    had been specified at the end of the style sheet. For example:</P>
+
+    <PRE>&lt;P style='color = &quot;blue&quot;'&gt;a paragraph of text&lt;/p&gt;</PRE>
+
+    <P>The UA may choose to honor other stylistic attributes (e.g. 'ALIGN')
+    as if a 'STYLE' attribute had been used. When in conflict with other stylistic
+    attributes, the 'STYLE' attribute should win.</P>
+
+    <H2>5 &nbsp;&nbsp; Formatting model</H2>
+
+    <P>This document suggests a simple box-oriented formatting model. Each
+    block-level element (e.g. 'H1' and 'P', but not 'EM') is surrounded by
+    a box. The size of the box is the sum of the element width (i.e. formatted
+    text or image), the padding, the border and the margins:</P>
+
+    <PRE>    _______________________________________
+       |                                       |
+       |           margin (transparent)        |
+       |   _________________________________   |
+       |  |                                 |  |
+       |  |        border                   |  |
+       |  |   ___________________________   |  |
+       |  |  |                           |  |  |
+       |  |  |     padding               |  |  |
+       |  |  |   _____________________   |  |  |
+       |  |  |  |                     |  |  |  |
+       |  |  |  |  content            |  |  |  |
+       |  |  |  |_____________________|  |  |  |
+       |  |  |___________________________|  |  |
+       |  |_________________________________|  |
+       |_______________________________________|
+
+                |    element width    |
+
+       |               box width               |
+
+    </PRE>
+
+    <P>The size of the margin, border and padding are set with the <A HREF="#margin-left-margin-right-margin-top-margin-bottom-margin">'margin'</A>,
+    <A HREF="#border-top-border-right-border-bottom-border-left-border">'border'</A>
+    and <A HREF="#padding">'padding'</A> properties respectively. The padding
+    area uses the same background as the element itself (set with the <A HREF="#background">'background'</A>
+    property). The color and style for the border is set with the 'border'
+    property. The margins are always transparent, so the parent element will
+    shine through.</P>
+
+    <P>The following example shows how margins and padding format a 'UL' element
+    with two children. To simplify the diagram there are no borders.</P>
+
+    <PRE>    &lt;STYLE TYPE=&quot;text/javascript&quot;&gt;
+          with(tags.UL) {
+            bgColor = &quot;red&quot;;
+            topMargin = A;
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rightMargin&nbsp;=&nbsp;B;
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;bottomMargin&nbsp;=&nbsp;C;
+     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;leftMargin&nbsp;=&nbsp;D;
+            topPadding = E;
+            rightPadding = F;
+            bottomPadding = G;
+            leftPadding = H:
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+          with(tags.LI) {
+            color = &quot;white&quot;;
+            background = &quot;blue&quot;;     /* so text is white on blue */
+            margins(a, b, c, d);      /* margins is a method that simplifies the assignment of the 4 margin widths */
+            paddings(e f g h);
+          }
+        &lt;/STYLE&gt;
+        ..
+        &lt;UL&gt;
+          &lt;LI&gt;1st element of list
+          &lt;LI&gt;2nd element of list
+        &lt;/UL&gt;
+    </PRE>
+
+    <PRE>   _______________________________________________________
+      |                                                       |
+      |    A      UL margin (transparent)                     |
+      |    _______________________________________________    |
+      | D |                                               | B |
+      |   |    E   UL padding (red)                       |   |
+      |   |    _______________________________________    |   |
+      |   | H |                                       | F |   |
+      |   |   |    a   LI margin (transparent,        |   |   |
+      |   |   |        so red shines through)         |   |   |
+      |   |   |    _______________________________    |   |   |
+      |   |   | d |                               | b |   |   |
+      |   |   |   |    e    LI padding (blue)     |   |   |   |
+      |   |   |   |                               |   |   |   |
+      |   |   |   | h  1st element of list      f |   |   |   |
+      |   |   |   |                               |   |   |   |
+      |   |   |   |    g                          |   |   |   |
+      |   |   |   |_______________________________|   |   |   |
+      |   |   |                                       |   |   |
+      |   |   |     max(a, c)                         |   |   | &lt;- note the max
+      |   |   |                                       |   |   |
+      |   |   |    _______________________________    |   |   |
+      |   |   |   |                               |   |   |   |
+      |   |   | d |    e    LI padding (blue)     |   |   |   |
+      |   |   |   |                               |   |   |   |
+      |   |   |   | h  2nd element of list      f |   |   |   |
+      |   |   |   |                               |   |   |   |
+      |   |   |   |    g                          |   |   |   |
+      |   |   |   |_______________________________|   |   |   |
+      |   |   |                                       |   |   |
+      |   |   |   c    LI margin (transparent,        |   |   |
+      |   |   |        so red shines through)         |   |   |
+      |   |   |_______________________________________|   |   |
+      |   |                                               |   |
+      |   |    G                                          |   |
+      |   |_______________________________________________|   |
+      |                                                       |
+      |   C                                                   |
+      |_______________________________________________________|
+    </PRE>
+
+    <P>Technically, padding and margin properties are not inherited. But, as
+    the example shows, the placement of an element is relative to ancestors
+    and siblings so these elements' padding and margin properties have an effect
+    on their children.</P>
+
+    <P>If the border width had been set (the default value is '0'), the border
+    would have appeared between the padding and the margins.</P>
+
+    <H3>5.1 &nbsp;&nbsp; Vertical formatting</H3>
+
+    <P>The width of the margins specify the minimum distance to the edges of
+    surrounding boxes. Two or more adjoining margins (i.e., with no border,
+    padding or content between them) are collapsed to use the maximum of the
+    margin values. In the example above, the margins between the two 'LI' elements
+    are collapsed by using the maximum of the first LI element's 'margin-bottom'
+    and the second LI element's 'margin-top'. Similarly, if the padding between
+    the 'UL' and the first 'LI' element (the &quot;E&quot; constant) had been
+    zero, the margins of the UL and first LI elements should have been collapsed.</P>
+
+    <P>In the case of negative margins, the absolute maximum of the negative
+    adjoining margins should be deducted from the maximum of the positive adjoining
+    margins.</P>
+
+    <H3>5.2 &nbsp;&nbsp; Horizontal formatting</H3>
+
+    <P>Seven length units influence the horizontal dimension of a box: left
+    margin, left border, left padding, width, right padding, right border,
+    right margin. Added up, these have to be equal to the width of the parent
+    element. Therefore, one cannot specify values for all properties and expect
+    them to be honored. The relative strengths between them are as follows:</P>
+
+    <OL>
+    <LI>left border</LI>
+
+    <LI>right border</LI>
+
+    <LI>left padding</LI>
+
+    <LI>right padding</LI>
+
+    <LI>width</LI>
+
+    <LI>left margin</LI>
+
+    <LI>right margin</LI>
+    </OL>
+
+    <P>By default, the value of the 'width' property is 'auto' which means
+    it will be automatically calculated based on the other properties' values.
+    However, if 'width' is assigned another value, or the dimensions don't
+    add up for other reasons, the property with the lowest rank will be assigned
+    'auto', i.e. automatically calculated.</P>
+
+    <H3>5.3 &nbsp;&nbsp; Lists</H3>
+
+    <P>Elements with a 'display' property value of 'list-item' are preceded
+    by a label. The type of label is determined by the 'list-style' property.
+    The label is not considered to be a part of the content, and will be placed
+    outside the content. The rendering of the label should be based on the
+    font and color properties of the element it belongs to.</P>
+
+    <H3>5.4 &nbsp;&nbsp; The Canvas</H3>
+
+    <P>The canvas is the part of the UA's drawing surface onto which documents
+    are rendered. No structural element of a document corresponds to the canvas.
+    This creates a problem when the document doesn't fill the whole canvas:
+    how should the unfilled area be rendered? HTML extensions have set a precedence
+    in this area; attributes on the 'BODY' element set the background of the
+    whole canvas. To support designers' expectations, we introduce a special
+    rule to find the canvas background:</P>
+
+    <BLOCKQUOTE>
+    <P>If the 'background' value of the 'HTML' element is different from 'transparent'
+    then use it, else use the 'background' value of the 'BODY' element. If
+    the resulting value is 'transparent', the rendering is undefined.</P>
+    </BLOCKQUOTE>
+
+    <P>This rule allows:</P>
+
+    <PRE>  &lt;HTML STYLE=&quot;background = 'http://style.com/marble.png'&quot;&gt;
+      &lt;BODY STYLE=&quot;bgColor = 'red'&quot;&gt;</PRE>
+
+    <P>In the example above, the canvas will be covered with &quot;marble&quot;.
+    The background color of the 'BODY' element (which may or may not fully
+    cover the canvas) will be red.</P>
+
+    <P>Until other means of addressing the canvas become available, we recommend
+    setting canvas properties on the 'BODY' element.</P>
+
+    <H3><A NAME="floating-elements"></A>5.5 &nbsp;&nbsp; Floating elements</H3>
+
+    <P>Using the <A HREF="#float">'float'</A> property, elements can be declared
+    to be outside the normal flow of elements. For example, by setting the
+    'float' property of an image to 'left', the normal flow will wrap around
+    on the right side. The image's position will be taken from the margin properties.</P>
+
+    <PRE>&lt;STYLE&gt;
+      with(tags.IMG) {
+        float = &quot;left&quot;;
+        leftMargin = &quot;2em&quot;;
+      }
+    &lt;/STYLE&gt;
+
+    &lt;BODY&gt;
+    &lt;IMG SRC=star.gif&gt;
+    &lt;P&gt;Some text to show how text wraps around floating images
+    &lt;/BODY&gt;
+    </PRE>
+
+    <P>The above example could be formatted as:</P>
+
+    <PRE>      ___
+         |   |Some text
+         | * |to show how
+         |___|text wraps
+      around floating images
+    </PRE>
+
+    <P>Vertical bars and underscore characters are used to indicate the bounding
+    box of the image.</P>
+
+    <P>Typically, only image elements are set to be floating. However, there
+    is nothing that prevents the 'float' property to be used on other elements:</P>
+
+    <PRE>  with(tags.H1) {
+        fontSize = &quot;medium&quot;;
+        float = &quot;left&quot;;           /* run-in header */
+      }
+    </PRE>
+
+    <H3>5.6 &nbsp;&nbsp; Replaced Elements</H3>
+
+    <P>A replaced element is an element which is replaced by content pointed
+    to from the element. For example, in HTML, the IMG element is replaced
+    by the image pointed to by the SRC attribute. One can assume that replaced
+    elements come with their own intrinsic width and height. If the value for
+    'width' is 'auto', the intrinsic width should be used as the width of the
+    element. If a value other than 'auto' is specified in the style sheet,
+    this value should be used and the replaced element should be resized accordingly
+    (the resize method will depend on the media type). The 'height' property
+    is used in the same manner.</P>
+
+    <H2>6 &nbsp;&nbsp; Properties</H2>
+
+    <P>Style sheets influence the presentation of documents by assigning values
+    to style properties. This section lists the defined style properties and
+    their corresponding list of possible values.</P>
+
+    <H3>6.1 &nbsp;&nbsp; Notation for Property Values</H3>
+
+    <P>In the text below, the allowed values for each property are listed with
+    a syntax like the following:</P>
+
+    <BLOCKQUOTE>
+    <P><I>Value:</I> N | NW | NE<BR>
+    <I>Value:</I> [ &lt;length&gt; | thick | thin ]{1,4}<BR>
+    <I>Value:</I> &lt;url&gt;? &lt;color&gt; [ / &lt;color&gt; ]?<BR>
+    <I>Value:</I> &lt;url&gt; || &lt;color&gt;<BR>
+    </P>
+    </BLOCKQUOTE>
+
+    <P>The words between &quot;&lt;&quot; and &quot;&gt;&quot; give a type
+    of value. The most common types are &lt;length&gt;, &lt;percentage&gt;,
+    &lt;url&gt;, &lt;number&gt; and &lt;color&gt;; these are described in the
+    section on <A HREF="http://www.w3.org/pub/WWW/Style/Group/units">units</A>.
+    The more specialized types (e.g. &lt;font-family&gt; and &lt;border-style&gt;)
+    are described under the property where they appear.</P>
+
+    <P>Other words are keywords that must appear literally. The slash (/) is
+    also considered a keyword.</P>
+
+    <P>Several things juxtaposed mean that all of them must occur, in the given
+    order. A bar (|) separates alternatives: one of them must occur. A double
+    bar (A || B) means that either A or B or both must occur, in any order.
+    Brackets ([]) are for grouping. Juxtaposition is stronger than the double
+    bar, and the double bar is stronger than the bar. Thus &quot;a b | c ||
+    d e&quot; is equivalent to &quot;[ a b ] | [ c || [ d e ]]&quot;.</P>
+
+    <P>Every type, keyword, or bracketed group may be followed by one of the
+    following modifiers:</P>
+
+    <UL>
+    <LI>An asterisk (*) indicates that the preceding type, word or group is
+    repeated zero or more times.</LI>
+
+    <LI>A plus (+) indicates that the preceding type, word or group is repeated
+    one or more times.</LI>
+
+    <LI>A question mark (?) indicates that the preceding type, word or group
+    is optional.</LI>
+
+    <LI>A pair of numbers in curly braces ({A,B}) indicates that the preceding
+    type, word or group is repeated at least A and at most B times.</LI>
+    </UL>
+
+    <H3>6.2 &nbsp;&nbsp; Font Properties</H3>
+
+    <P>Setting font properties will be among the most common uses of style
+    sheets. Unfortunately, there exists no well-defined and universally accepted
+    taxonomy for classifying fonts, and terms that apply to one font family
+    may not be appropriate for others. E.g. 'italic' is commonly used to label
+    slanted text, but the term is not appropriate for sans-serif fonts (whose
+    slanted fonts are called 'oblique'). This specification suggests a liberal
+    terminology for describing fonts, and a level of detail similar to common
+    desktop publishing applications.</P>
+
+    <P>Additional font characteristics are being worked on in the W3C Fonts
+    working group.</P>
+
+    <H4>6.2.1 &nbsp;&nbsp; 'fontSize'</H4>
+
+    <P><I>Value:</I> &lt;absolute-size&gt; | &lt;relative-size&gt; | &lt;length&gt;
+    | &lt;percentage&gt;<BR>
+    <I>Initial:</I> medium<BR>
+    <I>Applies to:</I> all elements<BR>
+    <I>Inherited:</I> yes<BR>
+    <I>Percentage values:</I> relative to parent element's font size<BR>
+    </P>
+
+    <DL>
+    <DT><B>&lt;absolute-size&gt;</B></DT>
+
+    <DD>An &lt;absolute-size&gt; keyword is an index to a table of font sizes
+    computed and kept by the UA. Legal values are: [ xx-small | x-small | small
+    | medium | large | x-large | xx-large ]. On a computer screen a scaling
+    factor of 1.5 is suggested between adjacent indexes; if the 'medium' font
+    is 10pt, the 'large' font could be 15pt. Different media may need different
+    scaling factors. Also, the UA should take the quality and availability
+    of fonts into account when computing the table. The table may be different
+    from one font family to another.</DD>
+
+    <DT><B>&lt;relative-size&gt;</B></DT>
+
+    <DD>A &lt;relative-size&gt; keyword is interpreted relative to the table
+    of font sizes and the font size of the parent element. Legal values are:
+    [ larger | smaller ]. For example, if the parent element has a font size
+    of 'medium', a value of 'larger' will make the font size of the current
+    element be 'large'. If the parent element's size is not close to a table
+    entry, the UA is free to interpolate between table entries or round off
+    to the closest one. The UA may have to extrapolate table values if the
+    numerical value goes beyond the keywords.</DD>
+    </DL>
+
+    <P>If the value is a number, it is interpreted as a relative keyword where
+    a value of '1' is equivalent to 'bigger'. For example, if the parent element
+    has a font size of 'medium', a value of '-2' will make the font size of
+    the current element be 'x-small'.</P>
+
+    <P>Length and percentage values should not take the font size table into
+    account when calculating the font size of the element.</P>
+
+    <P>For most properties, length values refer to the font size of the current
+    element. On the 'font-size' property' length units (e.g. 'em' and 'ex'),
+    refer to the font size of the parent element.</P>
+
+    <P>Note that an application may reinterpret an explicit size, depending
+    on the context. For example, inside a VR scene, a font may get a different
+    size because of perspective distortion.</P>
+
+    <P>Examples:</P>
+
+    <PRE>  tags.P.fontSize = &quot;12pt&quot;;        /* absolute size: be careful! */
+      tags.BLOCKQUOTE.fontSize = -1;
+      tags.EM.fontSize = +1;          /* the '+' is optional */
+      tags.EM.fontSize *= 1.50;       /* increase by 150% */
+      tags.EM.fontSize = &quot;1.5em&quot;;</PRE>
+
+    <P>If the suggested scaling factor of 1.5 is used, the latter three rules
+    are identical.</P>
+
+    <H4>6.2.2 &nbsp;&nbsp; 'fontStyle'</H4>
+
+    <P><I>Value:</I> normal | italic || small-caps | oblique || small-caps
+    | small-caps<BR>
+    <I>Initial:</I> normal<BR>
+    <I>Applies to:</I> all elements<BR>
+    <I>Inherited:</I> yes<BR>
+    <I>Percentage values:</I> N/A<BR>
+    </P>
+
+    <P>Legal combinations of the values are:</P>
+
+    <UL>
+    <LI>one of the four values ('normal', 'italic', 'oblique', 'small-caps')</LI>
+
+    <LI>'italic' or 'oblique', combined with 'small-caps'</LI>
+    </UL>
+
+    <P>If the preferred font style cannot be accomplished, the UA should make
+    best efforts to find acceptable substitutions. Often, an 'oblique' font
+    can be substituted by an 'italic' font. If 'small-caps' are not available,
+    capital letters of a smaller font size can be used to render small characters
+    if the resolution of the output medium is appropriate for this.</P>
+
+    <PRE>  tags.H1.fontStyle(small-caps, italic);&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;a helper method&nbsp;is called
+      contextual(tags.H1, tags.EM).fontStyle = &quot;italic&quot;;</PRE>
+
+    <P>In the example above, emphasized text within 'H1' will appear in normal
+    lower-case italic.</P>
+
+    <H4>6.2.3 &nbsp;&nbsp; 'lineHeight'</H4>
+
+    <P><I>Value:</I> &lt;number&gt; | &lt;length&gt; | &lt;percentage&gt;<BR>
+    <I>Initial:</I> UA specific<BR>
+    <I>Applies to:</I> block-level elements<BR>
+    <I>Inherited:</I> yes<BR>
+    <I>Percentage values:</I> refers to the font size of the element itself<BR>
+    </P>
+
+    <P>The property sets the the distance between two adjacent lines' baselines.
+    It only applies to block-level elements.</P>
+
+    <P>When a numerical value is specified, the line height is given by the
+    font size of the current element multiplied with the numerical value. This
+    differs from a percentage value in the way it inherits: when a numerical
+    value is specified, child elements will inherit the factor itself, not
+    the resultant value (as is the case with <A HREF="#percentage-units">percentage</A>
+    and other units).</P>
+
+    <P>Negative values are not allowed.</P>
+
+    <P>The three rules in the example below have the same resultant line height:</P>
+
+    <PRE>  with(tags.DIV) {</PRE>
+
+    <PRE>&nbsp;&nbsp;&nbsp;&nbsp;lineHeight = 1.2;
+    &nbsp;&nbsp;&nbsp;&nbsp;fontSize = &quot;10pt&quot;;     /* number */
+      &nbsp;&nbsp;lineHeight = &quot;1.2em;
+    &nbsp;&nbsp;&nbsp;&nbsp;fontSize = &quot;10pt&quot;;   /* length */
+      &nbsp;&nbsp;lineHeight *= 1.20   /* 120% */
+    &nbsp;&nbsp;&nbsp;&nbsp;fontSize = &quot;10pt&quot;;    /* percentage */</PRE>
+
+    <P>It is suggested that UAs set the initial value to be a number in the
+    range of 1.0 to 1.2.</P>
+
+    <H3>6.3 &nbsp;&nbsp; Color and Background Properties</H3>
+
+    <H4>6.3.1 &nbsp;&nbsp; 'color'</H4>
+
+    <P><I>Value:</I> &lt;color&gt;<BR>
+    <I>Initial:</I> UA specific<BR>
+    <I>Applies to:</I> all elements<BR>
+    <I>Inherited:</I> yes<BR>
+    <I>Percentage values:</I> N/A<BR>
+    </P>
+
+    <P>This property describes the text color of an element, i.e. the &quot;foreground&quot;
+    color. There are different ways to specify red:</P>
+
+    <PRE>  with(tags.EM) {</PRE>
+
+    <PRE>&nbsp;&nbsp;color = &quot;red&quot;;              /* natural language */
+      color = rgb(255,0,0);&nbsp;&nbsp;     /* RGB rage 0-255   */
+      }</PRE>
+
+    <H4>6.3.2 &nbsp;&nbsp; 'background'</H4>
+
+    <P><I>Value:</I> &lt;url&gt;<BR>
+    <I>Initial:</I> empty<BR>
+    <I>Applies to:</I> all elements<BR>
+    <I>Inherited:</I> no<BR>
+    <I>Percentage values:</I> N/A<BR>
+    </P>
+
+    <LI>This property describes the background of an element, the surface onto
+    which the content (such as text) is rendered.</LI>
+
+    <P>Corresponding example:</P>
+
+    <PRE>  tags.BODY.background = &quot;http://foo.com/background.jpg&quot;;</PRE>
+
+    <H4><BR>
+    6.3.3&nbsp;&nbsp; 'bgColor'</H4>
+
+    <P><I>Value:</I> &lt;color&gt;<BR>
+    <I>Initial:</I> empty<BR>
+    <I>Applies to:</I> all elements<BR>
+    <I>Inherited:</I> no<BR>
+    <I>Percentage values:</I> N/A<BR>
+    </P>
+
+    <LI>This property describes the background of an element, the surface onto
+    which the content (such as text) is rendered.</LI>
+
+    <P>Corresponding example:</P>
+
+    <PRE>  tags.BODY.bgColor = &quot;red&quot;;</PRE>
+
+    <H3>6.4 &nbsp;&nbsp; Text Properties</H3>
+
+    <H4>6.4.1 &nbsp;&nbsp; 'wordSpacing'</H4>
+
+    <P><I>Value:</I> normal | &lt;length&gt;<BR>
+    <I>Initial:</I> normal<BR>
+    <I>Applies to:</I> all elements<BR>
+    <I>Inherited:</I> yes<BR>
+    <I>Percentage values:</I> N/A<BR>
+    </P>
+
+    <P>The length unit indicates an addition to the default space between words.
+    Values can be negative, but there may be implementation-specific limits.
+    The UA is free to select the exact spacing algorithm. The word spacing
+    may also be influenced by justification (which is a value of the 'align'
+    property).</P>
+
+    <PRE>   tags.H1.wordSpacing = 4</PRE>
+
+    <P>Here, the word-spacing between each word in 'H1' elements would be increased
+    with 4 pixels.</P>
+
+    <H4>6.4.2 &nbsp;&nbsp; 'letter-spacing'</H4>
+
+    <P><I>Value:</I> normal | &lt;length&gt;<BR>
+    <I>Initial:</I> normal<BR>
+    <I>Applies to:</I> all elements<BR>
+    <I>Inherited:</I> yes<BR>
+    <I>Percentage values:</I> N/A<BR>
+    </P>
+
+    <P>The length unit indicates an addition to the default space between characters.
+    Values can be negative, but there may be implementation-specific limits.
+    The UA is free to select the exact spacing algorithm. The letter spacing
+    may also be influenced by justification (which is a value of the 'align'
+    property).</P>
+
+    <PRE>  tags.BLOCKQUOTE.letterSpacing = &quot;0.1em&quot;</PRE>
+
+    <P>Here, the word-spacing between each character in 'BLOCKQUOTE' elements
+    would be increased with '0.1em'.</P>
+
+    <H4>6.4.3 &nbsp;&nbsp; 'text-decoration'</H4>
+
+    <P><I>Value:</I> none | [ underline | overline | line-through | blink ]+<BR>
+    <I>Initial:</I> none<BR>
+    <I>Applies to:</I> all elements<BR>
+    <I>Inherited:</I> no, but see clarification below<BR>
+    <I>Percentage values:</I> N/A<BR>
+    </P>
+
+    <P>This property describes decorations that are added to the text of an
+    element. If the element has no text (e.g. the IMG element in HTML) or is
+    an empty element (e.g. &quot;&lt;EM&gt;&lt;/EM&gt;&quot;), this property
+    has no effect.</P>
+
+    <P>The color(s) required for the text decoration should be derived from
+    the 'color' property value.</P>
+
+    <P>This property is not inherited, but children elements should match their
+    ancestor. E.g., if an element is underlined, the line should span the child
+    elements. The color of the underlining will remain the same even if descendant
+    elements have different 'color' values.</P>
+
+    <PRE>  tags.BLOCKQUOTE.textDecoration = &quot;underline&quot;</PRE>
+
+    <P>We expect UA vendors to propose several new values on this property.
+    Formatters should treat unknown values as 'underline'.</P>
+
+    <H4>6.4.4 &nbsp;&nbsp; 'verticalAlign'</H4>
+
+    <P><I>Value:</I> baseline | sub | super | top | text-top | middle | bottom
+    | text-bottom | &lt;percentage&gt;<BR>
+    <I>Initial:</I> baseline<BR>
+    <I>Applies to:</I> all elements<BR>
+    <I>Inherited:</I> yes<BR>
+    <I>Percentage values:</I> refer to the 'line-height' of the element itself<BR>
+    </P>
+
+    <P>The property affects the vertical positioning of the element. One set
+    of keywords is relative to the parent element:</P>
+
+    <DL>
+    <DT>'baseline'</DT>
+
+    <DD>align the baseline of the element with the baseline of the parent</DD>
+
+    <DT>'middle'</DT>
+
+    <DD>align the vertical midpoint of the element (typically an image) with
+    the baseline plus half the x-height of the parent</DD>
+
+    <DT>'sub'</DT>
+
+    <DD>subscript the element</DD>
+
+    <DT>'super'</DT>
+
+    <DD>superscript the element</DD>
+
+    <DT>'text-top'</DT>
+
+    <DD>align the top of the element with the top of the parent element's font</DD>
+
+    <DT>'text-bottom'</DT>
+
+    <DD>align the bottom of the element with the bottom of the parent element's
+    font</DD>
+    </DL>
+
+    <P>Another set of properties are relative to the formatted line that the
+    element is a part of:</P>
+
+    <DL>
+    <DT>'top'</DT>
+
+    <DD>align the top of the element with the tallest element on the line</DD>
+
+    <DT>'bottom'</DT>
+
+    <DD>align the bottom of the element with the lowest element on the line</DD>
+    </DL>
+
+    <P>Using the 'top' and 'bottom' alignment, unsolvable situations can occur
+    where element dependencies form a loop.</P>
+
+    <P>Percentage values refer to the 'line-height' of the element itself.
+    E.g., a value of '-100%' will lower the element to where the baseline of
+    the next line should have been.</P>
+
+    <H4>6.4.5 &nbsp;&nbsp; 'textTransform'</H4>
+
+    <P><I>Value:</I> capitalize | uppercase | lowercase | none<BR>
+    <I>Initial:</I> none<BR>
+    <I>Applies to:</I> all elements<BR>
+    <I>Inherited:</I> yes<BR>
+    <I>Percentage values:</I> N/A<BR>
+    </P>
+
+    <DL>
+    <DT>'capitalize'</DT>
+
+    <DD>uppercases the first character of each word</DD>
+
+    <DT>'uppercase'</DT>
+
+    <DD>uppercases all letters of the element</DD>
+
+    <DT>'lowercase'</DT>
+
+    <DD>lowercases all letters of the element</DD>
+
+    <DT>'none'</DT>
+
+    <DD>neutralizes inherited value.</DD>
+    </DL>
+
+    <P>The actual transformation in each case is human language and UA dependent.</P>
+
+    <PRE>  tags.H1.textTransform = &quot;uppercase&quot;;</PRE>
+
+    <P>The example above would put 'H1' elements in uppercase text.</P>
+
+    <H4>6.4.6 &nbsp;&nbsp; 'textAlign'</H4>
+
+    <P><I>Value:</I> left | right | center | justify<BR>
+    <I>Initial:</I> UA specific<BR>
+    <I>Applies to:</I> block-level elements<BR>
+    <I>Inherited:</I> yes<BR>
+    <I>Percentage values:</I> N/A<BR>
+    </P>
+
+    <P>This property describes how text is aligned within the element. The
+    actual justification algorithm used is UA and human language dependent.</P>
+
+    <P>Example:</P>
+
+    <PRE>tags.P.textAlign = &quot;center&quot;</PRE>
+
+    <P>Note that alignments are relative to the width of the element, not the
+    canvas. If 'justify' is not supported, the UA will supply a replacement.
+    Typically, this will be 'left' for western languages.</P>
+
+    <H4>6.4.7 &nbsp;&nbsp; 'textIndent'</H4>
+
+    <P><I>Value:</I> &lt;length&gt; | &lt;percentage&gt;<BR>
+    <I>Initial:</I> 0<BR>
+    <I>Applies to:</I> block-level elements<BR>
+    <I>Inherited:</I> yes<BR>
+    <I>Percentage values:</I> refer to parent element's width<BR>
+    </P>
+
+    <P>The property specifies indentation that appears before the first formatted
+    line. 'text-indent' may be negative, but there may be implementation-specific
+    limits. An indent is not inserted in the middle of an element that was
+    broken by another (such as 'BR' in HTML).</P>
+
+    <P>Example:</P>
+
+    <PRE> tags.P.textIndent = &quot;3em&quot;
+    </PRE>
+
+    <H3>6.5 &nbsp;&nbsp; Box Properties</H3>
+
+    <P>See the <A HREF="#formatting-model">formatting model (section 4)</A>
+    for examples on how to use the box properties.</P>
+
+    <H4>6.5.1 &nbsp;&nbsp; 'leftMargin', 'rightMargin', 'topMargin', 'bottomMargin',
+    'margins'</H4>
+
+    <P><I>Value:</I> [ &lt;length&gt; | &lt;percentage&gt; | auto ]{1,4} (for
+    'margin' property)<BR>
+    <I>Initial:</I> 0<BR>
+    <I>Applies to:</I> all elements<BR>
+    <I>Inherited:</I> no<BR>
+    <I>Percentage values:</I> refer to parent element's width<BR>
+    </P>
+
+    <P>These properties set the margin of an element: the 'margin' property
+    sets the border for all four sides while the other properties only set
+    their respective side.</P>
+
+    <P>For the 'margin' property, the four lengths apply to top, right, bottom
+    and left respectively.</P>
+
+    <PRE>    tags.BODY.margins(&quot;1em&quot;, &quot;2em&quot;, &quot;3em&quot;, &quot;2em&quot;} /* top=1em, right=2em, bottom=3em, left=2em */</PRE>
+
+    <P>The 'margins' method is a shorthand way of setting all the margin values
+    at the same place in the style sheet. These properties allow only one value.
+    The last rule of the example above is equivalent to the example below:</P>
+
+    <PRE>  with(tags.BODY) {
+        topMargin = &quot;1em&quot;;
+        rightMargin = &quot;2em&quot;;
+        bottomMargin = &quot;3em&quot;;
+        leftMargin = &quot;2em&quot;;
+      }
+    </PRE>
+
+    <P>The margins express the minimal distance between the borders of two
+    adjacent elements. See the <A HREF="#formatting-model">formatting model
+    (section 4)</A> for an example.</P>
+
+    <P>When margin properties are applied to replaced elements (e.g. IMG),
+    they express the minimal distance from the replaced element to any of the
+    content of the parent element.</P>
+
+    <P>Negative margin values are allowed, but there may be implementation-specific
+    limits.</P>
+
+    <H4>6.5.2 &nbsp;&nbsp; 'topPadding', 'rightPadding', 'bottomPadding', 'leftPadding',
+    and 'paddings'</H4>
+
+    <P><I>Value:</I> [ &lt;length&gt; | &lt;percentage&gt; | auto ]{1,4}<BR>
+    <I>Initial:</I> 0<BR>
+    <I>Applies to:</I> all elements<BR>
+    <I>Inherited:</I> no<BR>
+    <I>Percentage values:</I> refer to parent element's width<BR>
+    </P>
+
+    <P>The property describes how much space to insert between the border and
+    the content (e.g. text or image). The order is top, right, bottom, left.</P>
+
+    <P>The surface of the padding area is set with the 'background' property.</P>
+
+    <PRE>  tags.H1.paddings(&quot;1em&quot;, &quot;2em&quot;, &quot;3em&quot;, &quot;2em&quot;} /* top=1em, right=2em, bottom=3em, left=2em */
+      tags.H1.bgColor = &quot;white&quot;</PRE>
+
+    <P>The 'paddings' method is a shorthand way of setting all the padding
+    values at the same place in the style sheet. These properties allow only
+    one value. The last rule of the example above is equivalent to the example
+    below:</P>
+
+    <PRE>  with(tags.BODY) {
+        topPadding = &quot;1em&quot;;
+        rightPadding = &quot;2em&quot;;
+        bottomPadding = &quot;3em&quot;;
+        leftPadding = &quot;2em&quot;;
+      }</PRE>
+
+    <P>The example above sets a 1em padding on all sides. The 'em' unit is
+    relative to the element's font.</P>
+
+    <P>Padding values cannot be negative. See the <A HREF="#formatting-model">formatting
+    model (section 4)</A> for more on these properties.</P>
+
+    <H4>6.5.3 &nbsp;&nbsp; 'borderStyle'</H4>
+
+    <P><I>Value:</I> none | solid<BR>
+    <I>Initial:</I> medium none<BR>
+    <I>Applies to:</I> all elements<BR>
+    <I>Inherited:</I> no<BR>
+    <I>Percentage values:</I> N/A</P>
+
+    <P>Sets the existance and style of a border around an object. Any unknown
+    border style should be treated as &quot;so&cedil;&brvbar;�.</P>
+
+    <H4>6.5.3 &nbsp;&nbsp; 'borderWidth'</H4>
+
+    <P><I>Value:</I> number<BR>
+    <I>Initial:</I> medium none<BR>
+    <I>Applies to:</I> all elements<BR>
+    <I>Inherited:</I> no<BR>
+    <I>Percentage values:</I> N/A</P>
+
+    <P>Sets the width of a border around an object in pixels, points or &quot;em&quot;
+    units.</P>
+
+    <H4><A NAME="width"></A>6.5.4 &nbsp;&nbsp; 'width'</H4>
+
+    <P><I>Value:</I> &lt;length&gt; | &lt;percentage&gt; | auto<BR>
+    <I>Initial:</I> auto<BR>
+    <I>Applies to:</I> all elements<BR>
+    <I>Inherited:</I> no<BR>
+    <I>Percentage values:</I> refer to parent element's width<BR>
+    </P>
+
+    <P>This property can be applied to text elements, but it is most useful
+    with inline images and similar insertions. The width is to be enforced
+    by scaling the image if necessary. When scaling, the aspect ratio of the
+    image should be preserved if the 'height' property is 'auto'.</P>
+
+    <P>Example:</P>
+
+    <PRE>  ids.first-image.width = 100;</PRE>
+
+    <P>See the <A HREF="#formatting-model">formatting model (section 5)</A>
+    for a description of the relationship between this property and the margin
+    and padding.</P>
+
+    <H4>6.5.5 &nbsp;&nbsp; 'height'</H4>
+
+    <P><I>Value:</I> &lt;length&gt; | auto<BR>
+    <I>Initial:</I> auto<BR>
+    <I>Applies to:</I> block-level and replaced elements<BR>
+    <I>Inherited:</I> no<BR>
+    <I>Percentage values:</I> N/A<BR>
+    </P>
+
+    <P>This property can be applied to text, but it is most useful with inline
+    images and similar insertions. The height is to be enforced by scaling
+    the image if necessary. When scaling, the aspect ratio of the image should
+    be preserved if the 'width' property is 'auto'.</P>
+
+    <P>Example:</P>
+
+    <PRE>ids.first-image.height = 50;</PRE>
+
+    <P>If applied to a textual element, the height can be enforced with e.g.
+    a scrollbar.</P>
+
+    <H4>6.5.6 &nbsp;&nbsp; 'float'</H4>
+
+    <P><I>Value:</I> &lt;side-flow&gt;<BR>
+    <I>Initial:</I> none box<BR>
+    <I>Applies to:</I> all elements<BR>
+    <I>Inherited:</I> no<BR>
+    <I>Percentage values:</I> N/A<BR>
+    </P>
+
+    <P>Using the 'float' property, one can set an element to be floating and
+    indicate how other content will wrap around it.</P>
+
+    <DL>
+    <DT><B>&lt;side-flow&gt;</B></DT>
+
+    <DD>Legal values are: [left | right | none]. If no value is specified,
+    'none' is assumed. With the value 'none', the element will be displayed
+    where it appears in the text. With a value of 'left' ('right') the margin
+    properties will decide the horizontal positioning of the image and the
+    text will float on the right (left) side of the image. With a value of
+    'left' or 'right', the element is treated as block-level (so, e.g. the
+    'text-align' property can be set).</DD>
+    </DL>
+
+    <P>This property is most often used with inline images.</P>
+
+    <H4>6.5.7 &nbsp;&nbsp; 'clear'</H4>
+
+    <P><I>Value:</I> none | left | right | both<BR>
+    <I>Initial:</I> none<BR>
+    <I>Applies to:</I> all elements<BR>
+    <I>Inherited:</I> no<BR>
+    <I>Percentage values:</I> N/A<BR>
+    </P>
+
+    <P>This property specifies if an element allows floating elements on its
+    sides. More specifically, the value of this property lists the sides where
+    floating elements are not accepted. With 'clear' set to 'left', an element
+    will be moved below any floating element on the left side. With 'clear'
+    set to 'none', floating elements are allowed on all sides. Example:</P>
+
+    <PRE>  tags.H1.clear = &quot;left&quot;
+    </PRE>
+
+    <H3>6.6 &nbsp;&nbsp; Classification Properties</H3>
+
+    <P>These properties classify elements into categories more than they set
+    specific visual parameters.</P>
+
+    <H4>6.6.1 &nbsp;&nbsp; 'display'</H4>
+
+    <P><I>Value:</I> block | inline | list-item | none<BR>
+    <I>Initial:</I> according to HTML<BR>
+    <I>Applies to:</I> all elements<BR>
+    <I>Inherited:</I> no<BR>
+    <I>Percentage values:</I> N/A<BR>
+    </P>
+
+    <P>This property indicates if an element is inline (e.g. 'EM' in HTML),
+    block-level (e.g. 'H1' in HTML), or a block-level list item (e.g. 'LI'
+    in HTML). For HTML documents, the initial value will be taken from the
+    HTML specification.</P>
+
+    <P>A value of 'none' turns the display of the element, including children
+    elements and the surrounding box, off.</P>
+
+    <PRE>  with(tags) {
+       P.display = &quot;block&quot;
+       EM.display = &quot;inline&quot;
+       LI.display = &quot;list-item&quot;
+       IMG.display = &quot;none&quot;
+      }</PRE>
+
+    <P>The last rule turns the display of images off.</P>
+
+    <P>Note that HTML defines what elements are block-level (called &quot;Block
+    Structuring Elements&quot;) and inline (called &quot;Phrase Markup&quot;),
+    and this may be hardcoded into some UA implementations.</P>
+
+    <H4>6.6.2 &nbsp;&nbsp; 'listStyle'</H4>
+
+    <P><I>Value:</I> &lt;keyword&gt; <BR>
+    <I>Initial:</I> disc outside<BR>
+    <I>Applies to:</I> elements with 'display' property value 'list-item'<BR>
+    <I>Inherited:</I> yes<BR>
+    <I>Percentage values:</I> N/A<BR>
+    </P>
+
+    <P>The 'list-style' property describes how list items (i.e. elements with
+    a 'display' value of 'list-item') are formatted.</P>
+
+    <DL>
+    <DT><B>&lt;keyword&gt;</B></DT>
+
+    <DD>Legal values are: [disc | circle | square | decimal | lower-roman |
+    upper-roman | lower-alpha | upper-alpha | none]. If no value is specified,
+    'disc' is assumed.</DD>
+    </DL>
+
+    <P>This property can be set on any element, and it will inherit normally
+    down the tree. However, the 'list-style' will only be displayed on elements
+    with a 'display' value of 'list-item'. In HTML this is typically the case
+    for the 'LI' element.</P>
+
+    <PRE>  with (tags) {
+       UL.listStyle = &quot;disc&quot;
+       OL.listStyle = &quot;decimal&quot;        /* 1 2 3 4 5 etc. */
+       OL.listStyle = &quot;lower-roman&quot;    /* a b c d e etc. */
+      }
+
+    </PRE>
+
+    <H4>6.6.3 &nbsp;&nbsp; 'whiteSpace'</H4>
+
+    <P><I>Value:</I> normal | pre | nowrap<BR>
+    <I>Initial:</I> according to HTML<BR>
+    <I>Applies to:</I> block-level elements<BR>
+    <I>Inherited:</I> yes<BR>
+    <I>Percentage values:</I> N/A<BR>
+    </P>
+
+    <P>Declares how white space inside the element should be handled: the 'normal'
+    way (where white space is collapsed), as 'pre' (which behaves like the
+    'PRE' element in HTML) or as 'nowrap' (where wrapping is done only through
+    BR elements):</P>
+
+    <PRE>  tags.PRE.whiteSpace = &quot;pre&quot;  /* initial value */
+    </PRE>
+
+    <H2>7&nbsp;&nbsp; Units</H2>
+
+    <H3>7.1 &nbsp;&nbsp; Length Units</H3>
+
+    <P>The format of a length value is an optional sign character ('+' or '-',
+    with '+' being the default) immediately followed by a unit converting function
+    which contains a number as an argument</P>
+
+    <P>Some properties allow negative length units, but this may complicate
+    the formatting model and there may be implementation-specific limits. If
+    a negative length value cannot be supported, it should be clipped to the
+    nearest value that can be supported.</P>
+
+    <P>There are three types of length units: relative, pixel and absolute.
+    Relative units specify a length relative to another length property. Style
+    sheets that use relative units will more easily scale from one medium to
+    another (e.g. from a computer display to a laser printer). <A HREF="#percentage-units">Percentage
+    units</A> (described below) and keyword values (e.g. 'x-large') offer similar
+    advantages.</P>
+
+    <P>Child elements inherit the computed value, not the relative value:</P>
+
+    <PRE>  with (tags.BODY) {
+        fontSize = &quot;12pt&quot;
+        textIndent = &quot;3em&quot;  /* i.e. 36pt */
+      }
+      tags.H1.fontSize = &quot;15pt&quot;
+    </PRE>
+
+    <P>In the example above, the 'textIndent' value of 'H1' elements will be
+    36pt, not 45pt.</P>
+
+    <P>These relative units are supported:</P>
+
+    <PRE>  with(tags) {</PRE>
+
+    <PRE>  H1.margin: &quot;0.5em&quot;        /* ems, the height of the element's font */
+      H1.margin: &quot;1ex&quot;        /* x-height, ~ the height of the letter 'x' */
+      P.font-size: &quot;12px&quot;    /* pixels, relative to canvas */</PRE>
+
+    <P>Pixel units, as used in the last rule, are relative to the resolution
+    of the canvas, i.e. most often a computer display. If the pixel density
+    of the output device is very different from that of a typical computer
+    display, the UA should rescale pixel values. The suggested &quot;reference
+    pixel&quot; is the visual angle of one pixel on a device with a pixel density
+    of 90dpi and a distance from the reader of an arm's length.</P>
+
+    <P>Absolute length units are useful only when the physical properties of
+    the output medium is known. These absolute units are supported:</P>
+
+    <PRE>  with(tags) {
+       H1.margin: &quot;0.5in&quot;      /* inches, 1in = 2.54cm */
+       H2.line-height: &quot;3cm&quot;)   /* centimeters */
+       H3.word-spacing: &quot;4mm&quot;  /* millimeters */
+       H4.font-size: &quot;2pt&quot;    /* points, 1pt = 1/72 in */
+       H4.font-size: &quot;1pi&quot;     /* picas, 1pc = 12pt */
+    }</PRE>
+
+    <H3>7.2 &nbsp;&nbsp; Color Units</H3>
+
+    <P>A color is a either a color name or a numerical RGB specification.</P>
+
+    <P>The suggested list of color names is: aqua, black, blue, fuchsia, gray,
+    green, lime, maroon, navy, olive, purple, red, silver, teal, white, and
+    yellow. These 16 colors are taken from the Windows VGA palette and will
+    also be used in forthcoming HTML 3.2. The RGB values for these color name
+    are not defined in this specification.</P>
+
+    <PRE>  with(tags) {
+       BODY.color = &quot;black&quot;
+       bgColor = &quot;white&quot;
+       H1.color = &quot;maroon&quot;
+       H2.color = &quot;olive&quot;
+      }
+    </PRE>
+
+    <P>RGB colors are specified in the sRGB color space as defined in the appendix
+    of [6]. UAs should make reasonable efforts to render colors accurately
+    according to the sRGB specification.</P>
+
+    <P>Values outside the numerical ranges should be clipped. The three rules
+    below are therefore equivalent:</P>
+
+    <PRE>  with(tags.EM.color) {
+       rgb(255,0,0)        /* integer range 0 - 255 */
+       rgb(300,0,0)        /* clipped to 255 */
+       rgb(110%, 0%, 0%)   /* clipped to 100% */
+      }
+    </PRE>
+
+    <H3>7.4 &nbsp;&nbsp; URL</H3>
+
+    <P>A Uniform Resource Locator (URL) is identified with a functional notation:</P>
+
+    <PRE>  tags.BODY.background = &quot;http://www.bg.com/pinkish.gif&quot;</PRE>
+
+    <P>Partial URLs are interpreted relative to the source of the style sheet,
+    not relative to the document:</P>
+
+    <PRE>  tags.BODY.background = &quot;yellow&quot;
+    </PRE>
+
+
+    <H2>Section 8 Editing considerations</H3>
+
+    Expressing styles through JavaScript allows the author to
+    generate dynamic effects for the document.  While this is
+    highly desirable in an interactive medium it can cause problems
+    when using an editor designed for static documents.
+    <p>
+    It is suggested that editors that are designed to edit static
+    documents render a page using the dynamic style sheet
+    as input and then create a static representation from the
+    rendered instance.  This process does lose information since
+    the document will no longer have dynamic expressions.
+    <p>
+    Authers who generate dynamic
+    styles by hand or by using a dynamic editor
+    should not expect to be able to use a static editor, just
+    as those authors who generate GIF animations should not
+    expect to be able to use GIF editors that do not support
+    animation.
+
+    <H2>Section 9 Printing considerations</H3>
+
+    <i>This section is unfinished</i>
+    <p>
+    Special considerations should be made by authors for how
+    a page should look when printed.  Since JavaScript can
+    query the capabilities of a rendering engine it should
+    be possible to dynamically adjust the appearence of a document
+    when printing.  For example, a style sheet author may use
+    a JavaScript expression to test if the rendering engine
+    supports color.  Since most printers are black and white
+    the author may choose to use italics and bold, or different
+    fonts to represent what otherwise may have been expressed
+    using different colors.
+    <p>
+    In the future this specification should be extended to
+    set printer specific styles like page headers and footers.
+    Page break boundaries would also be a desirable feature.
+
+    <H2>10 References</H2>
+
+    <P>[4] HTML3 and Style Sheets (http://www.w3.org/pub/WWW/TR/WD-style.html)</P>
+
+    </BODY>
+    </HTML>

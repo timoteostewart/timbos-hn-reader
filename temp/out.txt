@@ -1,0 +1,83 @@
+2024-02-13T05:59:08Z [active]  INFO     id 39345618: asdfft2(): interesting mimetypes all_values=['application/xhtml+xml', 'text/xml'] for url http://www.arxiv.org/abs/2402.03405 (~Tim~)
+2024-02-13T06:06:09Z [active]  INFO     id 39349992: asdfft2(): interesting mimetypes all_values=['text/html5'] for url https://sohl-dickstein.github.io/2024/02/12/fractal.html (~Tim~)
+2024-02-13T06:06:09Z [active]  INFO     id 39349992: asdfft2(): timbos_textfile_format_identifier(): res='text/html5' (~Tim~)
+2024-02-13T06:13:45Z [active]  INFO     id 39345618: asdfft2(): interesting mimetypes all_values=['application/xhtml+xml', 'text/xml'] for url http://www.arxiv.org/abs/2402.03405 (~Tim~)
+2024-02-13T06:52:59Z [best]    ERROR    id 39320003: d_og_i(): no get_response (~Tim~)
+2024-02-13T07:01:28Z [classic] ERROR    id 39331705: d_og_i(): no get_response (~Tim~)
+2024-02-13T07:05:36Z [top]     INFO     id 39330362: asdfft2(): timbos_textfile_format_identifier(): meta http-equiv content-type 'text/html' (~Tim~)
+2024-02-13T07:10:18Z [top]     INFO     id 39350541: asdfft2(): interesting mimetypes all_values=['text/x-script.python'] for url https://ericchiang.github.io/post/spotify/ (~Tim~)
+2024-02-13T07:16:13Z [new]     INFO     id 39355355: asdfft2(): interesting mimetypes all_values=['text/html5'] for url https://www.sfgate.com/bayarea/article/tech-campus-san-jose-housing-plans-18663818.php (~Tim~)
+2024-02-13T07:16:13Z [new]     INFO     id 39355355: asdfft2(): timbos_textfile_format_identifier(): meta http-equiv content-type 'text/html' (~Tim~)
+2024-02-13T07:16:13Z [new]     INFO     id 39355355: asdfft2(): timbos_textfile_format_identifier(): res='text/html5' (~Tim~)
+2024-02-13T07:17:44Z [new]     INFO     id 39354310: asdfft2(): interesting mimetypes all_values=['application/octet-stream'] for url https://chrisdallariva.substack.com/p/i-promise-you-dont-really-miss-blockbuster (~Tim~)
+2024-02-13T07:18:09Z [new]     INFO     id 39352725: asdfft2(): interesting mimetypes all_values=['text/html5'] for url https://www.animenewsnetwork.com/news/2024-02-04/gundam-seed-freedom-film-tops-1.9-billion-yen-in-10-days/.207208 (~Tim~)
+2024-02-13T07:18:09Z [new]     INFO     id 39352725: asdfft2(): timbos_textfile_format_identifier(): res='text/html5' (~Tim~)
+2024-02-13T07:18:58Z [new]     INFO     id 39351582: asdfft2(): timbos_textfile_format_identifier(): meta http-equiv content-type 'text/html' (~Tim~)
+2024-02-13T07:19:00Z [new]     ERROR    id 39353796: d_og_i(): no get_response (~Tim~)
+2024-02-13T07:19:00Z [new]     INFO     id 39351066: asdfft2(): interesting mimetypes all_values=['application/xhtml+xml', 'text/xml'] for url https://arxiv.org/abs/2402.00365 (~Tim~)
+2024-02-13T07:19:12Z [new]     ERROR    id 39353796: d_og_i(): no get_response (~Tim~)
+2024-02-13T07:19:49Z [new]     INFO     id 39351066: asdfft2(): interesting mimetypes all_values=['application/xhtml+xml', 'text/xml'] for url https://arxiv.org/abs/2402.00365 (~Tim~)
+2024-02-13T07:19:56Z [new]     INFO     id 39351423: asdfft2(): interesting mimetypes all_values=['application/xhtml+xml', 'text/xml'] for url https://arxiv.org/abs/2402.04396 (~Tim~)
+2024-02-13T07:20:09Z [new]     INFO     id 39351423: asdfft2(): interesting mimetypes all_values=['application/xhtml+xml', 'text/xml'] for url https://arxiv.org/abs/2402.04396 (~Tim~)
+2024-02-13T07:20:26Z [new]     INFO     id 39353086: asdfft2(): timbos_textfile_format_identifier(): meta http-equiv content-type 'text/html' (~Tim~)
+2024-02-13T07:20:50Z [new]     INFO     id 39352725: asdfft2(): interesting mimetypes all_values=['text/html5'] for url https://www.animenewsnetwork.com/news/2024-02-04/gundam-seed-freedom-film-tops-1.9-billion-yen-in-10-days/.207208 (~Tim~)
+2024-02-13T07:20:50Z [new]     INFO     id 39352725: asdfft2(): timbos_textfile_format_identifier(): res='text/html5' (~Tim~)
+2024-02-13T07:22:07Z [new]     ERROR    id 39350588: d_og_i(): no get_response (~Tim~)
+2024-02-13T07:22:21Z [new]     ERROR    id 39350022: d_og_i(): no get_response (~Tim~)
+2024-02-13T07:23:48Z [new]     ERROR    id 39350588: d_og_i(): no get_response (~Tim~)
+2024-02-13T07:25:13Z [new]     INFO     id 39354310: asdfft2(): interesting mimetypes all_values=['application/octet-stream'] for url https://chrisdallariva.substack.com/p/i-promise-you-dont-really-miss-blockbuster (~Tim~)
+2024-02-13T07:26:13Z [new]     INFO     id 39351293: asdfft2(): interesting mimetypes all_values=['application/xhtml+xml', 'text/xml'] for url https://arxiv.org/abs/2205.05982 (~Tim~)
+2024-02-13T07:26:43Z [new]     INFO     id 39354152: asdfft2(): interesting mimetypes all_values=['text/plain'] for url http://signal-processing.net/ (~Tim~)
+2024-02-13T07:26:54Z [new]     INFO     id 39352140: asdfft2(): interesting mimetypes all_values=['application/xhtml+xml', 'text/xml'] for url https://arxiv.org/abs/2402.00045 (~Tim~)
+2024-02-13T07:27:14Z [new]     INFO     id 39353319: asdfft2(): interesting mimetypes all_values=['text/html5'] for url https://pkg.robjhyndman.com/weird-package/ (~Tim~)
+2024-02-13T07:27:14Z [new]     INFO     id 39353319: asdfft2(): timbos_textfile_format_identifier(): res='text/html5' (~Tim~)
+2024-02-13T07:27:20Z [new]     INFO     id 39354152: asdfft2(): interesting mimetypes all_values=['text/plain'] for url http://signal-processing.net/ (~Tim~)
+2024-02-13T07:28:02Z [new]     INFO     id 39349793: asdfft2(): timbos_textfile_format_identifier(): meta http-equiv content-type 'text/html' (~Tim~)
+2024-02-13T07:28:47Z [new]     INFO     id 39353319: asdfft2(): interesting mimetypes all_values=['text/html5'] for url https://pkg.robjhyndman.com/weird-package/ (~Tim~)
+2024-02-13T07:28:47Z [new]     INFO     id 39353319: asdfft2(): timbos_textfile_format_identifier(): res='text/html5' (~Tim~)
+2024-02-13T07:29:31Z [new]     INFO     id 39355223: asdfft2(): timbos_textfile_format_identifier(): meta http-equiv content-type 'text/html' (~Tim~)
+2024-02-13T07:29:40Z [new]     ERROR    id 39350714: d_og_i(): no get_response (~Tim~)
+2024-02-13T07:29:54Z [new]     INFO     id 39355223: asdfft2(): timbos_textfile_format_identifier(): meta http-equiv content-type 'text/html' (~Tim~)
+2024-02-13T07:30:04Z [new]     ERROR    id 39350434: d_og_i(): no get_response (~Tim~)
+2024-02-13T07:33:48Z [new]     ERROR    id 39350434: d_og_i(): no get_response (~Tim~)
+2024-02-13T07:34:13Z [new]     INFO     id 39350425: asdfft2(): interesting mimetypes all_values=['text/plain'] for url http://sscce.org/ (~Tim~)
+2024-02-13T07:34:13Z [new]     INFO     id 39350425: asdfft2(): timbos_textfile_format_identifier(): meta http-equiv content-type 'text/html' (~Tim~)
+2024-02-13T07:39:27Z [new]     ERROR    id 39347983: d_og_i(): no get_response (~Tim~)
+2024-02-13T07:39:44Z [new]     INFO     id 39351149: asdfft2(): interesting mimetypes all_values=['text/html5'] for url https://www.slidebook.io/blog/the-power-of-defaults/ (~Tim~)
+2024-02-13T07:39:44Z [new]     INFO     id 39351149: asdfft2(): timbos_textfile_format_identifier(): res='text/html5' (~Tim~)
+2024-02-13T07:40:08Z [new]     ERROR    id 39348630: d_og_i(): no get_response (~Tim~)
+2024-02-13T07:42:02Z [new]     ERROR    id 39348591: d_og_i(): no get_response (~Tim~)
+2024-02-13T07:52:14Z [new]     INFO     id 39348112: asdfft2(): interesting mimetypes all_values=['text/javascript'] for url https://github.com/SABRE-JS/SABRE.js (~Tim~)
+2024-02-13T08:33:39Z [top]     INFO     id 39322022: asdfft2(): interesting mimetypes from all_values=['application/pdf'] for url https://philpapers.org/archive/BERCOY-2.pdf (~Tim~)
+2024-02-13T08:35:18Z [new]     INFO     id 39350774: asdfft2(): interesting mimetypes from all_values=['application/pdf'] for url https://info.lookout.com/rs/051-ESQ-475/images/lookout-pegasus-technical-analysis.pdf (~Tim~)
+2024-02-13T08:35:21Z [new]     INFO     id 39350066: asdfft2(): interesting mimetypes from all_values=['application/pdf'] for url https://galactanet.com/lostsols.pdf (~Tim~)
+2024-02-13T08:35:45Z [new]     INFO     id 39355498: asdfft2(): interesting mimetypes from all_values=['application/xhtml+xml', 'text/xml'] for url https://michael.orlitzky.com/articles/greybeards_tomb%3A_the_lost_treasure_of_language_design.xhtml (~Tim~)
+2024-02-13T08:37:13Z [new]     INFO     id 39355393: asdfft2(): timbos_textfile_format_identifier(): text/html5 (~Tim~)
+2024-02-13T09:21:31Z [new]     ERROR    id 39355955: d_og_i(): no get_response (~Tim~)
+2024-02-13T09:21:34Z [new]     INFO     id 39355945: asdfft2(): timbos_textfile_format_identifier(): text/html5 (~Tim~)
+2024-02-13T10:06:24Z [new]     INFO     id 39356130: asdfft2(): interesting mimetypes from all_values=['text/plain'] for url https://passwordbasket.com/ (~Tim~)
+2024-02-13T10:53:40Z [new]     INFO     id 39356381: asdfft2(): timbos_textfile_format_identifier(): text/html5 (~Tim~)
+2024-02-13T10:54:02Z [new]     INFO     id 39356371: asdfft2(): interesting mimetypes from all_values=['application/xhtml+xml', 'text/xml'] for url https://arxiv.org/abs/2401.18006 (~Tim~)
+2024-02-13T10:54:52Z [new]     INFO     id 39356347: asdfft2(): interesting mimetypes from all_values=['text/plain'] for url https://hyp3rlinx.altervista.org/advisories/MICROSOFT_WINDOWS_DEFENDER_TROJAN.WIN32.POWESSERE.G_MITIGATION_BYPASS_PART2.txt (~Tim~)
+2024-02-13T10:55:19Z [new]     INFO     id 39356220: asdfft2(): timbos_textfile_format_identifier(): text/html5 (~Tim~)
+2024-02-13T11:36:06Z [new]     INFO     id 39356592: asdfft2(): timbos_textfile_format_identifier(): text/html5 (~Tim~)
+2024-02-13T12:59:20Z [new]     INFO     id 39357085: asdfft2(): interesting mimetypes from all_values=['application/pdf'] for url https://web.archive.org/web/20210717235459id_/https://link.springer.com/content/pdf/10.1007/s11846-021-00466-9.pdf?error=cookies_not_supported&code=c6b7009d-e867-48d9-ab1f-38d65b9b670a (~Tim~)
+2024-02-13T13:00:54Z [new]     INFO     id 39357042: asdfft2(): interesting mimetypes from all_values=['application/pdf'] for url https://cr.yp.to/bib/1995/wirth.pdf (~Tim~)
+2024-02-13T13:40:36Z [new]     INFO     id 39357436: asdfft2(): interesting mimetypes from all_values=['application/xhtml+xml', 'text/xml'] for url https://arxiv.org/abs/2401.08710 (~Tim~)
+2024-02-13T13:41:27Z [new]     ERROR    id 39357435: d_og_i(): no get_response (~Tim~)
+2024-02-13T13:42:47Z [new]     INFO     id 39357377: asdfft2(): timbos_textfile_format_identifier(): text/html5 (~Tim~)
+2024-02-13T15:10:29Z [new]     INFO     id 39358111: asdfft2(): timbos_textfile_format_identifier(): text/html5 (~Tim~)
+2024-02-13T15:14:49Z [new]     INFO     id 39358152: asdfft2(): interesting mimetypes from all_values=['application/octet-stream'] for url https://bencher.dev/learn/benchmarking/rust/iai/ (~Tim~)
+2024-02-13T15:15:55Z [new]     INFO     id 39358138: asdfft2(): interesting mimetypes from all_values=['video/mp4'] for url https://www.goody2.ai/video/goody2-169.mp4 (~Tim~)
+2024-02-13T15:15:55Z [new]     INFO     id 39358138: asdfft2(): timbos_textfile_format_identifier(): text/html5 (~Tim~)
+2024-02-13T15:16:33Z [new]     INFO     id 39358131: asdfft2(): interesting mimetypes from all_values=['application/pdf'] for url https://www.usenix.org/system/files/conference/nsdi13/nsdi13-final170_update.pdf (~Tim~)
+2024-02-13T15:59:21Z [new]     INFO     id 39358707: asdfft2(): interesting mimetypes from all_values=['application/xhtml+xml', 'text/xml'] for url https://arxiv.org/abs/2402.05424 (~Tim~)
+2024-02-13T16:01:03Z [new]     ERROR    id 39358318: d_og_i(): no get_response (~Tim~)
+94  (~Tim~)
+<</ArtBox[0.0  (~Tim~)
+b���+���:g��㌱��g�Z�D\IŢD�0y?��7dI-��(���]�o�k��lZ�/�H�dSx���x!������y�g��2�y��ޯ�������jxE���*�D��Eۃ�ˈ���3��a�F3���J��e�ڕe�PH$�}V�Qn}�4��e��~��n�z��{}�a����q�V���3�ِ"�w��*����YeC���0Erїv��*��j��1�G���w�B?�<�����d, (~Tim~)
+b���+���:g��㌱��g�Z�D\IŢD�0y?��7dI-��(���]�o�k��lZ�/�H�dSx���x!������y�g��2�y��ޯ�������jxE���*�D��Eۃ�ˈ���3��a�F3���J��e�ڕe�PH$�}V�Qn}�4��e��~��n�z��{}�a����q�V���3�ِ"�w��*����YeC���0Erїv��*��j��1�G���w�B?�<�����d, (~Tim~)
+|���+�x���\���yty�����1����zx`��q��!�����*�����]>��M����[E�V��D���A��ͤr���������9�#�l����������w&�3��)�Lqg:�ov5Fގ�pb��ԯ"�!�⠕F������n�)״rM+״�~�����l?j���ҒV7��t������	*7�%+ѳ*&h��a�vh���)��~^��J`�D�Jh�8 (~Tim~)
+|���+�x���\���yty�����1����zx`��q��!�����*�����]>��M����[E�V��D���A��ͤr���������9�#�l����������w&�3��)�Lqg:�ov5Fގ�pb��ԯ"�!�⠕F������n�)״rM+״�~�����l?j���ҒV7��t������	*7�%+ѳ*&h��a�vh���)��~^��J`�D�Jh�8 (~Tim~)
+���^,vHH/�s���Tr*�=�� Ѡ���(� (~Tim~)
+���^,vHH/�s���Tr*�=�� Ѡ���(� (~Tim~)
