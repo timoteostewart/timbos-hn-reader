@@ -215,11 +215,10 @@ def get_domains_from_url_via_urllib(url: str, log_prefix=""):
     hostname_full = parsed_url.netloc
 
     if hostname_full.endswith(":443"):
-        logger.info(
-            log_prefix_local
-            + f"removed ':443' from end of hostname_full for url {url} (~Tim~)"
-        )
         hostname_full = hostname_full[:-4]
+        logger.info(
+            log_prefix_local + f"removed ':443' from end of hostname_full for url {url}"
+        )
 
     match = re.search(r"^w{2,3}\d?\.", hostname_full)
     if match and len(match.group()) >= 3:

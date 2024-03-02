@@ -16,6 +16,7 @@ import magic
 from bs4 import BeautifulSoup
 
 from MarkupTag import MarkupTag
+from Trie import Trie
 
 logger = logging.getLogger(__name__)
 
@@ -280,6 +281,16 @@ svg_tags["current"] = set(
     ]
 )
 
+tag_based_markup_languages = [
+    "application/atom+xml",
+    "application/rss+xml",
+    "application/xhtml+xml",
+    "application/xml",
+    "image/svg+xml",
+    "text/html",
+    "text/html5",
+]
+
 
 def check_for_valid_text_encodings(local_file: str, log_prefix="") -> List[str]:
     # requires iconv (i.e., libiconv) command
@@ -292,12 +303,17 @@ def check_for_valid_text_encodings(local_file: str, log_prefix="") -> List[str]:
         "ISO-8859-1",
         "UTF-8",
         "WINDOWS-1251",
-        # "ISO-8859-2",
-        # "UTF-16",
-        # "UTF-32",
-        # "UTF-7",
-        # "WINDOWS-1252",
     ]
+
+    # text_encodings.extend(
+    #     [
+    #         "ISO-8859-2",
+    #         "UTF-16",
+    #         "UTF-32",
+    #         "UTF-7",
+    #         "WINDOWS-1252",
+    #     ]
+    # )
 
     for each_encoding in text_encodings:
         cmd = f"iconv -f {each_encoding} -t {each_encoding} {local_file} -o /dev/null"
@@ -328,7 +344,13 @@ def check_for_valid_text_encodings(local_file: str, log_prefix="") -> List[str]:
             logger.error(log_prefix_local + tb_str)
 
     if "UTF-8" in valid_encodings:
-        if not is_utf8_2(local_file):
+        if is_utf8_2(local_file):
+            logger.info(
+                log_prefix_local
+                + f"`iconv -f UTF-8` succeeded and `isutf8` agreed for {local_file} (~Tim~)"
+            )
+
+        else:
             valid_encodings.remove("UTF-8")
             logger.info(
                 log_prefix_local
@@ -447,6 +469,187 @@ def is_valid_json(local_file: str, log_prefix="") -> bool:
     return False
 
 
+nonspecific_cts = set(
+    [
+        "application/binary",  # nonstandard
+        "application/octet-stream",
+        "message/rfc822",
+        "multipart/alternative",
+        "multipart/form-data",
+        "multipart/mixed",
+    ]
+)
+
+binary_cts = set(
+    [
+        "application/eps",
+        "application/gzip",
+        "application/ogg",
+        "application/opengraph-image",
+        "application/vnd.android.package-archive",
+        "application/vnd.lotus-organizer",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/vnd.rar",
+        "application/x-bzip2",
+        "application/x-dosexec",
+        "application/x-gzip",
+        "application/x-tar",
+        "application/zip",
+        "audio/mp4",
+        "audio/mpeg",
+        "audio/mpeg3",
+        "audio/prs.sid",
+        "font/ttf",
+        "image/avif",
+        "image/bmp",
+        "image/gif",
+        "image/jp2",
+        "image/jpeg",
+        "image/jpg",
+        "image/png",
+        "image/svg+xml",
+        "image/tiff",
+        "image/vnd.microsoft.icon",
+        "image/webp",
+        "image/x-eps",
+        "image/x-icon",
+        "model/opengraph-image",  # nonstandard
+        "video/mp4",
+        "video/webm",
+        "video/x-ms-wmv",
+    ]
+)
+
+binary_mimetypes_prefixes = [
+    "image/",
+    "audio/",
+    "video/",
+    "model/",
+    "font/",
+]
+
+binary_mimetypes_prefixes_trie = Trie(prefix_search=True)
+for _ in binary_mimetypes_prefixes:
+    binary_mimetypes_prefixes_trie.add_member(_)
+
+textual_cts = set(
+    [
+        "application/activity+json",
+        "application/atom+xml",
+        "application/json",
+        "application/pdf",
+        "application/postscript",
+        "application/rls-services+xml",
+        "application/rss+xml",
+        "application/svg+xml",
+        "application/typescript",  # nonstandard
+        "application/xhtml+xml",
+        "application/xml",
+        "text/calendar",
+        "text/css",
+        "text/csv",
+        "text/html",
+        "text/html5",  # nonstandard
+        "text/hypertext",  # nonstandard
+        "text/javascript",
+        "text/markdown",
+        "text/pdf",  # nonstandard
+        "text/pgp",  # nonstandard
+        "text/plain",
+        "text/vnd.trolltech.linguist",
+        "text/x-c",
+        "text/x-c++",
+        "text/x-c++src",
+        "text/x-component",
+        "text/x-csrc",
+        "text/x-diff",
+        "text/x-java",
+        "text/x-lilypond",
+        "text/x-perl",
+        "text/x-php",
+        "text/x-ruby",
+        "text/x-script.python",
+        "text/x-server-parsed-html",
+        "text/x-sh",
+        "text/x-shellscript",
+        "text/x-tex",
+        "text/x-web-markdown",
+        "text/xml",
+        "text/xsl",
+    ]
+)
+
+textual_mimetypes_suffixes = [
+    "+json",
+    "+xml",
+]
+
+textual_mimetypes_suffixes_trie = Trie(suffix_search=True)
+for _ in textual_mimetypes_suffixes:
+    textual_mimetypes_suffixes_trie.add_member(_)
+
+
+def is_a_binary_mimetype(mimetype: str) -> bool:
+    if mimetype in binary_cts:
+        return True
+    elif mimetype in textual_cts:
+        return False
+    elif mimetype.startswith("text/"):
+        return False
+    elif binary_mimetypes_prefixes_trie.search(mimetype) is not None:
+        return True
+    elif textual_mimetypes_suffixes_trie.search(mimetype) is not None:
+        return False
+    else:
+        return True
+
+
+def get_mimetype(
+    local_file: str, srct: str = None, url: str = None, log_prefix=""
+) -> str:
+
+    log_prefix_local = log_prefix + "get_mimetype(): "
+
+    if srct:
+        if ";" in srct:
+            srct = srct.split(";")[0].strip()
+        srct = srct.lower()
+
+    # use trusted tools to check if file is probably binary
+    trusted_sources = Counter(
+        [
+            get_mimetype_via_python_magic(local_file=local_file, log_prefix=log_prefix),
+            get_mimetype_via_file_command(local_file=local_file, log_prefix=log_prefix),
+            get_mimetype_via_exiftool(local_file=local_file, log_prefix=log_prefix),
+        ]
+    )
+
+    consensus_ct = None
+    if len(trusted_sources) == 1 and srct == trusted_sources.most_common(1)[0][0]:
+        # all 3 trusted sources agree with srct
+        consensus_ct = srct
+    elif len(trusted_sources) == 1:
+        # all 3 trusted sources agree; srct differs or is absent
+        consensus_ct = trusted_sources.most_common(1)[0][0]
+    elif len(trusted_sources) == 2 and srct == trusted_sources.most_common(1)[0][0]:
+        # 2 trusted sources agree with srct
+        consensus_ct = srct
+    elif len(trusted_sources) == 2:
+        # 2 trusted sources agree; srct differs or is absent
+        consensus_ct = trusted_sources.most_common(1)[0][0]
+    elif len(trusted_sources) >= 2 and srct in trusted_sources:
+        # 1 or 2 trusted sources agree with srct
+        consensus_ct = srct
+    else:
+        # no consensus
+        pass
+    # TODO: could fall back to guessing mimetype from URL
+
+    # if file is probably binary, invoke get_textual_mimetype just in case
+
+    # if file is probably not binary, invoke get_textual_mimetype
+
+
 def get_mimetype_via_exiftool(local_file: str, log_prefix="") -> str:
     log_prefix_local = log_prefix + "get_mimetype_via_exiftool(): "
     mimetype = None
@@ -508,13 +711,17 @@ def get_mimetype_via_exiftool2(local_file: str, log_prefix="") -> str:
 
         if isinstance(exc, subprocess.CalledProcessError):
             logger.error(log_prefix_local + exc_slug)
-            return None
 
         else:
             logger.error(log_prefix_local + "unexpected exception: " + exc_slug)
             tb_str = traceback.format_exc()
             logger.error(log_prefix_local + tb_str)
-            return None
+
+        with open(local_file, mode="rb") as file:
+            bytes = file.read(512)
+            logger.error(log_prefix_local + f"{bytes=} (~Tim~)")
+
+        return None
 
     if res:
         match = re.search(r"MIME Type[\ ]*:\ ", res)
@@ -691,12 +898,15 @@ def guess_mimetype_from_uri_extension(url, log_prefix=""):
     return res
 
 
-def collect_empty_attributes(doctype_str: str):
+def collect_empty_attributes(s: str):
+    if not s:
+        return []
+
     in_quote = False  # Flag to track whether we're inside quotes
     current_substr = ""  # Current substring being collected
     substrings = []  # List to hold the final substrings
 
-    for char in doctype_str:
+    for char in s:
         if char == '"':  # Toggle the in_quote flag when we hit a quote
             if in_quote:  # If we're ending a quoted string, add it to the list
                 current_substr += char  # Include the closing quote
@@ -764,33 +974,13 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
     # for text/html, what are the top 5 tags seen? for xhtml+xml? for text/html5?
     # compare "tags seen" with textfile_format_identifier result, particular the tag soup when the result is text/plain or None
 
-    log_prefix_local = log_prefix + "timbos_textfile_format_identifier(): "
+    log_prefix_local = log_prefix + "get_textual_mimetype(): "
 
     CHARS_TO_READ = None  # 'None' means read all chars
 
     local_file = os.path.abspath(local_file)
 
-    clues_toward = {
-        "text/plain": 0,
-        "text/markdown": 0,
-        "text/html": 0,
-        "text/html5": 0,
-        "application/xml": 0,
-        "application/xhtml+xml": 0,
-        "image/svg+xml": 0,
-        "application/json": 0,
-        "application/postscript": 0,
-        "image/x-eps": 0,
-        "application/pdf": 0,
-        "text/x-shellscript": 0,
-    }
-
     text_encodings = check_for_valid_text_encodings(local_file, log_prefix)
-
-    if context and "url" in context:
-        logger.info(log_prefix_local + f"{text_encodings=} for url {context['url']}")
-    else:
-        logger.info(log_prefix_local + f"{text_encodings=}")
 
     if not text_encodings:
         if context and "url" in context:
@@ -861,15 +1051,22 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
         # elif "ISO-8859-2" in text_encodings:
         #     encoding_to_use = "iso-8859-2"
 
-    # if encoding_to_use:
-    #     clues_toward["text/plain"] += 1
-
-    if is_valid_json(local_file):
-        clues_toward["application/json"] += 1
-    else:
-        clues_toward["application/json"] = -float("inf")
-
-    is_wellformed_xml = check_for_wellformed_xml(local_file)
+    clues_toward = {
+        "text/plain": 0,
+        "text/markdown": 0,
+        "text/html": 0,
+        "text/html5": 0,
+        "application/xml": 0,
+        "application/atom+xml": 0,
+        "application/rss+xml": 0,
+        "application/xhtml+xml": 0,
+        "image/svg+xml": 0,
+        "application/json": 0,
+        "application/postscript": 0,
+        "image/x-eps": 0,
+        "application/pdf": 0,
+        "text/x-shellscript": 0,
+    }
 
     content = None
     with open(local_file, mode="r", encoding=encoding_to_use) as file:
@@ -891,6 +1088,17 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
         "\t",
     ]:
         content = content[1:]
+
+    logger.info(log_prefix_local + f"{encoding_to_use=} out of {text_encodings=}")
+    first_64 = content[:64].replace("\n", " ")
+    logger.info(log_prefix_local + f"content[:64]={first_64}")
+
+    if is_valid_json(local_file):
+        clues_toward["application/json"] += 1
+    else:
+        clues_toward["application/json"] = -float("inf")
+
+    is_wellformed_xml = check_for_wellformed_xml(local_file)
 
     # check for PDF
     if content.startswith("%PDF-"):
@@ -943,7 +1151,8 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
         "xml",
         "XML",
     ]:
-        match = re.search(r"<\?" + xml_case + r"\b(.*?)\?>", content, re.DOTALL)
+        cur_re = r"<\?" + xml_case + r"\b(.*?)\?>"
+        match = re.search(cur_re, content, re.DOTALL)
         if match:
             the_tag = MarkupTag(
                 tag_name=xml_case,
@@ -956,7 +1165,7 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
 
             # collect attributes with quoted values
             matches = re.finditer(
-                f" ({xml_attribute_name_re})=['\"](.*?)['\"]",
+                f" ?({xml_attribute_name_re})=['\"](.*?)['\"]",
                 attrib_material,
             )
             for match in matches:
@@ -964,11 +1173,7 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
 
             # collect attributes with unquoted values
             matches = re.finditer(
-                " ("
-                + xml_attribute_name_re
-                + ")=("
-                + xml_attribute_unquoted_value_re
-                + ")",
+                f" ?({xml_attribute_name_re})=({xml_attribute_unquoted_value_re})",
                 attrib_material,
             )
             for match in matches:
@@ -977,11 +1182,25 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
             # collect empty attributes (no value; or implicitly the empty string)
             copy_of_attrib_material = attrib_material
 
-            for each in the_tag.empty_attribs:
-                target_re = f"\\b{each}\\b"
-                copy_of_attrib_material = re.sub(
-                    target_re, " ", copy_of_attrib_material, 1
-                )
+            for k, v in the_tag.attribs.items():
+                target_replacement_strs = [
+                    f'{k}="{v}"',
+                    f"{k}='{v}'",
+                ]
+
+                for each in target_replacement_strs:
+                    while each in copy_of_attrib_material:
+                        copy_of_attrib_material = copy_of_attrib_material.replace(
+                            each, " "
+                        )
+
+                # for values without spaces, we can also try to remove unquoted attribute values
+                if not " " in v:
+                    target_replacement_str = f"{k}={v}"
+                    while target_replacement_str in copy_of_attrib_material:
+                        copy_of_attrib_material = copy_of_attrib_material.replace(
+                            target_replacement_str, " "
+                        )
 
             the_tag.empty_attribs.extend(
                 collect_empty_attributes(copy_of_attrib_material)
@@ -995,6 +1214,8 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
         "META",
         "SVG",
         "TITLE",
+        "RSS",
+        "FEED",
     ]
 
     for each_tag in [
@@ -1016,7 +1237,7 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
 
             # collect attributes with quoted values
             matches = re.finditer(
-                f"({xml_attribute_name_re})=['\"](.*?)['\"]",
+                f" ?({xml_attribute_name_re})=['\"](.*?)['\"]",
                 attrib_material,
             )
             for match in matches:
@@ -1024,7 +1245,7 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
 
             # collect attributes with unquoted values
             matches = re.finditer(
-                f" ({xml_attribute_name_re})=({xml_attribute_unquoted_value_re})",
+                f" ?({xml_attribute_name_re})=({xml_attribute_unquoted_value_re})",
                 attrib_material,
             )
             for match in matches:
@@ -1199,38 +1420,56 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
     # award text/html a bonus of 1 point if it has 3 or more text/html5 markers
     clues_toward["text/html"] += clues_toward["text/html5"] // 3
 
-    # check for xmlns attribute in specific tags
-    has_xmlns_attr = False
-    for each_tag in [
-        "html",
-        "svg",
-        "xml",
-    ]:
-        if each_tag in document:
-            for each_time in document[each_tag]:
-                for k, v in each_time.attribs.items():
-                    if k.lower() == "xmlns" and v.lower().endswith("xhtml"):
-                        has_xmlns_attr = True
+    # check for Atom element and namespace
+    if "feed" in document:
+        clues_toward["application/atom+xml"] += 1
 
-    if "html" in document and has_xmlns_attr:
-        clues_toward["application/xhtml+xml"] += 1
+        found_xmlns = False
+        for k, v in document["feed"][0].attribs.items():
+            k_lower = k.lower()
+            v_lower = v.lower()
+            if k_lower.startswith("xmlns") and v_lower.endswith("atom"):
+                # http://www.w3.org/2005/Atom
+                found_xmlns = True
+                clues_toward["application/atom+xml"] += 1
+        if not found_xmlns:
+            clues_toward["application/atom+xml"] = -float("inf")
 
-    if "html" in document and not has_xmlns_attr:
-        clues_toward["application/xhtml+xml"] = -float("inf")
+    # check for html element and xhtml namespace
+    if "html" in document:
+        found_xmlns = False
+        for k, v in document["html"][0].attribs.items():
+            k_lower = k.lower()
+            v_lower = v.lower()
+            if k_lower.startswith("xmlns") and v_lower.endswith("xhtml"):
+                found_xmlns = True
+                clues_toward["application/xhtml+xml"] += 1
+        if not found_xmlns:
+            clues_toward["application/xhtml+xml"] = -float("inf")
+
+    # check for rss element and namespace
+    if "rss" in document:
+        clues_toward["application/rss+xml"] += 1
+        for k, v in document["rss"][0].attribs.items():
+            k_lower = k.lower()
+            v_lower = v.lower()
+            if k_lower == "version" and v_lower == "2.0":
+                clues_toward["application/rss+xml"] += 1
 
     # check for svg element and namespace
     if "svg" in document:
         clues_toward["image/svg+xml"] += 1
 
+        found_xmlns = False
         for k, v in document["svg"][0].attribs.items():
             k_lower = k.lower()
             v_lower = v.lower()
-            if k_lower == "xmlns" and v_lower.endswith("svg"):
+            if k_lower.startswith("xmlns") and v_lower.endswith("svg"):
                 # http://www.w3.org/2000/svg
-                has_xmlns_attr = True
+                found_xmlns = True
                 clues_toward["image/svg+xml"] += 1
-    else:
-        clues_toward["image/svg+xml"] = -float("inf")
+        if not found_xmlns:
+            clues_toward["image/svg+xml"] = -float("inf")
 
     if has_dtd:
         clues_toward["application/xml"] += 1
@@ -1246,10 +1485,10 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
     if "xml" in document and "html" in document:
         clues_toward["application/xhtml+xml"] += 1
 
-    if not has_dtd or not has_xmlns_attr:
+    if not has_dtd:
         clues_toward["application/xhtml+xml"] = -float("inf")
 
-    if "body" in document and "head" in document:
+    if "head" in document and "body" in document:
         clues_toward["text/html"] += 1
 
     # clues_toward.sort(key=lambda x: x[1], reverse=True)
@@ -1284,11 +1523,8 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
             print(f"{num_html_tags_seen=}")
 
     else:
-        clues_toward["application/xhtml+xml"] = -float("inf")
-        clues_toward["application/xml"] = -float("inf")
-        clues_toward["image/svg+xml"] = -float("inf")
-        clues_toward["text/html"] = -float("inf")
-        clues_toward["text/html5"] = -float("inf")
+        for _ in tag_based_markup_languages:
+            clues_toward[_] = -float("inf")
 
     res = "text/plain"
 
@@ -1310,6 +1546,14 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
 
         if res == "text/html5":
             res = "text/html"
+
+        if res == "application/xml":
+            # try to make more specific
+            top_xml_score = 0
+            for k, v in clues_toward.items():
+                if k.endswith("+xml") and v > top_xml_score:
+                    res = k
+                    top_xml_score = v
 
     if res not in [
         "application/pdf",

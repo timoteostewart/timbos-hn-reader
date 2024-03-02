@@ -1,0 +1,5 @@
+application/octet-stream
+application/pdf
+image/jpeg
+text/html
+text/plain

@@ -503,71 +503,97 @@ def asdfft2(item_id=None, pos_on_page=None):
             if content_type_to_use:
                 all_values.add(content_type_to_use)
 
-        if srct != "skipped":
-            if textual_mimetype is not None:
-                content_type_to_use = textual_mimetype
-            else:
-                # forge consensus from the srct and the guesses and the mts
+        # if srct != "skipped":
+        #     if textual_mimetype is not None:
+        #         content_type_to_use = textual_mimetype
+        #     else:
+        #         # forge consensus from the srct and the guesses and the mts
 
-                if srct:
-                    # 1. If all_values has length 1 and this value matches srct, use that
-                    if len(all_values) == 1 and srct in all_values:
-                        logger.info(
-                            log_prefix_local + f"srct matches all values (~Tim~)"
-                        )
-                        content_type_to_use = srct
+        consensus_content_type_to_use = None
+        trusted_values = set(
+            [
+                mimetype_via_python_magic,
+                mimetype_via_file_command,
+                mimetype_via_exiftool,
+            ]
+        )
 
-                    # 2. If srct is a generic binary mimetype and mimetype_via_python_magic, mimetype_via_file_command, mimetype_via_exiftool all agree, use that
-                    if srct in generic_binary_mimetypes:
-                        x = set(
-                            [
-                                mimetype_via_python_magic,
-                                mimetype_via_file_command,
-                                mimetype_via_exiftool,
-                            ]
-                        )
-                        if len(x) == 1:
-                            logger.info(
-                                log_prefix_local
-                                + f"generic srct, but 3 trusted values match (~Tim~)"
-                            )
-                            content_type_to_use = x.pop()
+        if srct:
+            # 1. If all_values has length 1 and this value matches srct, use that:
+            if len(all_values) == 1 and srct in all_values:
+                consensus_content_type_to_use = srct
+                logger.info(
+                    log_prefix_local
+                    + f"{srct=} equals {all_values=} ; {consensus_content_type_to_use=} ; {textual_mimetype=}"
+                )
 
-                    # 3. If srct, mimetype_via_python_magic, mimetype_via_file_command, mimetype_via_exiftool all agree, use that
-                    else:
-                        x = set(
-                            [
-                                mimetype_via_python_magic,
-                                mimetype_via_file_command,
-                                mimetype_via_exiftool,
-                            ]
-                        )
-                        if len(x) == 1 and srct in x:
-                            logger.info(
-                                log_prefix_local
-                                + f"srct matches 3 trusted values (~Tim~)"
-                            )
-                            content_type_to_use = srct
-
-                else:  # srct is None
-                    # 4. If mimetype_via_python_magic, mimetype_via_file_command, mimetype_via_exiftool all agree, use that
-                    x = set(
-                        [
-                            mimetype_via_python_magic,
-                            mimetype_via_file_command,
-                            mimetype_via_exiftool,
-                        ]
+            # 2. If srct is a generic binary mimetype and mimetype_via_python_magic, mimetype_via_file_command, mimetype_via_exiftool all agree, use that:
+            elif srct in generic_binary_mimetypes:
+                if len(trusted_values) == 1:
+                    consensus_content_type_to_use = trusted_values.pop()
+                    logger.info(
+                        log_prefix_local
+                        + f"generic {srct=}, but {trusted_values=} ; {consensus_content_type_to_use=} ; {textual_mimetype=} (~Tim~)"
                     )
-                    if len(x) == 1:
-                        logger.info(
-                            log_prefix_local
-                            + f"no srct, but 3 trusted values match (~Tim~)"
-                        )
-                        content_type_to_use = x.pop()
+
+            # 3. If srct, mimetype_via_python_magic, mimetype_via_file_command, mimetype_via_exiftool all agree, use that:
+            elif len(trusted_values) == 1 and srct in trusted_values:
+                consensus_content_type_to_use = srct
+                logger.info(
+                    log_prefix_local
+                    + f"{srct=} equals {trusted_values=} ; {consensus_content_type_to_use=} ; {textual_mimetype=} (~Tim~)"
+                )
+
+            # 4. If srct matches any value in trusted_values, use that:
+            elif srct in trusted_values:
+                consensus_content_type_to_use = srct
+                logger.info(
+                    log_prefix_local
+                    + f"{srct=} matches any of {trusted_values=} ; {consensus_content_type_to_use=} ; {textual_mimetype=} (~Tim~)"
+                )
+
+            # 5. If srct matches any value in all_values, use that:
+            elif srct in all_values:
+                consensus_content_type_to_use = srct
+                logger.info(
+                    log_prefix_local
+                    + f"{srct=} matches any of {all_values=} ; {consensus_content_type_to_use=} ; {textual_mimetype=} (~Tim~)"
+                )
+
+            # 6. Just use srct
+            else:
+                consensus_content_type_to_use = srct
+                logger.info(
+                    log_prefix_local
+                    + f"{srct=} instead of {all_values=} ; {consensus_content_type_to_use=} ; {textual_mimetype=} (~Tim~)"
+                )
+
+        else:  # srct is None
+            # 7. If mimetype_via_python_magic, mimetype_via_file_command, mimetype_via_exiftool all agree, use that:
+            if len(trusted_values) == 1:
+                consensus_content_type_to_use = trusted_values.pop()
+                logger.info(
+                    log_prefix_local
+                    + f"srct=None, but {trusted_values=} ; {consensus_content_type_to_use=} ; {textual_mimetype=} (~Tim~)"
+                )
+
+            # 8. Fall back on generic 'application/octet-stream'
+            else:
+                consensus_content_type_to_use = "application/octet-stream"
+                logger.info(
+                    log_prefix_local
+                    + f"srct=None, and {all_values=} disagree ; {consensus_content_type_to_use=} ; {textual_mimetype=} (~Tim~)"
+                )
+
+        if textual_mimetype and consensus_content_type_to_use != textual_mimetype:
+            logger.info(
+                log_prefix_local
+                + f"{consensus_content_type_to_use=} doesn't match {textual_mimetype=} (~Tim~)"
+            )
 
         logger.info(
             log_prefix_local
-            + f"srct: {srct}, guesses: {content_types_guessed_from_uri_extension}, mts: {possible_magic_types}, {textual_mimetype=}, {content_type_to_use=} for url {story_object.url}"
+            + f"srct: {srct}, guesses: {content_types_guessed_from_uri_extension}, mts: {possible_magic_types}, {consensus_content_type_to_use=}, {textual_mimetype=}, {content_type_to_use=} for url {story_object.url}"
         )
 
         if srct != "skipped":
@@ -1019,6 +1045,18 @@ def freshen_up(story_object=None, page_package=None):
             logger.info(
                 log_prefix_local + f"updated title from '{old_title}' to '{new_title}'"
             )
+
+            if (
+                story_object.downloaded_og_image_magic_result == "application/pdf"
+                and "pdf" in story_object.title[-12:].lower()
+                and story_object.story_content_type_slug
+                == ' <span class="story-content-type">[pdf]</span>'
+            ):
+                story_object.story_content_type_slug = ""
+                logger.info(
+                    f"id {story_object.id}: removed [pdf] label after title (~Tim~)"
+                )
+
     else:
         logger.info(
             log_prefix_local
@@ -1812,14 +1850,13 @@ def supervisor(cur_story_type):
                 log_prefix
                 + f"failed to ingest roster for {roster_story_type} stories: {exc}"
             )
-            raise exc
 
     if len(rosters[cur_story_type]) == 0:
         logger.error(
             log_prefix
             + f"failed to ingest roster '{cur_story_type}' after {config.settings['SCRAPING']['NUM_RETRIES_FOR_HN_FEEDS']} tries. See errors."
         )
-        return 1
+        rosters[roster_story_type] = []
 
     page_packages = []
     cur_page_number = 1

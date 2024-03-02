@@ -54,36 +54,14 @@ def endpoint_query_via_requests(url=None, retries=3, delay=8, log_prefix=""):
         # logger.info(log_prefix + f"successfully queried endpoint {url}")
         return resp_as_dict
 
-    # except requests.exceptions.ConnectTimeout as exc:
-    #     if url.startswith("http://ip-api.com/json/"):
-    #         return None
-    #     else:
-    #         exc_name = exc.__class__.__name__
-    #         exc_msg = str(exc)
-    #         exc_slug = f"{exc_name}: {exc_msg}"
-    #         logger.info(exc_slug + " (~Tim~)")
-
-    except requests.exceptions.HTTPError as exc:
-        exc_name = exc.__class__.__name__
-        exc_msg = str(exc)
-        exc_slug = f"{exc_name}: {exc_msg}"
-        logger.info(exc_slug + " (~Tim~)")
-
-    except requests.exceptions.SSLError as exc:
-        exc_name = exc.__class__.__name__
-        exc_msg = str(exc)
-        exc_slug = f"{exc_name}: {exc_msg}"
-        logger.info(exc_slug + " (~Tim~)")
-
     except Exception as exc:
-        exc_name = exc.__class__.__name__
-        exc_msg = str(exc)
-        exc_slug = f"{exc_name}: {exc_msg}"
+        pass
+        handle_exception(exc=exc, log_prefix=log_prefix_local, context={"url": url})
 
         delay *= 2
         logger.info(
             log_prefix_local
-            + f"problem querying url {url}: {exc_slug} ; will delay {delay} seconds and retry (retries left {retries})"
+            + f"problem querying url {url} ; will delay {delay} seconds and retry (retries left {retries})"
         )
         time.sleep(delay)
 
@@ -120,6 +98,7 @@ def firebaseio_endpoint_query(query=None, log_prefix=""):
 
 
 def get_content_type_via_head_request(url: str = None, log_prefix=""):
+    log_prefix_local = log_prefix + "get_content_type_via_head_request(): "
     if not url:
         raise Exception("no URL provided")
 
@@ -130,14 +109,14 @@ def get_content_type_via_head_request(url: str = None, log_prefix=""):
         exc_name = f"{exc.__class__.__module__}.{exc.__class__.__name__}"
         exc_msg = str(exc)
         exc_slug = f"{exc_name}: {exc_msg}"
-        logger.info(log_prefix + f"{exc_slug}")
+        logger.info(log_prefix_local + f"{exc_slug}")
 
     if not headers:
         # suppress logging if we're coming from download_og_image() since we log there
         if log_prefix.endswith("d_og_i(): "):
             pass
         else:
-            logger.info(log_prefix + f"failed to get HTTP headers for {url}")
+            logger.info(log_prefix_local + f"failed to get HTTP headers for {url}")
         return None
 
     # extract content-type from headers
@@ -149,17 +128,33 @@ def get_content_type_via_head_request(url: str = None, log_prefix=""):
             if "/" in each_ct_val:
                 content_type = each_ct_val
                 break
+
+        if content_type == "*/*":
+            logger.info(log_prefix_local + f"{content_type=} for {url} (~Tim~)")
+            content_type = None
+
+        if "," in content_type:
+            comma_delimited_content_types = [x.strip() for x in content_type.split(",")]
+            if len(set(comma_delimited_content_types)) == 1:
+                content_type = comma_delimited_content_types[0]
+            else:
+                logger.info(
+                    log_prefix_local
+                    + f"multiple content-types {comma_delimited_content_types} found in HTTP headers for url {url} (~Tim~)"
+                )
+                content_type = None
+
     else:
         logger.info(
-            log_prefix + f"content-type is absent from HTTP headers for url {url}"
+            log_prefix_local + f"content-type is absent from HTTP headers for url {url}"
         )
-        return None
+        content_type = None
 
     if content_type:
         return content_type
     else:
         logger.info(
-            log_prefix
+            log_prefix_local
             + f"content-type could not be determined from HTTP headers for url {url}"
         )
         return None
@@ -463,9 +458,9 @@ for _ in browser_exception_msg_prefixes:
 
 
 hrequests_exceptions_suffixes = [
-    # " EOF",
+    " EOF",
     "context deadline exceeded (Client.Timeout exceeded while awaiting headers)",
-    "http2: unsupported scheme"
+    "http2: unsupported scheme",
     "i/o timeout (Client.Timeout exceeded while awaiting headers)",
     "no such host",
     "remote error: tls: user canceled",
@@ -570,6 +565,9 @@ def handle_exception(exc: Exception = None, log_prefix="", context=None):
             elif browser_exception_msg_prefixes_trie.search(exc_msg) is not None:
                 expected_exception = True
 
+            elif exc_msg.startswith("net::ERR_CERT_DATE_INVALID"):
+                expected_exception = True
+
             elif "cookies" in exc_msg:
                 pattern = r"cookies\[\d+\]\.value: expected string, got undefined"
                 match = re.search(pattern, exc_msg)
@@ -583,6 +581,9 @@ def handle_exception(exc: Exception = None, log_prefix="", context=None):
 
         elif isinstance(exc, hrequests.exceptions.ClientException):
             if hrequests_exceptions_suffixes_trie.search(exc_msg) is not None:
+                expected_exception = True
+
+            elif "net/http: request canceled" in exc_msg:
                 expected_exception = True
 
             elif (

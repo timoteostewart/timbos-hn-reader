@@ -1,0 +1,120 @@
+
+
+
+Story Type: active
+Events: 376
+Min: 0.0
+Max: 17.416666666666668
+Mean: 10.93771102049073
+Median: 11.666666666666666
+Mode: 12.176470588235293
+First Quartile: 9.857142857142858
+Third Quartile: 12.828125
+
+
+Story Type: best
+Events: 404
+Min: 0.0
+Max: 16.666666666666668
+Mean: 10.941047058759425
+Median: 11.764705882352942
+Mode: 11.764705882352942
+First Quartile: 10.0
+Third Quartile: 12.5
+
+
+Story Type: classic
+Events: 362
+Min: 0.0
+Max: 17.727272727272727
+Mean: 11.167796795253746
+Median: 12.352941176470589
+Mode: 12.352941176470589
+First Quartile: 10.0
+Third Quartile: 13.125
+
+
+Story Type: new
+Events: 403
+Min: 0.0
+Max: 20.0
+Mean: 4.496772324744864
+Median: 3.7313432835820897
+Mode: 0.0
+First Quartile: 2.43908242908814
+Third Quartile: 6.173780487804878
+
+
+Story Type: top
+Events: 406
+Min: 0.0
+Max: 20.0
+Mean: 10.033973366620101
+Median: 10.416666666666666
+Mode: 14.285714285714286
+First Quartile: 6.172839506172839
+Third Quartile: 13.157894736842104
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Processing Category: fresh
+Events: 118362
+Min: 0
+Max: 1204
+Mean: 5
+Median: 2.0
+Mode: 2
+First Quartile: 1.0
+Third Quartile: 4.0
+
+
+Processing Category: fresh_thumbnail
+Events: 214232
+Min: 0
+Max: 3237
+Mean: 13
+Median: 7.0
+Mode: 5
+First Quartile: 5.0
+Third Quartile: 14.0
+
+
+Processing Category: freshened
+Events: 6284731
+Min: 0
+Max: 137
+Mean: 0
+Median: 0
+Mode: 0
+First Quartile: 0.0
+Third Quartile: 1.0
+
+
+Processing Category: reused
+Events: 19599996
+Min: 0
+Max: 15
+Mean: 0
+Median: 0.0
+Mode: 0
+First Quartile: 0.0
+Third Quartile: 0.0

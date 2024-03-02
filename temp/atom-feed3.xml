@@ -1,0 +1,41 @@
+287	<?xml version="1.0" encoding="utf-8"?>
+288	<feed xmlns="http://www.w3.org/2005/Atom">
+289
+290	 <title>Example Feed</title>
+291	 <subtitle>A subtitle.</subtitle>
+292	 <link href="http://example.org/feed/" rel="self"/>
+293	 <link href="http://example.org/"/>
+294	 <updated>2003-12-13T18:30:02Z</updated>
+295	 <author>
+296	   <name>John Doe</name>
+297	   <email>johndoe@example.com</email>
+298	 </author>
+299	 <id>urn:uuid:60a76c80-d399-11d9-b91C-0003939e0af6</id>
+300
+301	 <entry>
+302	   <content type="text/xml">
+303	       <p:Customer xmlns:p="http://www.ibm.com/crm" xmlns="http://www.ibm.com/crm">
+304	               <id>10</id>
+305	       </p:Customer>
+306	   </content>
+307	   <title>Atom-Powered Robots Run Amok</title>
+308	   <link href="http://example.org/2003/12/13/atom03"/>
+309	   <id>urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a</id>
+310	   <updated>2003-12-13T18:30:02Z</updated>
+311	   <summary>Some text.</summary>
+312	 </entry>
+313	<entry>
+314	   <content>
+315	      <content type="text/json">
+316	          {"firstName"="John","lastName"="Doe","id"="10"}
+317	      </content>
+318	      <type>text/json</type>
+319	   </content>
+320	   <title>Atom-Powered Robots Run Amok</title>
+321	   <link href="http://example.org/2003/12/13/atom03"/>
+322	   <id>urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a</id>
+323	   <updated>2003-12-13T18:30:02Z</updated>
+324	   <summary>Some text.</summary>
+325	 </entry>
+326
+327	</feed>
