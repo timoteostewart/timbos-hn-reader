@@ -19,6 +19,9 @@ export PYTHONWARNINGS="ignore:Unverified HTTPS request"
 trap handle_control_c INT
 # trap handle_error INT
 
+export MAGICK_HOME=/usr/local/ImageMagick-7
+export WAND_MAGICK_LIBRARY_SUFFIX="-7.Q16HDRI"
+
 project_base_dir=/srv/timbos-hn-reader/
 all_logs_dir="${project_base_dir}logs/"
 python_bin_dir="${project_base_dir}.venv/bin/"

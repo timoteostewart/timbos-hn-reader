@@ -1,3 +1,5 @@
+import builtins
+import datetime
 import json
 import logging
 import mimetypes
@@ -5,6 +7,7 @@ import os
 import re
 import subprocess
 import sys
+import time
 import traceback
 from collections import Counter, defaultdict
 from enum import Enum, auto
@@ -210,6 +213,10 @@ html_tags["html5"] = set(
     ]
 )
 
+all_html_tag_names = set()
+all_html_tag_names.update(html_tags["current"])
+all_html_tag_names.update(html_tags["obsolete_or_deprecated"])
+all_html_tag_names.update(html_tags["html5"])
 
 svg_tags["current"] = set(
     [
@@ -281,6 +288,9 @@ svg_tags["current"] = set(
     ]
 )
 
+all_svg_tag_names = set()
+all_svg_tag_names.update(svg_tags["current"])
+
 tag_based_markup_languages = [
     "application/atom+xml",
     "application/rss+xml",
@@ -319,7 +329,7 @@ def check_for_valid_text_encodings(local_file: str, log_prefix="") -> List[str]:
         cmd = f"iconv -f {each_encoding} -t {each_encoding} {local_file} -o /dev/null"
 
         try:
-            subprocess.run(
+            result = subprocess.run(
                 cmd,
                 check=True,
                 stdout=subprocess.PIPE,
@@ -327,12 +337,14 @@ def check_for_valid_text_encodings(local_file: str, log_prefix="") -> List[str]:
                 text=True,
                 shell=True,
             )
-
-            valid_encodings.append(each_encoding)
+            if result.returncode == 0:
+                valid_encodings.append(each_encoding)
+            else:
+                continue
 
         except subprocess.CalledProcessError as exc:
             # non-zero return code
-            pass
+            continue
 
         except Exception as exc:
             short_exc_name = exc.__class__.__name__
@@ -342,15 +354,10 @@ def check_for_valid_text_encodings(local_file: str, log_prefix="") -> List[str]:
             logger.error(log_prefix_local + "unexpected exception: " + exc_slug)
             tb_str = traceback.format_exc()
             logger.error(log_prefix_local + tb_str)
+            continue
 
     if "UTF-8" in valid_encodings:
-        if is_utf8_2(local_file):
-            logger.info(
-                log_prefix_local
-                + f"`iconv -f UTF-8` succeeded and `isutf8` agreed for {local_file} (~Tim~)"
-            )
-
-        else:
+        if not is_utf8_2(local_file):
             valid_encodings.remove("UTF-8")
             logger.info(
                 log_prefix_local
@@ -367,7 +374,7 @@ def check_for_wellformed_xml(local_file: str, log_prefix="") -> bool:
     cmd = f"xmlwf -c {local_file}"
 
     try:
-        subprocess.run(
+        result = subprocess.run(
             cmd,
             check=True,
             stdout=subprocess.PIPE,
@@ -375,7 +382,8 @@ def check_for_wellformed_xml(local_file: str, log_prefix="") -> bool:
             text=True,
             shell=True,
         )
-        return True
+        if result.returncode == 0:
+            return True
 
     except subprocess.CalledProcessError as exc:
         pass
@@ -399,7 +407,7 @@ def is_utf8(local_file: str, log_prefix="") -> bool:
     cmd = f"isutf8 {local_file}"
 
     try:
-        res = subprocess.run(
+        result = subprocess.run(
             cmd,
             check=True,
             stdout=subprocess.PIPE,
@@ -407,33 +415,45 @@ def is_utf8(local_file: str, log_prefix="") -> bool:
             text=True,
             shell=True,
         )
-        if res.returncode == 0:
+        if result.returncode == 0:
             return True
 
-    except subprocess.CalledProcessError as exc:
-        pass
-
     except Exception as exc:
-        short_exc_name = exc.__class__.__name__
-        exc_name = exc.__class__.__module__ + "." + short_exc_name
-        exc_msg = str(exc)
-        exc_slug = f"{exc_name}: {exc_msg}"
-        logger.error(log_prefix_local + "unexpected exception: " + exc_slug)
-        tb_str = traceback.format_exc()
-        logger.error(log_prefix_local + tb_str)
+        if isinstance(exc, subprocess.CalledProcessError):
+            pass
+
+        else:
+            exc_name = exc.__class__.__name__
+            exc_fq_name = exc.__class__.__module__ + "." + exc_name
+            exc_msg = str(exc)
+            exc_slug = f"{exc_fq_name}: {exc_msg}"
+            logger.error(log_prefix_local + "unexpected exception: " + exc_slug)
+            tb_str = traceback.format_exc()
+            logger.error(log_prefix_local + tb_str)
 
     return False
 
 
 def is_utf8_2(local_file: str, log_prefix="") -> bool:
+    log_prefix_local = log_prefix + "is_utf8_2(): "
     with open(local_file, "rb") as file:
         data = file.read()
         try:
             data.decode("UTF-8")
-        except UnicodeDecodeError:
-            return False
-        else:
             return True
+        except Exception as exc:
+            if isinstance(exc, builtins.UnicodeDecodeError):
+                pass
+            else:
+                exc_name = exc.__class__.__name__
+                exc_fq_name = exc.__class__.__module__ + "." + exc_name
+                exc_msg = str(exc)
+                exc_slug = f"{exc_fq_name}: {exc_msg}"
+                logger.error(log_prefix_local + "unexpected exception: " + exc_slug)
+                tb_str = traceback.format_exc()
+                logger.error(log_prefix_local + tb_str)
+
+    return False
 
 
 def is_valid_json(local_file: str, log_prefix="") -> bool:
@@ -443,7 +463,7 @@ def is_valid_json(local_file: str, log_prefix="") -> bool:
     cmd = f"jq . {local_file}"
 
     try:
-        res = subprocess.run(
+        result = subprocess.run(
             cmd,
             check=True,
             stdout=subprocess.PIPE,
@@ -451,20 +471,20 @@ def is_valid_json(local_file: str, log_prefix="") -> bool:
             text=True,
             shell=True,
         )
-        if res.returncode == 0:
+        if result.returncode == 0:
             return True
 
-    except subprocess.CalledProcessError as exc:
-        pass
-
     except Exception as exc:
-        short_exc_name = exc.__class__.__name__
-        exc_name = exc.__class__.__module__ + "." + short_exc_name
-        exc_msg = str(exc)
-        exc_slug = f"{exc_name}: {exc_msg}"
-        logger.error(log_prefix_local + "unexpected exception: " + exc_slug)
-        tb_str = traceback.format_exc()
-        logger.error(log_prefix_local + tb_str)
+        if isinstance(exc, subprocess.CalledProcessError):
+            pass
+        else:
+            exc_name = exc.__class__.__name__
+            exc_fq_name = exc.__class__.__module__ + "." + exc_name
+            exc_msg = str(exc)
+            exc_slug = f"{exc_fq_name}: {exc_msg}"
+            logger.error(log_prefix_local + "unexpected exception: " + exc_slug)
+            tb_str = traceback.format_exc()
+            logger.error(log_prefix_local + tb_str)
 
     return False
 
@@ -477,6 +497,7 @@ nonspecific_cts = set(
         "multipart/alternative",
         "multipart/form-data",
         "multipart/mixed",
+        "inode/x-empty",
     ]
 )
 
@@ -499,6 +520,7 @@ binary_cts = set(
         "audio/mpeg",
         "audio/mpeg3",
         "audio/prs.sid",
+        "binary/octet-stream",
         "font/ttf",
         "image/avif",
         "image/bmp",
@@ -545,6 +567,7 @@ textual_cts = set(
         "application/typescript",  # nonstandard
         "application/xhtml+xml",
         "application/xml",
+        "image/xvg+xml",
         "text/calendar",
         "text/css",
         "text/csv",
@@ -693,15 +716,18 @@ def get_mimetype_via_exiftool2(local_file: str, log_prefix="") -> str:
 
     cmd = f'/usr/local/bin/exiftool -File:MIMEType "{local_file}"'
 
+    result_stdout = None
     try:
-        res = subprocess.run(
+        result = subprocess.run(
             cmd,
             check=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
             shell=True,
-        ).stdout
+        )
+
+        result_stdout = result.stdout
 
     except Exception as exc:
         exc_name = exc.__class__.__name__
@@ -710,11 +736,12 @@ def get_mimetype_via_exiftool2(local_file: str, log_prefix="") -> str:
         exc_slug = f"{fq_exc_name}: {exc_msg}"
 
         if isinstance(exc, subprocess.CalledProcessError):
-            logger.error(log_prefix_local + exc_slug)
+            logger.info(log_prefix_local + exc_slug)
 
         else:
             logger.error(log_prefix_local + "unexpected exception: " + exc_slug)
             tb_str = traceback.format_exc()
+            logger.error(log_prefix_local + result.stderr)
             logger.error(log_prefix_local + tb_str)
 
         with open(local_file, mode="rb") as file:
@@ -723,10 +750,10 @@ def get_mimetype_via_exiftool2(local_file: str, log_prefix="") -> str:
 
         return None
 
-    if res:
-        match = re.search(r"MIME Type[\ ]*:\ ", res)
+    if result_stdout:
+        match = re.search(r"MIME Type[\ ]*:\ ", result_stdout)
         if match:
-            mimetype = res.split(":")[-1].strip()
+            mimetype = result_stdout.split(":")[-1].strip()
             return mimetype
         else:
             return None
@@ -740,42 +767,46 @@ def get_mimetype_via_file_command(local_file, log_prefix="") -> str:
     cmd = f"/srv/timbos-hn-reader/getmt local {local_file}"
 
     try:
-        res = subprocess.run(
+        result = subprocess.run(
             cmd,
             check=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
             shell=True,
-        ).stdout
-    except subprocess.CalledProcessError as exc:
-        short_exc_name = exc.__class__.__name__
-        exc_name = exc.__class__.__module__ + "." + short_exc_name
-        exc_msg = str(exc)
-        exc_slug = f"{exc_name}: {exc_msg}"
-        tb_str = traceback.format_exc()
-        logger.error(log_prefix_local + exc_slug)
-        logger.error(log_prefix_local + tb_str)
-        return None
+        )
+        if result.returncode == 0:
+            result_stdout = result.stdout
+        else:
+            return None
+
     except Exception as exc:
         short_exc_name = exc.__class__.__name__
-        exc_name = exc.__class__.__module__ + "." + short_exc_name
+        exc_fq_name = exc.__class__.__module__ + "." + short_exc_name
         exc_msg = str(exc)
-        exc_slug = f"{exc_name}: {exc_msg}"
+        exc_slug = f"{exc_fq_name}: {exc_msg}"
         tb_str = traceback.format_exc()
-        logger.error(log_prefix_local + "unexpected exception: " + exc_slug)
-        logger.error(log_prefix_local + tb_str)
+
+        if isinstance(exc, subprocess.CalledProcessError):
+            logger.error(log_prefix_local + exc_slug)
+            logger.error(log_prefix_local + tb_str)
+
+        else:
+            logger.error(log_prefix_local + "unexpected exception: " + exc_slug)
+            logger.error(log_prefix_local + tb_str)
+
         return None
 
-    # res is json, so decode it into a python dictionary
-    res = json.loads(res)
-    return res["mimetype"]
+    # result_stdout is json, so decode it into a python dictionary
+    result_json = json.loads(result_stdout)
+    return result_json["mimetype"]
 
 
 def get_mimetype_via_python_magic(local_file, log_prefix="") -> str:
     log_prefix_local = log_prefix + "get_mimetype_via_libmagic(): "
     try:
         magic_type_as_mimetype = magic.from_file(local_file, mime=True)
+        return magic_type_as_mimetype
     except Exception as exc:
         short_exc_name = exc.__class__.__name__
         exc_name = exc.__class__.__module__ + "." + short_exc_name
@@ -784,9 +815,8 @@ def get_mimetype_via_python_magic(local_file, log_prefix="") -> str:
         tb_str = traceback.format_exc()
         logger.error(log_prefix_local + "unexpected exception: " + exc_slug)
         logger.error(log_prefix_local + tb_str)
-        return None
 
-    return magic_type_as_mimetype
+    return None
 
 
 def guess_mimetype_from_uri_extension(url, log_prefix=""):
@@ -943,6 +973,18 @@ def collect_empty_attributes(s: str):
     return [x.strip() for x in substrings if x.strip() != ""]
 
 
+white_space_chars = set(
+    [
+        " ",
+        "\f",
+        "\n",
+        "\v",
+        "\r",
+        "\t",
+    ]
+)
+
+
 def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -> str:
     """Discriminate between HTML, HTML5, JSON, plain text, XHTML, XHTML5, and XML"""
 
@@ -1079,15 +1121,10 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
         logger.info(log_prefix_local + f"file {local_file} is empty")
         return None
 
-    while content[0] in [
-        " ",
-        "\f",
-        "\n",
-        "\v",
-        "\r",
-        "\t",
-    ]:
+    while content[0] in white_space_chars:
         content = content[1:]
+
+    logger.info(log_prefix_local + f"{len(content)=}")
 
     logger.info(log_prefix_local + f"{encoding_to_use=} out of {text_encodings=}")
     first_64 = content[:64].replace("\n", " ")
@@ -1163,9 +1200,17 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
 
             attrib_material = match.group(1).strip()
 
-            # collect attributes with quoted values
+            # collect attributes with single-quoted values
             matches = re.finditer(
-                f" ?({xml_attribute_name_re})=['\"](.*?)['\"]",
+                f" ?({xml_attribute_name_re})='(.*?)'",
+                attrib_material,
+            )
+            for match in matches:
+                the_tag.attribs[match.group(1).lower()] = match.group(2)
+
+            # collect attributes with double-quoted values
+            matches = re.finditer(
+                f' ?({xml_attribute_name_re})="(.*?)"',
                 attrib_material,
             )
             for match in matches:
@@ -1235,9 +1280,17 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
             attrib_material = match.group(1).strip()
             # print(f"{the_tag.tag_name.lower()}: {attrib_material=}")
 
-            # collect attributes with quoted values
+            # collect attributes with single-quoted values
             matches = re.finditer(
-                f" ?({xml_attribute_name_re})=['\"](.*?)['\"]",
+                f" ?({xml_attribute_name_re})='(.*?)'",
+                attrib_material,
+            )
+            for match in matches:
+                the_tag.attribs[match.group(1).lower()] = match.group(2)
+
+            # collect attributes with double-quoted values
+            matches = re.finditer(
+                f' ?({xml_attribute_name_re})="(.*?)"',
                 attrib_material,
             )
             for match in matches:
@@ -1277,30 +1330,6 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
             the_tag.empty_attribs.extend(
                 collect_empty_attributes(copy_of_attrib_material)
             )
-
-    # check all sorts of tags to apply any statistical heuristics
-    number_of_tags = 0
-    cur_re = r"<([A-Za-z0-9]+)(.*?)/?>"
-    tags_seen = Counter()
-    matches = re.finditer(cur_re, content, re.DOTALL)
-    for match in matches:
-        if not match.group().endswith("/>"):
-            tags_seen[match.group(1).lower()] += 1
-            number_of_tags += 1
-
-    logger.info(log_prefix_local + f"{number_of_tags=}")
-    logger.info(
-        log_prefix_local
-        + f"tags_seen={sorted(tags_seen.items(), key=lambda x: x[1], reverse=True)}"
-    )
-    logger.info(log_prefix_local + f"{len(content)=}")
-
-    has_html_tags = {k: False for k, v in html_tags.items()}
-
-    for html_tag_sets_k, html_tag_sets_v in html_tags.items():
-        for k, v in tags_seen.items():
-            if k in html_tag_sets_v:
-                has_html_tags[html_tag_sets_k] = True
 
     # analyze !doctype
     has_dtd = False
@@ -1354,7 +1383,7 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
                 continue
 
             if each_lower == "svg":
-                clues_toward["application/svg+xml"] += 2
+                clues_toward["image/svg+xml"] += 2
                 continue
 
             if each_lower in ["public", "system"]:
@@ -1406,6 +1435,26 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
                                     log_prefix_local
                                     + f"unexpected meta http-equiv content-type '{each_val}'"
                                 )
+
+    # check all sorts of tags to apply any statistical heuristics
+    tag_counts = Counter()
+    pattern = r"<([A-Za-z0-9]+)(.*?)/?>"
+    matches = re.finditer(pattern, content, re.DOTALL)
+    for match in matches:
+        if not match.group().endswith("/>"):
+            tag_counts[match.group(1).lower()] += 1
+    if tag_counts:
+        logger.info(log_prefix_local + f"{sum(tag_counts.values())=}")
+        logger.info(
+            log_prefix_local
+            + f"tag_counts={sorted(tag_counts.items(), key=lambda x: x[1], reverse=True)}"
+        )
+
+    has_html_tags = {k: False for k in html_tags.keys()}
+    for html_tag_sets_k, html_tag_sets_v in html_tags.items():
+        for tag_counts_k in tag_counts.keys():
+            if tag_counts_k in html_tag_sets_v:
+                has_html_tags[html_tag_sets_k] = True
 
     if has_html_tags["html5"]:
         clues_toward["text/html5"] += 1
@@ -1501,26 +1550,42 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
 
     log_first_1k_chars = False
 
-    if tags_seen:
+    if tag_counts:
         # 2024-02-23T13:46:37Z [new]     INFO     id 39480233: asdfft2(): timbos_textfile_format_identifier(): tags_seen=[('a', 18), ('meta', 1), ('pre', 1), ('b', 1), ('small', 1)]
-        num_html_tags_seen = 0
-        num_svg_tags_seen = 0
-        for k in tags_seen.keys():
-            if k in html_tags["current"] or k in html_tags["html5"]:
-                num_html_tags_seen += 1
-            if k in html_tags["obsolete_or_deprecated"]:
-                num_html_tags_seen += 1
-            if k in svg_tags["current"]:
-                num_svg_tags_seen += 1
+        num_html_tag_names_seen = 0
+        num_svg_tag_names_seen = 0
+        num_nonstandard_tag_names_seen = 0
+        nonstandard_tags_population = 0
 
-        if num_html_tags_seen > 0:
+        nonstd_tag_names = []
+
+        for k, v in tag_counts.items():
+            if k in all_html_tag_names:
+                num_html_tag_names_seen += 1
+            elif k in all_svg_tag_names:
+                num_svg_tag_names_seen += 1
+            else:
+                num_nonstandard_tag_names_seen += 1
+                nonstandard_tags_population += v
+                nonstd_tag_names.append(k)
+
+        logger.info(f"{nonstd_tag_names=}")
+
+        if num_html_tag_names_seen > 0:
             clues_toward["text/html"] += 1
-        if num_svg_tags_seen > 0:
+        if num_svg_tag_names_seen > 0:
             clues_toward["image/svg+xml"] += 1
 
+        if num_nonstandard_tag_names_seen > 0:
+            logger.info(
+                log_prefix_local
+                + f"nonstd tag names={num_nonstandard_tag_names_seen*100/len(tag_counts.keys()):.1f}%, "
+                f"nonstd indiv tags={nonstandard_tags_population*100/sum(tag_counts.values()):.1f}% (~Tim~)"
+            )
+
         if debug:
-            print(f"{tags_seen=}")
-            print(f"{num_html_tags_seen=}")
+            logger.debug(f"{tag_counts=}")
+            logger.debug(f"{num_html_tag_names_seen=}")
 
     else:
         for _ in tag_based_markup_languages:
@@ -1533,8 +1598,8 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
         list_sorted = [x for x in list_sorted if x[1] > 0]
 
         if debug:
-            print(f"{clues_toward=}")
-            print(f"{list_sorted=}")
+            logger.debug(f"{clues_toward=}")
+            logger.debug(f"{list_sorted=}")
 
         logger.info(log_prefix_local + f"clues_toward={list_sorted}")
 
@@ -1574,6 +1639,32 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
 
 if __name__ == "__main__":
 
+    class MicrosecondFormatter(logging.Formatter):
+        def format(self, record):
+            record_datetime = datetime.datetime.fromtimestamp(record.created)
+            # timestamp = record_datetime.strftime("%Y-%m-%d %H:%M:%S.%f %c")
+            timestamp = record_datetime.strftime("%Y-%m-%d")
+            record.asctime = timestamp
+            return super().format(record)
+
+        def formatTime(self, record, datefmt=None):
+            record_datetime = datetime.datetime.fromtimestamp(record.created)
+            s = record_datetime.strftime("%Y-%m-%d %H:%M:%S.%fZ")
+            # s = time.strftime("%Y-%m-%d %H:%M:%S", ct)
+            # s = f"{s}.{int(record.msecs):06d}"  # Add microseconds
+            return s
+
+    logger.setLevel(logging.DEBUG)
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.DEBUG)
+    # formatter = MicrosecondFormatter("%(asctime)s %(levelname)-8s %(message)s")
+    formatter = logging.Formatter(
+        "%(asctime)s.%(msecs)03d %(levelname)-8s %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+    console_handler.setFormatter(formatter)
+    logger.addHandler(console_handler)
+
     if len(sys.argv) < 2:
         print("Usage: python utils_mimetypes_magic.py <local_file>")
         sys.exit(1)
@@ -1585,7 +1676,7 @@ if __name__ == "__main__":
 
     try:
         res = get_textual_mimetype(local_file=local_file, log_prefix="", debug=True)
-        print(res)
+        print(f"\n{res}\n")
     except Exception as exc:
         short_exc_name = exc.__class__.__name__
         exc_name = exc.__class__.__module__ + "." + short_exc_name

@@ -83,6 +83,18 @@ get-iso8601-date() {
     printf $(date -u +"%Y-%m-%dT%H:%M:%SZ")
 }
 
+# usage: get-iso8601-date-microseconds
+get-iso8601-date-microseconds() {
+    TZ=UTC
+    printf $(date -u +"%Y-%m-%dT%H:%M:%S.%6NZ")
+}
+
+# usage: get-iso8601-date-milliseconds
+get-iso8601-date-milliseconds() {
+    TZ=UTC
+    printf $(date -u +"%Y-%m-%dT%H:%M:%S.%3NZ")
+}
+
 # usage: get-time-in-unix-seconds
 get-time-in-unix-seconds() {
     printf '%(%s)T\n' -1

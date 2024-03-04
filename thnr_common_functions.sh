@@ -33,11 +33,6 @@ get-cur-year-and-doy() {
     echo "${cur_year_and_doy}"
 }
 
-get-datetime-iso-8601() {
-    TZ=UTC
-    printf $(date -u +"%Y-%m-%dT%H:%M:%SZ")
-}
-
 get-last-filename() {
     local pattern="$1"
     local last_file=""
@@ -69,7 +64,7 @@ write-log-message() {
 
     local level="$2"
     local message="$3"
-    local log_line=$(printf "%s           %-8s %s" "$(get-datetime-iso-8601)" "${level^^}" "${message}")
+    local log_line=$(printf "%s           %-8s %s" "$(get-iso8601-date-milliseconds)" "${level^^}" "${message}")
 
     local specific_log_file="${all_logs_dir}${server_name}-${log_identifier}-${cur_year_and_doy}.log"
     ensure-correct-file-owner "${specific_log_file}"

@@ -10,6 +10,7 @@ from dateutil.tz import tzutc
 from goose3 import Goose
 from goose3.crawler import Crawler
 from goose3.extractors.publishdate import TIMEZONE_INFO
+from goose3.text import get_encodings_from_content
 
 import config
 import utils_text
@@ -676,8 +677,37 @@ def monkeypatched_extract_3_1_19(self):
     }
 
 
+# def get_meta_encoding(self):
+#     """Parse the meta encoding"""
+#     encoding = get_encodings_from_content(self.article.raw_html)
+#     return encoding[0] if encoding else None
+
+
+def monkeypatched_get_meta_encoding_3_1_19(self):
+    """Parse the meta encoding"""
+    encoding = get_encodings_from_content(self.article.raw_html)
+    if encoding:
+        res = encoding[0]
+    else:
+        res = None
+
+    for each in [
+        "",
+        "none",
+        "null",
+    ]:
+        if res == each:
+            logger.info(
+                f"monkeypatched_get_meta_encoding_3_1_19(): defaulting to 'utf-8' for {self.article.final_url} since original was '{each}' (~Tim~)"
+            )
+            res = "utf-8"
+
+    return res
+
+
 metas_extractor = goose3.extractors.metas.MetasExtractor
 metas_extractor.extract = monkeypatched_extract_3_1_19
+metas_extractor.get_meta_encoding = monkeypatched_get_meta_encoding_3_1_19
 
 
 if __name__ == "__main__":

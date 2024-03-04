@@ -55,14 +55,20 @@ def asdfft1(item_id=None, pos_on_page=None):
 
     try:
         asdfft2(item_id, pos_on_page)
+
     except Exception as exc:
-        log_prefix_tmp = log_prefix_id + "asdfft2(): "
-        exc_name = exc.__class__.__name__
-        exc_msg = str(exc)
-        exc_slug = f"{exc_name}: {exc_msg}"
-        logger.info(log_prefix_tmp + exc_slug)
-        tb_str = traceback.format_exc()
-        logger.info(log_prefix_tmp + tb_str)
+        if isinstance(exc, UnsupportedStoryType):
+            pass
+
+        else:
+            exc_name = exc.__class__.__name__
+            exc_msg = str(exc)
+            exc_slug = f"{exc_name}: {exc_msg}"
+            logger.info(
+                log_prefix_id + "asdfft2(): " + "unexpected exception: " + exc_slug
+            )
+            tb_str = traceback.format_exc()
+            logger.info(log_prefix_id + "asdfft2(): " + tb_str)
 
     story_as_dict = None
     try:
@@ -269,7 +275,7 @@ def asdfft1(item_id=None, pos_on_page=None):
         else:
             logger.info(
                 log_prefix_local
-                + f"unexpected linked url content-type {story_object.linked_url_reported_content_type} for url {story_object.url}"
+                + f"unexpected linked url content-type '{story_object.linked_url_reported_content_type}' for url {story_object.url}"
             )
 
         if story_object.og_image_url:
@@ -406,12 +412,49 @@ def asdfft2(item_id=None, pos_on_page=None):
         asdfft2_preprocess_outbound_link(story_object, log_prefix=log_prefix_local)
         # logger.info(log_prefix_local + f"linked url={story_object.url}")
 
-        response_object = utils_http.get_response_object_via_hrequests2(
-            url=story_object.url, log_prefix=log_prefix_local
-        )
+        # first try to download using requests.get()
 
-        if not response_object:
-            logger.info(log_prefix_local + f"failed to get response object for url")
+        hash_of_url = utils_hash.get_hash_of_url(story_object.url)
+
+        # res_r = utils_http.download_file_via_requests(
+        #     url=story_object.url,
+        #     dest_local_file=config.settings["TEMP_DIR"] + hash_of_url + "-r",
+        #     log_prefix=log_prefix_local,
+        # )
+
+        # if not res_r:
+        #     pass
+
+        # response_object_requests = utils_http.get_response_object_via_requests(
+        #     url=story_object.url, log_prefix=log_prefix_local
+        # )
+        # response_object_hrequests = utils_http.get_response_object_via_hrequests(
+        #     url=story_object.url, log_prefix=log_prefix_local
+        # )
+
+        response_objects = {}
+        for each_gro_func in [
+            utils_http.get_response_object_via_requests,
+            utils_http.get_response_object_via_hrequests,
+        ]:
+            ro = each_gro_func(url=story_object.url, log_prefix=log_prefix_local)
+            if ro:
+                response_objects[each_gro_func.__name__] = ro
+                # logger.info(
+                #     log_prefix_local
+                #     + f"got response object via {each_gro_func.__name__}, type of ro.content={type(ro.content)} (~Tim~)"
+                # )
+
+            else:
+                logger.info(
+                    log_prefix_local
+                    + f"failed to get response object via {each_gro_func.__name__}"
+                )
+
+        if not response_objects:
+            logger.info(
+                log_prefix_local + f"failed to get any response objects for url (~Tim~)"
+            )
 
             # create the story card with the details we have
             pass  # populate_story_card_html_in_story_object(story_object=story_object)
@@ -421,76 +464,105 @@ def asdfft2(item_id=None, pos_on_page=None):
 
             return
 
-        # invariant now: we have a response object
+        # invariant now: we have at least one response object
 
         content_type_to_use = None
 
-        # force content types based on URL
         parsed_url = urlparse(story_object.url)
-        if parsed_url.netloc.endswith("github.com") and "/blob/" in parsed_url.path:
-            content_type_to_use = "text/html"
+
+        # # force content types based on URL
+        # if parsed_url.netloc.endswith("github.com") and "/blob/" in parsed_url.path:
+        #     content_type_to_use = "text/html"
+        #     logger.info(
+        #         log_prefix_local
+        #         + f"forcing content_type_to_use={content_type_to_use} for url {story_object.url}"
+        #     )
+
+        # if content_type_to_use:
+        #     srct = "skipped"
+        #     content_types_guessed_from_uri_extension = "skipped"
+        #     possible_magic_types = "skipped"
+        #     textual_mimetype = "skipped"
+        srct = set(
+            [get_content_type_from_response(x) for x in response_objects.values()]
+        )
+
+        if not srct:
             logger.info(
                 log_prefix_local
-                + f"forcing content_type_to_use={content_type_to_use} for url {story_object.url}"
+                + f"failed to get any srct for {story_object.url=} (~Tim~)"
             )
 
-        if content_type_to_use:
-            srct = "skipped"
-            content_types_guessed_from_uri_extension = "skipped"
-            possible_magic_types = "skipped"
-            textual_mimetype = "skipped"
-        else:
-            srct = get_content_type_from_response(response_object)
+        if len(srct) > 1:
+            logger.info(
+                log_prefix_local
+                + f"multiple srct values: {srct=}, {story_object.url=} (~Tim~)"
+            )
+        srct = srct.pop()
 
-            # no matter whether we have a reported_content_type or not, let's download the content and get its magic type
-            hash_of_url = utils_hash.get_hash_of_url(story_object.url)
-            local_file_response_content = config.settings["TEMP_DIR"] + hash_of_url
-            if utils_file.save_response_content_to_disk(
-                response=response_object,
-                dest_local_file=local_file_response_content,
+        # no matter whether we have a reported_content_type or not, let's download the content and get its magic type
+        hash_of_url = utils_hash.get_hash_of_url(story_object.url)
+        local_file_with_response_content = config.settings["TEMP_DIR"] + hash_of_url
+
+        for k, v in response_objects.items():
+            utils_file.save_response_content_to_disk(
+                response=v,
+                dest_local_file=local_file_with_response_content + "-" + k,
                 log_prefix=log_prefix_local,
-            ):
-                # get magic type of the file
-                mimetype_via_python_magic = (
-                    utils_mimetypes_magic.get_mimetype_via_python_magic(
-                        local_file=local_file_response_content,
-                        log_prefix=log_prefix_local,
-                    )
-                )
+            )
 
-                mimetype_via_file_command = (
-                    utils_mimetypes_magic.get_mimetype_via_file_command(
-                        local_file=local_file_response_content,
-                        log_prefix=log_prefix_local,
-                    )
-                )
+        if response_objects:
+            local_file_with_response_content = (
+                local_file_with_response_content
+                + "-"
+                + list(response_objects.keys())[0]
+            )
 
-                mimetype_via_exiftool = (
-                    utils_mimetypes_magic.get_mimetype_via_exiftool2(
-                        local_file=local_file_response_content,
-                        log_prefix=log_prefix_local,
-                    )
-                )
-
-                textual_mimetype = utils_mimetypes_magic.get_textual_mimetype(
-                    local_file=local_file_response_content,
+            # get magic type of the file
+            mimetype_via_python_magic = (
+                utils_mimetypes_magic.get_mimetype_via_python_magic(
+                    local_file=local_file_with_response_content,
                     log_prefix=log_prefix_local,
-                    context={"url": story_object.url},
-                )
-
-            content_types_guessed_from_uri_extension = (
-                utils_mimetypes_magic.guess_mimetype_from_uri_extension(
-                    url=story_object.url, log_prefix=log_prefix_local
                 )
             )
 
-            possible_magic_types = []
-            if mimetype_via_python_magic:
-                possible_magic_types.append(mimetype_via_python_magic)
-            if mimetype_via_file_command:
-                possible_magic_types.append(mimetype_via_file_command)
-            if mimetype_via_exiftool:
+            mimetype_via_file_command = (
+                utils_mimetypes_magic.get_mimetype_via_file_command(
+                    local_file=local_file_with_response_content,
+                    log_prefix=log_prefix_local,
+                )
+            )
+
+            mimetype_via_exiftool = utils_mimetypes_magic.get_mimetype_via_exiftool2(
+                local_file=local_file_with_response_content,
+                log_prefix=log_prefix_local,
+            )
+
+            textual_mimetype = utils_mimetypes_magic.get_textual_mimetype(
+                local_file=local_file_with_response_content,
+                log_prefix=log_prefix_local,
+                context={"url": story_object.url},
+            )
+
+        content_types_guessed_from_uri_extension = (
+            utils_mimetypes_magic.guess_mimetype_from_uri_extension(
+                url=story_object.url, log_prefix=log_prefix_local
+            )
+        )
+
+        possible_magic_types = []
+        if mimetype_via_python_magic:
+            possible_magic_types.append(mimetype_via_python_magic)
+        if mimetype_via_file_command:
+            possible_magic_types.append(mimetype_via_file_command)
+        if mimetype_via_exiftool:
+            if type(mimetype_via_exiftool) == str:
                 possible_magic_types.append(mimetype_via_exiftool)
+            else:
+                logger.info(
+                    log_prefix_local
+                    + f"{mimetype_via_exiftool=}, type(mimetype_via_exiftool)={type(mimetype_via_exiftool)} (~Tim~)"
+                )
 
         if srct != "skipped":
             all_values = set()
@@ -778,7 +850,7 @@ def asdfft2(item_id=None, pos_on_page=None):
 
             if cur_content_type == "text/html":
                 with open(
-                    local_file_response_content,
+                    local_file_with_response_content,
                     mode="r",
                     encoding="utf-8",
                 ) as f:
@@ -787,7 +859,7 @@ def asdfft2(item_id=None, pos_on_page=None):
                 # get render() of response object
                 page_source_via_render = (
                     utils_http.get_rendered_page_source_via_response_object(
-                        response_object,
+                        response_object_hrequests,
                         log_prefix=log_prefix_local,
                     )
                 )
@@ -925,7 +997,7 @@ def asdfft2(item_id=None, pos_on_page=None):
                 # we'll log the unexpected content type, but we'll still create the story card with the details we have
                 logger.info(
                     log_prefix_local
-                    + f"unexpected linked url content-type {cur_content_type}"
+                    + f"unexpected linked url content-type '{cur_content_type}'"
                 )
                 break
 
@@ -1110,12 +1182,12 @@ def freshen_up(story_object=None, page_package=None):
 
 
 def get_content_type_from_response(response):
-    if not response:
-        return None
-    entire_content_type_header = (
-        response.headers["Content-Type"] if "Content-Type" in response.headers else None
-    )
-    return utils_text.parse_content_type_from_raw_header(entire_content_type_header)
+    if response and "Content-Type" in response.headers:
+        return utils_text.parse_content_type_from_raw_header(
+            response.headers["Content-Type"]
+        )
+
+    return None
 
 
 def get_html_page_filename(story_type: str, page_number: int, light_mode: bool):

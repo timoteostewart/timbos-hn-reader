@@ -33,7 +33,7 @@ warnings.filterwarnings("ignore", category=DeprecationWarning, module="httpx")
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 empty_page_source = "<html><head></head><body></body></html>"
-user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
+# user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
 
 
 def endpoint_query_via_requests(url=None, retries=3, delay=8, log_prefix=""):
@@ -249,7 +249,7 @@ def get_page_source_via_hrequests(
     page_source_via_get = None
     page_source_via_render = None
 
-    response = get_response_object_via_hrequests2(url, browser, log_prefix)
+    response = get_response_object_via_hrequests(url, browser, log_prefix)
 
     # get page source via GET
     if response:
@@ -325,9 +325,9 @@ def get_page_source_via_hrequests(
         return page_source
 
 
-def get_page_source_via_response_object(response_object=None, log_prefix=""):
+def gps_via_hro(response_object=None, log_prefix=""):
 
-    log_prefix_local = log_prefix + "get_page_source_via_response_object(): "
+    log_prefix_local = log_prefix + "gps_via_hro(): "
 
     # get page source via GET
     page_source_via_get = response_object.text
@@ -404,7 +404,7 @@ def get_rendered_page_source_via_response_object(response_object, log_prefix="")
         )
 
 
-def get_response_object_via_hrequests2(
+def get_response_object_via_hrequests(
     url=None,
     browser="chrome",
     log_prefix="",
@@ -412,27 +412,76 @@ def get_response_object_via_hrequests2(
     if not url:
         return None
 
-    try:
-        with hrequests.Session(
-            browser=browser,
-            headers={"User-Agent": user_agent},
-            os=os.getenv("CUR_OS", default="lin"),
-            temp=True,
-            timeout=config.settings["SCRAPING"]["REQUESTS_GET_TIMEOUT_S"],
-            verify=False,
-        ) as session:
-            response = session.get(
-                url,
-                allow_redirects=True,
-            )
-            return response
+    log_prefix_local = log_prefix + "gro_via_hr(): "
 
-    except Exception as exc:
-        handle_exception(
-            exc=exc,
-            log_prefix=log_prefix + "gro_via_hr2(): ",
-            context={"url": url},
-        )
+    with hrequests.Session(
+        browser=browser,
+        os=os.getenv("CUR_OS", default="lin"),
+        temp=True,
+        verify=False,
+    ) as session:
+        session.headers.update({"User-Agent": config.settings["SCRAPING"]["UA_STR"]})
+        try:
+            response = session.get(
+                allow_redirects=True,
+                timeout=config.settings["SCRAPING"]["REQUESTS_GET_TIMEOUT_S"],
+                url=url,
+            )
+            if response and response.status_code == 200:
+                return response
+            else:
+                logger.info(
+                    log_prefix_local
+                    + f"Failed to get response object, {response.status_code=} for url {url}"
+                )
+                return None
+
+        except Exception as exc:
+            handle_exception(
+                exc=exc,
+                log_prefix=log_prefix_local,
+                context={"url": url},
+            )
+
+    return None
+
+
+def get_response_object_via_requests(
+    url=None,
+    log_prefix="",
+):
+    if not url:
+        return None
+
+    log_prefix_local = log_prefix + "gro_via_r(): "
+
+    with requests.Session() as session:
+        session.headers.update({"User-Agent": config.settings["SCRAPING"]["UA_STR"]})
+        try:
+            with session.get(
+                allow_redirects=True,
+                stream=False,
+                timeout=config.settings["SCRAPING"]["REQUESTS_GET_TIMEOUT_S"],
+                url=url,
+                verify=False,
+            ) as response:
+                if response and response.status_code == 200:
+                    return response
+                else:
+                    logger.info(
+                        log_prefix_local
+                        + f"Failed to get response object, {response.status_code=} for url {url}"
+                    )
+                    return None
+
+        except Exception as exc:
+            handle_exception(
+                exc=exc,
+                log_prefix=log_prefix_local,
+                context={"url": url},
+            )
+
+    return None
 
 
 browser_exception_msg_prefixes = [
@@ -459,10 +508,12 @@ for _ in browser_exception_msg_prefixes:
 
 hrequests_exceptions_suffixes = [
     " EOF",
+    "EOF (Client.Timeout exceeded while awaiting headers)",
     "context deadline exceeded (Client.Timeout exceeded while awaiting headers)",
     "http2: unsupported scheme",
     "i/o timeout (Client.Timeout exceeded while awaiting headers)",
     "no such host",
+    "remote error: tls: unexpected message",
     "remote error: tls: user canceled",
     "stream error: stream ID 1; INTERNAL_ERROR",
     "unexpected EOF",
@@ -682,6 +733,70 @@ def head_request(url=None, log_prefix=""):
             context={"url": url},
         )
         return None
+
+
+def download_file_via_requests(url, dest_local_file, log_prefix="") -> bool:
+    log_prefix_local = log_prefix + "download_file_via_requests(): "
+    try:
+        with requests.get(
+            allow_redirects=True,
+            headers={"User-Agent": config.settings["SCRAPING"]["UA_STR"]},
+            stream=True,
+            timeout=config.settings["SCRAPING"]["REQUESTS_GET_TIMEOUT_S"],
+            url=url,
+            verify=False,
+        ) as response:
+            if response and response.status_code == 200:
+                with open(dest_local_file, "wb") as f:
+                    for chunk in response.iter_content(chunk_size=8192):
+                        f.write(chunk)
+                return True
+            else:
+                logger.info(
+                    log_prefix_local
+                    + f"Error: status code {response.status_code} for url {url}"
+                )
+                return False
+    except Exception as exc:
+        handle_exception(
+            exc=exc,
+            log_prefix=log_prefix,
+            context={"url": url},
+        )
+        return False
+
+
+def download_file_via_hrequests(url, dest_local_file, log_prefix="") -> bool:
+    log_prefix_local = log_prefix + "download_file_via_hrequests(): "
+
+    # get hrequests response object
+    response = get_response_object_via_hrequests(
+        url=url,
+        log_prefix=log_prefix_local,
+    )
+
+    if isinstance(response.content, bytes):
+        content_to_use = response.content
+    elif isinstance(response.content, str):
+        content_to_use = response.content.encode("utf-8")
+    else:
+        logger.error(
+            log_prefix_local
+            + f"unexpected type of response.content: {type(response.content)}"
+        )
+        return False
+
+    try:
+        with open(dest_local_file, "wb") as fout:
+            fout.write(content_to_use)
+        return True
+    except Exception as exc:
+        short_exc_name = exc.__class__.__name__
+        exc_name = exc.__class__.__module__ + "." + short_exc_name
+        exc_msg = str(exc)
+        exc_slug = exc_name + ": " + exc_msg
+        logger.error(log_prefix_local + exc_slug)
+        return False
 
 
 # monkey patch a few hrequests dependencies to prevent them from crashing on me

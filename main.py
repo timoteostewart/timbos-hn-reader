@@ -67,12 +67,13 @@ def main():
         encoding="utf-8",
     )
     story_type_padded = f"[{story_type}]     "[:9]
-    handler_main.setFormatter(
-        logging.Formatter(
-            f"%(asctime)s {story_type_padded} %(levelname)-8s %(message)s",
-            datefmt="%Y-%m-%dT%H:%M:%SZ",
-        )
+
+    formatter = logging.Formatter(
+        f"%(asctime)s.%(msecs)03dZ {story_type_padded} %(levelname)-8s %(message)s",
+        datefmt="%Y-%m-%dT%H:%M:%S",
     )
+
+    handler_main.setFormatter(formatter)
     main.logger.addHandler(handler_main)
 
     alt_log_filename = f"{config.settings['cur_host']}-combined-{cur_year_and_doy}.log"
@@ -84,8 +85,8 @@ def main():
     story_type_padded = f"[{story_type}]     "[:9]
     handler_alt.setFormatter(
         logging.Formatter(
-            f"%(asctime)s {story_type_padded} %(levelname)-8s %(message)s",
-            datefmt="%Y-%m-%dT%H:%M:%SZ",
+            f"%(asctime)s.%(msecs)03dZ {story_type_padded} %(levelname)-8s %(message)s",
+            datefmt="%Y-%m-%dT%H:%M:%S",
         )
     )
     main.logger.addHandler(handler_alt)

@@ -120,14 +120,15 @@ def download_og_image2(
     get_response = None
     try:
         with requests.get(
-            url=cur_url,
             allow_redirects=True,
-            verify=False,
-            timeout=config.settings["SCRAPING"]["REQUESTS_GET_TIMEOUT_S"],
             headers={"User-Agent": config.settings["SCRAPING"]["UA_STR"]},
+            timeout=config.settings["SCRAPING"]["REQUESTS_GET_TIMEOUT_S"],
+            url=cur_url,
+            verify=False,
         ) as response:
-            get_response = response
-            possibly_redirected_url = get_response.url
+            if response and response.status_code == 200:
+                get_response = response
+                possibly_redirected_url = get_response.url
 
     except requests.exceptions.MissingSchema as exc:
         short_exc_name = exc.__class__.__name__
@@ -504,7 +505,7 @@ def get_roster_via_screen_scraping(roster_story_type: str = None, log_prefix="")
                 if tries_left == 0:
                     break
                 else:
-                    time.sleep(4)  # courtesy pause between scrape attempts
+                    time.sleep(3)  # courtesy pause between scrape attempts
                     continue
 
     except Exception as exc:

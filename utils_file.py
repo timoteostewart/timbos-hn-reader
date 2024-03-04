@@ -17,10 +17,16 @@ def delete_file(file_full_path, log_prefix=""):
 def save_response_content_to_disk(response, dest_local_file, log_prefix=""):
     log_prefix_local = log_prefix + "save_response_content_to_disk(): "
 
-    if isinstance(response.content, str):
+    if isinstance(response.content, bytes):
+        content_to_use = response.content
+    elif isinstance(response.content, str):
         content_to_use = response.content.encode("utf-8")
     else:
-        content_to_use = response.content
+        logger.error(
+            log_prefix_local
+            + f"unexpected type of response.content: {type(response.content)}"
+        )
+        return False
 
     try:
         with open(dest_local_file, "wb") as fout:
