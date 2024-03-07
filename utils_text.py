@@ -522,32 +522,41 @@ def parse_content_type_from_raw_header(content_type_header: str, log_prefix=""):
     if not content_type_header:
         return None
 
-    if isinstance(content_type_header, list):
-        copy_of_content_type_header = [x.lower() for x in content_type_header]
-        copy_of_content_type_header = set(copy_of_content_type_header)
-        if len(copy_of_content_type_header) == 1:
-            content_type_header = copy_of_content_type_header.pop()
-        else:
-            logger.error(
-                log_prefix_local
-                + f"multiple content types found in header: {str(content_type_header)}"
-            )
-            return None
+    ct_set = set()
 
-    if not isinstance(content_type_header, str):
-        logger.error(
+    if isinstance(content_type_header, list):
+        for each in content_type_header:
+            ct_set.update(re.split("[;,]", each))
+    elif isinstance(content_type_header, str):
+        ct_set.update(re.split("[;,]", content_type_header))
+    else:
+        logger.info(
             log_prefix_local
-            + f"unexpected type {str(type(content_type_header))} for content_type_header {str(content_type_header)}"
+            + f"unexpected type {str(type(content_type_header))} for content_type_header {str(content_type_header)} (~Tim~)"
         )
 
-    content_type = None
-    for each_ct_val in content_type_header.split(";"):
-        each_ct_val = each_ct_val.strip()
-        if each_ct_val.startswith("charset"):
-            continue
-        if "/" in each_ct_val:
-            content_type = each_ct_val
-            break
+    ct_set = {x.strip() for x in ct_set if x.strip()}
+
+    for each in ct_set.copy():
+        if "/" in each:
+            pass
+        elif each.startswith("charset"):
+            ct_set.remove(each)
+        else:
+            ct_set.remove(each)
+
+    if len(ct_set) == 1:
+        return ct_set.pop().lower()
+    elif not ct_set:
+        logger.info(log_prefix_local + f"no content-type found in http header (~Tim~)")
+        return None
+    else:
+        logger.info(
+            log_prefix_local
+            + f"multiple content-types found in http header {ct_set=} (~Tim~)"
+        )
+        return ct_set.pop().lower()
+
     return content_type.lower() if content_type else None
 
 
@@ -686,6 +695,11 @@ def monkeypatched_extract_3_1_19(self):
 def monkeypatched_get_meta_encoding_3_1_19(self):
     """Parse the meta encoding"""
     encoding = get_encodings_from_content(self.article.raw_html)
+
+    # replace every occurrence of "null" with "utf-8" in 'encoding'
+    disallowed_encodings = ["", "none", "null"]
+    encoding = [x if x not in disallowed_encodings else "utf-8" for x in encoding]
+
     if encoding:
         res = encoding[0]
     else:

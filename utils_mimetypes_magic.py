@@ -25,6 +25,7 @@ logger = logging.getLogger(__name__)
 
 html_tags = {}
 svg_tags = {}
+mathml_tags = {}
 
 html_tags["current"] = set(
     [
@@ -213,55 +214,96 @@ html_tags["html5"] = set(
     ]
 )
 
+html_tags["github"] = set(
+    [
+        "action-menu",
+        "anchored-position",
+        "auto-check",
+        "clipboard-copy",
+        "cookie-consent",
+        "cookie-consent-link",
+        "custom-scopes",
+        "details-dialog",
+        "dialog-helper",
+        "focus-group",
+        "include-fragment",
+        "modal-dialog",
+        "qbsearch-input",
+        "query-builder",
+        "react-partial",
+        "relative-time",
+        "scrollable-region",
+        "tool-tip",
+        "turbo-frame",
+    ]
+)
+
+html_tags["xml"] = set(
+    [
+        "!doctype",
+        "?xml",
+    ]
+)
+
+html_tags["php"] = set(
+    [
+        "?php",
+    ]
+)
+
+
 all_html_tag_names = set()
 all_html_tag_names.update(html_tags["current"])
 all_html_tag_names.update(html_tags["obsolete_or_deprecated"])
 all_html_tag_names.update(html_tags["html5"])
+all_html_tag_names.update(html_tags["github"])
+all_html_tag_names.update(html_tags["xml"])
+all_html_tag_names.update(html_tags["php"])
 
 svg_tags["current"] = set(
     [
         "a",
         "animate",
-        "animateMotion",
-        "animateTransform",
+        "animatemotion",
+        "animatetransform",
         "circle",
-        "clipPath",
+        "clippath",
         "defs",
         "desc",
         "ellipse",
-        "feBlend",
-        "feColorMatrix",
-        "feComponentTransfer",
-        "feComposite",
-        "feConvolveMatrix",
-        "feDiffuseLighting",
-        "feDisplacementMap",
-        "feDistantLight",
-        "feDropShadow",
-        "feFlood",
-        "feFuncA",
-        "feFuncB",
-        "feFuncG",
-        "feFuncR",
-        "feGaussianBlur",
-        "feImage",
-        "feMerge",
-        "feMergeNode",
-        "feMorphology",
-        "feOffset",
-        "fePointLight",
-        "feSpecularLighting",
-        "feSpotLight",
-        "feTile",
-        "feTurbulence",
+        "feblend",
+        "fecolormatrix",
+        "fecomponenttransfer",
+        "fecomposite",
+        "feconvolvematrix",
+        "fediffuselighting",
+        "fedisplacementmap",
+        "fedistantlight",
+        "fedropshadow",
+        "feflood",
+        "fefunca",
+        "fefuncb",
+        "fefuncg",
+        "fefuncr",
+        "fegaussianblur",
+        "feimage",
+        "femerge",
+        "femergenode",
+        "femorphology",
+        "feoffset",
+        "fepointlight",
+        "fespecularlighting",
+        "fespotlight",
+        "fetile",
+        "feturbulence",
         "filter",
-        "foreignObject",
+        "foreignobject",
         "g",
         "hatch",
         "hatchpath",
         "image",
         "line",
-        "linearGradient",
+        "lineargradient",
         "marker",
         "mask",
         "metadata",
@@ -270,7 +312,7 @@ svg_tags["current"] = set(
         "pattern",
         "polygon",
         "polyline",
-        "radialGradient",
+        "radialgradient",
         "rect",
         "script",
         "set",
@@ -280,7 +322,7 @@ svg_tags["current"] = set(
         "switch",
         "symbol",
         "text",
-        "textPath",
+        "textpath",
         "title",
         "tspan",
         "use",
@@ -291,9 +333,203 @@ svg_tags["current"] = set(
 all_svg_tag_names = set()
 all_svg_tag_names.update(svg_tags["current"])
 
+
+mathml_tags["presentation"] = set(
+    [
+        "annotation",
+        "annotation-xml",
+        "maction",
+        "math",
+        "menclose",
+        "merror",
+        "mfenced",
+        "mfrac",
+        "mi",
+        "mmultiscripts",
+        "mn",
+        "mo",
+        "mover",
+        "mpadded",
+        "mphantom",
+        "mprescripts",
+        "mroot",
+        "mrow",
+        "ms",
+        "mspace",
+        "msqrt",
+        "mstyle",
+        "msub",
+        "msubsup",
+        "msup",
+        "mtable",
+        "mtd",
+        "mtext",
+        "mtr",
+        "munder",
+        "munderover",
+        "semantics",
+    ]
+)
+
+mathml_tags["content"] = set(
+    [
+        "abs",
+        "and",
+        "approx",
+        "arccos",
+        "arccosh",
+        "arccot",
+        "arccoth",
+        "arccsc",
+        "arccsch",
+        "arcsec",
+        "arcsech",
+        "arcsin",
+        "arcsinh",
+        "arctan",
+        "arctanh",
+        "arg",
+        "card",
+        "cartesianproduct",
+        "ceiling",
+        "ci",
+        "ci",
+        "cn",
+        "cn",
+        "cn",
+        "codomain",
+        "complexes",
+        "compose",
+        "condition",
+        "conjugate",
+        "cos",
+        "cosh",
+        "cot",
+        "coth",
+        "csc",
+        "csch",
+        "csymbol",
+        "csymbol",
+        "curl",
+        "degree",
+        "determinant",
+        "diff",
+        "divergence",
+        "divide",
+        "domain",
+        "domainofapplication",
+        "emptyset",
+        "eq",
+        "equivalent",
+        "eulergamma",
+        "exists",
+        "exp",
+        "exponentiale",
+        "factorial",
+        "factorof",
+        "false",
+        "floor",
+        "forall",
+        "gcd",
+        "geq",
+        "grad",
+        "gt",
+        "ident",
+        "image",
+        "imaginary",
+        "imaginaryi",
+        "implies",
+        "in",
+        "infinity",
+        "int",
+        "integers",
+        "intersect",
+        "interval",
+        "interval",
+        "inverse",
+        "lambda",
+        "laplacian",
+        "lcm",
+        "leq",
+        "limit",
+        "list",
+        "ln",
+        "log",
+        "logbase",
+        "logbase",
+        "lowlimit",
+        "lt",
+        "matrix",
+        "matrixrow",
+        "max",
+        "mean",
+        "median",
+        "min",
+        "minus",
+        "mode",
+        "moment",
+        "momentabout",
+        "momentabout",
+        "naturalnumbers",
+        "neq",
+        "not",
+        "notanumber",
+        "notin",
+        "notprsubset",
+        "notsubset",
+        "or",
+        "otherwise",
+        "outerproduct",
+        "partialdiff",
+        "pi",
+        "piece",
+        "piecewise",
+        "plus",
+        "power",
+        "primes",
+        "product",
+        "prsubset",
+        "quotient",
+        "rationals",
+        "real",
+        "reals",
+        "rem",
+        "root",
+        "scalarproduct",
+        "sdev",
+        "sec",
+        "sech",
+        "selector",
+        "sep",
+        "set",
+        "setdiff",
+        "sin",
+        "sinh",
+        "subset",
+        "sum",
+        "tan",
+        "tanh",
+        "tendsto",
+        "times",
+        "transpose",
+        "true",
+        "union",
+        "uplimit",
+        "variance",
+        "vector",
+        "vectorproduct",
+        "xor",
+    ]
+)
+
+all_mathml_tag_names = set()
+all_mathml_tag_names.update(mathml_tags["presentation"])
+all_mathml_tag_names.update(mathml_tags["content"])
+
 tag_based_markup_languages = [
     "application/atom+xml",
     "application/rss+xml",
+    "application/mathml+xml",
     "application/xhtml+xml",
     "application/xml",
     "image/svg+xml",
@@ -357,7 +593,7 @@ def check_for_valid_text_encodings(local_file: str, log_prefix="") -> List[str]:
             continue
 
     if "UTF-8" in valid_encodings:
-        if not is_utf8_2(local_file):
+        if not is_utf8_via_python(local_file):
             valid_encodings.remove("UTF-8")
             logger.info(
                 log_prefix_local
@@ -367,9 +603,9 @@ def check_for_valid_text_encodings(local_file: str, log_prefix="") -> List[str]:
     return valid_encodings
 
 
-def check_for_wellformed_xml(local_file: str, log_prefix="") -> bool:
+def is_wellformed_xml_func(local_file: str, log_prefix="") -> bool:
     # requires Linux xmlwf command
-    log_prefix_local = log_prefix + "is_wellformed_xml(): "
+    log_prefix_local = log_prefix + "is_wellformed_xml_func(): "
 
     cmd = f"xmlwf -c {local_file}"
 
@@ -434,8 +670,8 @@ def is_utf8(local_file: str, log_prefix="") -> bool:
     return False
 
 
-def is_utf8_2(local_file: str, log_prefix="") -> bool:
-    log_prefix_local = log_prefix + "is_utf8_2(): "
+def is_utf8_via_python(local_file: str, log_prefix="") -> bool:
+    log_prefix_local = log_prefix + "is_utf8_via_python(): "
     with open(local_file, "rb") as file:
         data = file.read()
         try:
@@ -458,7 +694,7 @@ def is_utf8_2(local_file: str, log_prefix="") -> bool:
 
 def is_valid_json(local_file: str, log_prefix="") -> bool:
     # requires Linux jq command
-    log_prefix_local = log_prefix + "get_mimetype_via_file_command(): "
+    log_prefix_local = log_prefix + "is_valid_json(): "
 
     cmd = f"jq . {local_file}"
 
@@ -628,15 +864,14 @@ def is_a_binary_mimetype(mimetype: str) -> bool:
 
 
 def get_mimetype(
-    local_file: str, srct: str = None, url: str = None, log_prefix=""
+    local_file: str, srct: str = None, url: str = None, story_object=None, log_prefix=""
 ) -> str:
 
     log_prefix_local = log_prefix + "get_mimetype(): "
 
     if srct:
-        if ";" in srct:
-            srct = srct.split(";")[0].strip()
-        srct = srct.lower()
+        srcts = re.split("[;,]", srct)
+        srct = srcts[0].strip().lower()
 
     # use trusted tools to check if file is probably binary
     trusted_sources = Counter(
@@ -716,7 +951,6 @@ def get_mimetype_via_exiftool2(local_file: str, log_prefix="") -> str:
 
     cmd = f'/usr/local/bin/exiftool -File:MIMEType "{local_file}"'
 
-    result_stdout = None
     try:
         result = subprocess.run(
             cmd,
@@ -727,7 +961,15 @@ def get_mimetype_via_exiftool2(local_file: str, log_prefix="") -> str:
             shell=True,
         )
 
-        result_stdout = result.stdout
+        if result.stdout:
+            match = re.search(r"MIME Type[\ ]*:\ ", result.stdout)
+            if match:
+                mimetype = result.stdout.split(":")[-1].strip()
+                return mimetype
+            else:
+                return None
+        else:
+            return None
 
     except Exception as exc:
         exc_name = exc.__class__.__name__
@@ -748,16 +990,6 @@ def get_mimetype_via_exiftool2(local_file: str, log_prefix="") -> str:
             bytes = file.read(512)
             logger.error(log_prefix_local + f"{bytes=} (~Tim~)")
 
-        return None
-
-    if result_stdout:
-        match = re.search(r"MIME Type[\ ]*:\ ", result_stdout)
-        if match:
-            mimetype = result_stdout.split(":")[-1].strip()
-            return mimetype
-        else:
-            return None
-    else:
         return None
 
 
@@ -985,6 +1217,16 @@ white_space_chars = set(
 )
 
 
+def delete_specified_tag_elements(
+    content: str, tags_to_delete, parser_to_use="lxml"
+) -> str:
+    soup = BeautifulSoup(content, parser_to_use)
+    for tag_name in tags_to_delete:
+        for tag in soup.find_all(tag_name):
+            tag.decompose()
+    return soup.prettify()
+
+
 def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -> str:
     """Discriminate between HTML, HTML5, JSON, plain text, XHTML, XHTML5, and XML"""
 
@@ -1009,7 +1251,6 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
     """
 
     # 2024-02-10T21:09:43Z [active]  INFO     id 39324847: asdfft2(): srct: text/html, guesses: ['text/html', 'text/html'], mts: ['text/html', 'text/html', 'text/html'], textual_mimetype='image/svg+xml' for url https://kmaasrud.com/blog/opml-is-underrated.html
-    # 2024-02-11T06:56:32Z [new]     INFO     id 39327596: asdfft2(): srct: text/plain, guesses: ['text/html'], mts: ['application/json', 'application/json', 'application/json'], textual_mimetype='application/json' for url https://github.com/denkspuren/BitboardC4/blob/master/BitboardDesign.md
     # 2024-02-11T17:54:16Z [new]     INFO     id 39336677: asdfft2(): timbos_textfile_format_identifier(): clues_toward=[('text/plain', 0), ('text/html', 0), ('application/xml', 0), ('application/json', 0), ('text/markdown', 0), ('application/postscript', 0), ('image/x-eps', 0), ('application/pdf', 0), ('text/x-shellscript', 0), ('application/xhtml+xml', -inf), ('image/svg+xml', -inf)] (~Tim~)
 
     # TODO: compare "tags seen" with textfile_format_identifier result, particular the tag soup when the result is text/plain or None
@@ -1018,7 +1259,10 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
 
     log_prefix_local = log_prefix + "get_textual_mimetype(): "
 
-    CHARS_TO_READ = None  # 'None' means read all chars
+    if context and "url" in context:
+        url_slug = f"for url {context['url']} "
+    else:
+        url_slug = ""
 
     local_file = os.path.abspath(local_file)
 
@@ -1046,10 +1290,7 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
         ):
             content = None
             with open(local_file, mode="r", encoding="ISO-8859-1") as file:
-                if CHARS_TO_READ:
-                    content = file.read(CHARS_TO_READ)
-                else:
-                    content = file.read()
+                content = file.read()
             for char in content:
                 if ord(char) < 32:
                     if context and "url" in context:
@@ -1102,6 +1343,7 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
         "application/atom+xml": 0,
         "application/rss+xml": 0,
         "application/xhtml+xml": 0,
+        "application/mathml+xml": 0,
         "image/svg+xml": 0,
         "application/json": 0,
         "application/postscript": 0,
@@ -1112,10 +1354,7 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
 
     content = None
     with open(local_file, mode="r", encoding=encoding_to_use) as file:
-        if CHARS_TO_READ:
-            content = file.read(CHARS_TO_READ)
-        else:
-            content = file.read()
+        content = file.read()
 
     if not content:
         logger.info(log_prefix_local + f"file {local_file} is empty")
@@ -1127,17 +1366,17 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
     logger.info(log_prefix_local + f"{len(content)=}")
 
     logger.info(log_prefix_local + f"{encoding_to_use=} out of {text_encodings=}")
-    first_64 = content[:64].replace("\n", " ")
-    logger.info(log_prefix_local + f"content[:64]={first_64}")
+    first_128 = content[:128].replace("\n", " ")
+    logger.info(log_prefix_local + f"content[:128]={first_128}")
 
     if is_valid_json(local_file):
         clues_toward["application/json"] += 1
     else:
         clues_toward["application/json"] = -float("inf")
 
-    is_wellformed_xml = check_for_wellformed_xml(local_file)
+    is_wellformed_xml = is_wellformed_xml_func(local_file)
 
-    # check for PDF
+    # check for uncompressed PDF
     if content.startswith("%PDF-"):
         clues_toward["application/pdf"] += 1
 
@@ -1164,24 +1403,18 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
             clues_toward["image/x-eps"] += 1
         if not "EPS" in content[:30]:
             clues_toward["image/x-eps"] -= 1
-
-        # if not "%%BoundingBox:" in content:
-        #     clues_toward["image/x-eps"] = 0
     else:
         clues_toward["application/postscript"] = -float("inf")
         clues_toward["image/x-eps"] = -float("inf")
 
     document = defaultdict(list)
 
-    # xml_attribute_name_re = r"[A-Za-z_:][A-Za-z_:0-9-.]*"
-    xml_attribute_name_re = r"""[^\t\n\f \/>"'=]+"""  # per https://html.spec.whatwg.org/multipage/syntax.html#attributes-2
-    xml_attribute_name_re = (
-        "[^\\t\\n\\f \\/>'\"=]+"  # rewritten to avoid escaping backslashes
-    )
+    # xml_attribute_name_re = r"""[^\t\n\f \/>'"=]+"""  # per https://html.spec.whatwg.org/multipage/syntax.html#attributes-2
+    xml_attribute_name_re = "[^\\t\\n\\f \\/>'\"=]+"  # rewritten to avoid raw string
 
-    xml_attribute_unquoted_value_re = r"""[^\t\n\f "'/<=>\`]+"""
+    # xml_attribute_unquoted_value_re = r"""[^\t\n\f "'/<=>\`]+"""
     xml_attribute_unquoted_value_re = (
-        "[^\\t\\n\\f \"'/<=>\\`]+"  # rewritten to avoid escaping backslashes
+        "[^\\t\\n\\f \"'/<=>\\`]+"  # rewritten to avoid raw string
     )
 
     for xml_case in [
@@ -1233,10 +1466,10 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
                     f"{k}='{v}'",
                 ]
 
-                for each in target_replacement_strs:
-                    while each in copy_of_attrib_material:
+                for each_tag_to_delete in target_replacement_strs:
+                    while each_tag_to_delete in copy_of_attrib_material:
                         copy_of_attrib_material = copy_of_attrib_material.replace(
-                            each, " "
+                            each_tag_to_delete, " "
                         )
 
                 # for values without spaces, we can also try to remove unquoted attribute values
@@ -1251,21 +1484,27 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
                 collect_empty_attributes(copy_of_attrib_material)
             )
 
-    tags_to_check_upper = [
-        "!DOCTYPE",
-        "BODY",
-        "HEAD",
-        "HTML",
-        "META",
-        "SVG",
-        "TITLE",
-        "RSS",
-        "FEED",
+    tag_names_of_possible_root_elements = [
+        "feed",
+        "html",
+        "math",
+        "rss",
+        "svg",
     ]
 
-    for each_tag in [
-        item for elem in tags_to_check_upper for item in (elem, elem.lower())
-    ]:
+    tags_to_check = [
+        # !doctype
+        "!doctype",
+        # root elements
+        *tag_names_of_possible_root_elements,
+        # other significant elements
+        "head",
+        "title",
+        "meta",
+        "body",
+    ]
+
+    for each_tag in [item for elem in tags_to_check for item in (elem, elem.upper())]:
         cur_re = r"<" + each_tag + r"\b(.*?)/?>"
 
         matches = re.finditer(cur_re, content, re.DOTALL)
@@ -1278,7 +1517,6 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
             document[the_tag.tag_name.lower()].append(the_tag)
 
             attrib_material = match.group(1).strip()
-            # print(f"{the_tag.tag_name.lower()}: {attrib_material=}")
 
             # collect attributes with single-quoted values
             matches = re.finditer(
@@ -1313,10 +1551,10 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
                     f"{k}='{v}'",
                 ]
 
-                for each in target_replacement_strs:
-                    while each in copy_of_attrib_material:
+                for each_tag_to_delete in target_replacement_strs:
+                    while each_tag_to_delete in copy_of_attrib_material:
                         copy_of_attrib_material = copy_of_attrib_material.replace(
-                            each, " "
+                            each_tag_to_delete, " "
                         )
 
                 # for values without spaces, we can also try to remove unquoted attribute values
@@ -1331,102 +1569,212 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
                 collect_empty_attributes(copy_of_attrib_material)
             )
 
-    # analyze !doctype
-    has_dtd = False
+    # check in !doctype for declared root element
+    declared_root_element = None
+    root_element_xmlns = None
+    if "!doctype" in document and document["!doctype"][0].empty_attribs:
+        declared_root_element = document["!doctype"][0].empty_attribs[0]
+
+        if declared_root_element.lower() in tag_names_of_possible_root_elements:
+            if declared_root_element in document:
+                if "xmlns" in document[declared_root_element][0].attribs:
+                    root_element_xmlns = document[declared_root_element][0].attribs[
+                        "xmlns"
+                    ]
+                    logger.info(
+                        log_prefix_local
+                        + f"{declared_root_element=}, xmlns={root_element_xmlns}, {is_wellformed_xml=} {url_slug}"
+                    )
+
+        else:
+            logger.info(
+                log_prefix_local
+                + f"unexpected declared_root_element {declared_root_element} in {local_file} (~Tim~)"
+            )
+            declared_root_element = None
+
+    if declared_root_element:
+        if declared_root_element.lower() == "html":
+            clues_toward["text/html"] += 1  # and text/html5
+
+    if root_element_xmlns:
+        clues_toward["application/xhtml+xml"] += 1
+    else:
+        clues_toward["application/xhtml+xml"] = -float("inf")
+
+    # check in !doctype for FPI and system identifier
+    has_formal_public_identifier = False
+    has_system_identifier = False
     if "!doctype" in document:
         for empty_attrib in document["!doctype"][0].empty_attribs:
 
-            # check for public identifier
+            # check for formal public identifier (FPI)
             if empty_attrib.startswith("-//"):
-                has_dtd = True
+                has_formal_public_identifier = True
                 match = re.search(r"-//(.*?)//DTD (.*?)//", empty_attrib)
                 if match:
-                    if match.group(2).startswith("XHTML"):
-                        clues_toward["application/xhtml+xml"] += 1
+                    if match.group(2).startswith("HTML"):
+                        clues_toward["text/html"] += 1
+                    elif match.group(2).startswith("MathML"):
+                        clues_toward["application/mathml+xml"] += 1
                     elif match.group(2).startswith("SVG"):
                         clues_toward["image/svg+xml"] += 1
-                    elif match.group(2).startswith("HTML"):
-                        clues_toward["text/html"] += 1
+                    elif match.group(2).startswith("XHTML"):
+                        clues_toward["application/xhtml+xml"] += 1
                     else:
                         logger.info(
                             log_prefix_local
-                            + f"unexpected DTD {match.group(2)} in {local_file}"
+                            + f"unexpected FPI '{match.group(2)}' in {local_file} (~Tim~)"
                         )
                 continue
 
             # check for system identifier
             if (
                 empty_attrib.startswith("http://www.w3.org/")
+                or empty_attrib.startswith("https://www.w3.org/")
                 or empty_attrib.startswith("DTD")
                 or empty_attrib.startswith("/DTD")
                 or empty_attrib.endswith(".dtd")
             ):
-                has_dtd = True
-                match = re.search(r"(.*?)/(.*?)\.dtd", empty_attrib)
-                if "svg" in match.group(2):
-                    clues_toward["image/svg+xml"] += 1
-                elif "xhtml" in match.group(2):
+                has_system_identifier = True
+                # http://www.w3.org/1999/html
+                # http://www.w3.org/1999/xhtml
+                # http://www.w3.org/TR/html4/loose.dtd
+                # http://www.w3.org/TR/html4/strict.dtd
+                # http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd
+                # http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd
+                # https://www.w3.org/1999/xhtml
+                match = re.search(r"(.*)/(.*?\.dtd)", empty_attrib)
+                if match.group(2).startswith("xhtml"):
                     clues_toward["application/xhtml+xml"] += 1
-                elif "html" in match.group(2):
+                elif match.group(1).endswith("://www.w3.org/TR/html4"):
                     clues_toward["text/html"] += 1
+                elif match.group(2).startswith("svg1"):
+                    clues_toward["image/svg+xml"] += 1
+                elif match.group(2).startswith("mathml"):
+                    clues_toward["application/mathml+xml"] += 1
                 else:
                     logger.info(
                         log_prefix_local
-                        + f"unexpected DTD {match.group(2)} in {local_file}"
+                        + f"unexpected system identifier '{empty_attrib}' in {local_file}"
                     )
                 continue
 
             each_lower = empty_attrib.lower()
-            if each_lower == "html":
-                clues_toward["text/html"] += 2
-                clues_toward["application/xhtml+xml"] += 2
-                continue
-
-            if each_lower == "svg":
-                clues_toward["image/svg+xml"] += 2
-                continue
-
             if each_lower in ["public", "system"]:
+                continue
+            if declared_root_element and each_lower == declared_root_element.lower():
                 continue
 
             logger.info(
                 log_prefix_local
-                + f"unexpected !doctype empty attrib {empty_attrib} found in "
-                + local_file
+                + f"unexpected !doctype empty attrib {empty_attrib} found in {local_file} (~Tim~)"
             )
+
+    # quickly check if we're likely dealing with an html file, so we can delete superfluous root element tags
+    #    to get a more accurate identification
+    if not declared_root_element:
+        if "head" in document and "title" in document and "body" in document:
+            declared_root_element = (
+                "html"  # putatively declare the root element to be html
+            )
+
+    if declared_root_element:
+        # delete other root element tags used as inline or embedded elements in the document
+        copy_of_tag_names_of_possible_root_elements = list(
+            tag_names_of_possible_root_elements
+        )
+        copy_of_tag_names_of_possible_root_elements.remove(
+            declared_root_element.lower()
+        )
+        tags_to_delete = copy_of_tag_names_of_possible_root_elements
+        tags_to_delete.extend(["iframe", "link", "noscript", "script", "style"])
+        if root_element_xmlns:
+            parser_to_use = "lxml-xml"
+        else:
+            parser_to_use = "lxml"
+        content = delete_specified_tag_elements(
+            content=content, tags_to_delete=tags_to_delete, parser_to_use=parser_to_use
+        )
+        for each in tags_to_delete:
+            _ = document.pop(each, None)
 
     if not "!doctype" in document:
         clues_toward["application/xhtml+xml"] = -float("inf")
 
-    # check for html5
-    # 3-4 points is a strong indicator
-    if "!doctype" in document:
-        # check for <!DOCTYPE html>
-        doctype_elem = document["!doctype"][0]
-        if (
-            not doctype_elem.attribs
-            and len(doctype_elem.empty_attribs) == 1
-            and "html" in doctype_elem.empty_attribs
-        ):
-            clues_toward["text/html5"] += 1
+    # check for various clues for html, html5, xhtml
     if "html" in document:
-        # check for <html lang="en">
+        clues_toward["application/xhtml+xml"] += 1
+        clues_toward["text/html"] += 1  # and html5
+
         html_elem = document["html"][0]
-        if "lang" in html_elem.attribs:
+        has_common_html5_html_tag_attributes = False
+        for each in [
+            "dir",
+            "lang",
+            "manifest",
+        ]:
+            if each in html_elem.attribs:
+                has_common_html5_html_tag_attributes = True
+
+        if has_common_html5_html_tag_attributes:
             clues_toward["text/html5"] += 1
+
+        for each in [
+            "lang",
+            "xml:lang",
+        ]:
+            if each in html_elem.attribs:
+                clues_toward["application/xhtml+xml"] += 1
+
+    if not "html" in document:
+        clues_toward["application/xhtml+xml"] = -float("inf")
+        clues_toward["text/html5"] = -float("inf")
+
+    if "head" in document and "body" in document:
+        clues_toward["application/xhtml+xml"] += 1
+        clues_toward["text/html"] += 1  # and html5
+    else:
+        clues_toward["application/xhtml+xml"] = -float("inf")
+        clues_toward["text/html5"] = -float("inf")
+
+    if (
+        "html" in document
+        and "!doctype" in document
+        and declared_root_element
+        and declared_root_element.lower() == "html"
+    ):
+        clues_toward["application/xhtml+xml"] += 1
+        clues_toward["text/html5"] += 1
+
+    if "xml" in document:
+        clues_toward["application/xml"] += 1
+        if "html" in document:
+            clues_toward["application/xhtml+xml"] += 1
+    else:
+        clues_toward["application/xhtml+xml"] = -float("inf")
+
     if "meta" in document:
-        # check for meta charset and content-type
+        # check for clues in meta tags
+        found_meta_charset = False
+        found_meta_http_equiv = False
+        found_meta_viewport = False
         for each_meta_tag in document["meta"]:
+
+            # <meta charset="utf-8">
             if (
                 "charset" in each_meta_tag.attribs
                 and each_meta_tag.attribs["charset"].lower() == "utf-8"
             ):
-                clues_toward["text/html5"] += 1
+                found_meta_charset = True
+
+            # <meta http-equiv="content-type" content="text/html; charset=UTF-8">
             if "http-equiv" in each_meta_tag.attribs:
-                if each_meta_tag.attribs["http-equiv"] == "content-type":
+                if each_meta_tag.attribs["http-equiv"].lower() == "content-type":
                     if "content" in each_meta_tag.attribs:
-                        vals = each_meta_tag.attribs["content"].split(";")
-                        for each_val in vals:
+                        for each_val in re.split(
+                            "[;,]", each_meta_tag.attribs["content"]
+                        ):
                             if "/" in each_val and each_val not in [
                                 "application/xhtml+xml",
                                 "text/html",
@@ -1435,39 +1783,83 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
                                     log_prefix_local
                                     + f"unexpected meta http-equiv content-type '{each_val}'"
                                 )
+                            elif each_val == "text/html":
+                                clues_toward["text/html5"] += 1
+                                found_meta_http_equiv = True
+                            elif each_val == "application/xhtml+xml":
+                                clues_toward["application/xhtml+xml"] += 1
+                                found_meta_http_equiv = True
+                            elif each_val.startswith("charset"):
+                                try:
+                                    if each_val.split("=")[1].lower() == "utf-8":
+                                        found_meta_charset = True
+                                except IndexError:
+                                    logger.info(
+                                        log_prefix_local
+                                        + f"unexpected meta http-equiv content-type charset '{each_val}'"
+                                    )
+
+            # <meta name="viewport" content="width=device-width, initial-scale=1">
+            if "name" in each_meta_tag.attribs:
+                if each_meta_tag.attribs["name"].lower() == "viewport":
+                    if "content" in each_meta_tag.attribs:
+                        found_meta_viewport = True
+                        for each in re.split("[;,]", each_meta_tag.attribs["content"]):
+                            try:
+                                k, v = each.split("=")
+                            except IndexError:
+                                logger.info(
+                                    log_prefix_local
+                                    + f"unexpected meta viewport content value '{each}'"
+                                )
+                                continue
+
+                            if k == "width" and v.lower() == "device-width":
+                                clues_toward["text/html5"] += 1
+                            elif k == "initial-scale":
+                                clues_toward["text/html5"] += 1
+
+            if found_meta_charset and found_meta_http_equiv and found_meta_viewport:
+                break
+
+    if found_meta_charset:
+        clues_toward["text/html5"] += 1
 
     # check all sorts of tags to apply any statistical heuristics
     tag_counts = Counter()
-    pattern = r"<([A-Za-z0-9]+)(.*?)/?>"
-    matches = re.finditer(pattern, content, re.DOTALL)
+    # pattern = r"<([A-Za-z0-9\-]+)(.*?)/?>"
+    # matches = re.finditer(pattern, content, re.DOTALL)
+    pattern1 = r"<([^\ />]+?)/?>"  # for tags with no attributes
+    pattern2 = r"<([^\ />]+?) (.*?)/?>"  # for tags with attributes
+    matches = []
+    matches.extend(re.finditer(pattern1, content, re.DOTALL))
+    matches.extend(re.finditer(pattern2, content, re.DOTALL))
     for match in matches:
-        if not match.group().endswith("/>"):
+        if match.group().startswith("<!--"):
+            continue
+        elif match.group().endswith("-->"):
+            continue
+        elif match.group().endswith("/>"):
+            continue
+        else:
             tag_counts[match.group(1).lower()] += 1
     if tag_counts:
-        logger.info(log_prefix_local + f"{sum(tag_counts.values())=}")
         logger.info(
             log_prefix_local
             + f"tag_counts={sorted(tag_counts.items(), key=lambda x: x[1], reverse=True)}"
         )
 
-    has_html_tags = {k: False for k in html_tags.keys()}
-    for html_tag_sets_k, html_tag_sets_v in html_tags.items():
-        for tag_counts_k in tag_counts.keys():
-            if tag_counts_k in html_tag_sets_v:
-                has_html_tags[html_tag_sets_k] = True
+    # has_html_tags = {k: False for k in html_tags.keys()}
+    # for html_tag_sets_k, html_tag_sets_v in html_tags.items():
+    #     for tag_counts_k in tag_counts.keys():
+    #         if tag_counts_k in html_tag_sets_v:
+    #             has_html_tags[html_tag_sets_k] = True
+    # if has_html_tags["html5"]:
+    #     clues_toward["text/html5"] += 1
 
-    if has_html_tags["html5"]:
-        clues_toward["text/html5"] += 1
-
-    # check for html element
-    if "html" in document:
-        clues_toward["text/html"] += 1
-        clues_toward["application/xhtml+xml"] += 1
-    else:
-        clues_toward["application/xhtml+xml"] = -float("inf")
-
-    # award text/html a bonus of 1 point if it has 3 or more text/html5 markers
-    clues_toward["text/html"] += clues_toward["text/html5"] // 3
+    # award text/html all of text/html5's points
+    if clues_toward["text/html5"] > 0:
+        clues_toward["text/html"] += clues_toward["text/html5"]
 
     # check for Atom element and namespace
     if "feed" in document:
@@ -1485,16 +1877,16 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
             clues_toward["application/atom+xml"] = -float("inf")
 
     # check for html element and xhtml namespace
-    if "html" in document:
-        found_xmlns = False
-        for k, v in document["html"][0].attribs.items():
-            k_lower = k.lower()
-            v_lower = v.lower()
-            if k_lower.startswith("xmlns") and v_lower.endswith("xhtml"):
-                found_xmlns = True
-                clues_toward["application/xhtml+xml"] += 1
-        if not found_xmlns:
-            clues_toward["application/xhtml+xml"] = -float("inf")
+    # if "html" in document:
+    #     found_xmlns = False
+    #     for k, v in document["html"][0].attribs.items():
+    #         k_lower = k.lower()
+    #         v_lower = v.lower()
+    #         if k_lower.startswith("xmlns") and v_lower.endswith("xhtml"):
+    #             found_xmlns = True
+    #             clues_toward["application/xhtml+xml"] += 1
+    #     if not found_xmlns:
+    #         clues_toward["application/xhtml+xml"] = -float("inf")
 
     # check for rss element and namespace
     if "rss" in document:
@@ -1508,7 +1900,6 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
     # check for svg element and namespace
     if "svg" in document:
         clues_toward["image/svg+xml"] += 1
-
         found_xmlns = False
         for k, v in document["svg"][0].attribs.items():
             k_lower = k.lower()
@@ -1520,67 +1911,86 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
         if not found_xmlns:
             clues_toward["image/svg+xml"] = -float("inf")
 
-    if has_dtd:
-        clues_toward["application/xml"] += 1
+    # check for math element and namespace
+    if "math" in document:
+        clues_toward["application/mathml+xml"] += 1
+        found_xmlns = False
+        for k, v in document["math"][0].attribs.items():
+            k_lower = k.lower()
+            v_lower = v.lower()
+            if k_lower.startswith("xmlns") and v_lower.endswith("MathML"):
+                # http://www.w3.org/1998/Math/MathML
+                found_xmlns = True
+                clues_toward["application/mathml+xml"] += 1
+        if not found_xmlns:
+            clues_toward["application/mathml+xml"] = -float("inf")
+
+    # if has_dtd:
+    #     clues_toward["application/xhtml+xml"] += 1
+    #     clues_toward["application/xml"] += 1
 
     if is_wellformed_xml:
-        clues_toward["application/xml"] += 1
-
-    if "xml" in document:
-        clues_toward["application/xml"] += 1
-    else:
-        clues_toward["application/xhtml+xml"] = -float("inf")
-
-    if "xml" in document and "html" in document:
+        clues_toward["application/atom+xml"] += 1
+        clues_toward["application/mathml+xml"] += 1
+        clues_toward["application/rss+xml"] += 1
         clues_toward["application/xhtml+xml"] += 1
+        clues_toward["application/xml"] += 1
+        clues_toward["image/svg+xml"] += 1
 
-    if not has_dtd:
-        clues_toward["application/xhtml+xml"] = -float("inf")
-
-    if "head" in document and "body" in document:
-        clues_toward["text/html"] += 1
+    # if not has_formal_public_identifier:
+    #     clues_toward["application/xhtml+xml"] = -float("inf")
 
     # clues_toward.sort(key=lambda x: x[1], reverse=True)
     if debug:
         # dump contents of document object
         for k, v in document.items():
             print(k)
-            for each in v:
-                each.dump()
+            for each_tag_to_delete in v:
+                each_tag_to_delete.dump()
 
     log_first_1k_chars = False
 
+    num_nonstandard_tag_names_seen = 0
+
     if tag_counts:
-        # 2024-02-23T13:46:37Z [new]     INFO     id 39480233: asdfft2(): timbos_textfile_format_identifier(): tags_seen=[('a', 18), ('meta', 1), ('pre', 1), ('b', 1), ('small', 1)]
         num_html_tag_names_seen = 0
         num_svg_tag_names_seen = 0
-        num_nonstandard_tag_names_seen = 0
+        num_mathml_tag_names_seen = 0
         nonstandard_tags_population = 0
 
         nonstd_tag_names = []
 
         for k, v in tag_counts.items():
-            if k in all_html_tag_names:
+            k_lower = k.lower()
+            if k_lower in all_html_tag_names:
                 num_html_tag_names_seen += 1
-            elif k in all_svg_tag_names:
+            elif k_lower in all_svg_tag_names:
                 num_svg_tag_names_seen += 1
+            elif k_lower in all_mathml_tag_names:
+                num_mathml_tag_names_seen += 1
             else:
                 num_nonstandard_tag_names_seen += 1
                 nonstandard_tags_population += v
-                nonstd_tag_names.append(k)
+                nonstd_tag_names.append(k_lower)
 
-        logger.info(f"{nonstd_tag_names=}")
+        if nonstd_tag_names:
+            nonstd_tag_names.sort()
+            logger.info(log_prefix_local + f"{nonstd_tag_names=}")
 
         if num_html_tag_names_seen > 0:
             clues_toward["text/html"] += 1
+            clues_toward["application/xhtml+xml"] += 1
         if num_svg_tag_names_seen > 0:
             clues_toward["image/svg+xml"] += 1
+        if num_mathml_tag_names_seen > 0:
+            clues_toward["application/mathml+xml"] += 1
 
         if num_nonstandard_tag_names_seen > 0:
-            logger.info(
-                log_prefix_local
-                + f"nonstd tag names={num_nonstandard_tag_names_seen*100/len(tag_counts.keys()):.1f}%, "
-                f"nonstd indiv tags={nonstandard_tags_population*100/sum(tag_counts.values()):.1f}% (~Tim~)"
+            nonstd_as_pct_of_names = (
+                num_nonstandard_tag_names_seen * 100 / len(tag_counts.keys())
+            )
+            nonstd_as_pct_of_tags = (
+                nonstandard_tags_population * 100 / sum(tag_counts.values())
             )
 
         if debug:
@@ -1597,17 +2007,21 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
         list_sorted = sorted(clues_toward.items(), key=lambda x: x[1], reverse=True)
         list_sorted = [x for x in list_sorted if x[1] > 0]
 
-        if debug:
-            logger.debug(f"{clues_toward=}")
-            logger.debug(f"{list_sorted=}")
-
-        logger.info(log_prefix_local + f"clues_toward={list_sorted}")
-
         high_score = -1
-        for k, v in clues_toward.items():
-            if v > high_score:
+        for k, v in list_sorted:
+            if v >= high_score:
                 high_score = v
                 res = k
+
+        if num_nonstandard_tag_names_seen > 0:
+            # this indicates a possibly unreliable conclusion
+            logger.info(
+                log_prefix_local + f"clues_toward={list_sorted}, "
+                f"nonstd_as_pct_of_names={nonstd_as_pct_of_names:.1f}%, "
+                f"nonstd_as_pct_of_tags={nonstd_as_pct_of_tags:.1f}%"
+            )
+        else:
+            logger.info(log_prefix_local + f"clues_toward={list_sorted}")
 
         if res == "text/html5":
             res = "text/html"
@@ -1617,6 +2031,10 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
             top_xml_score = 0
             for k, v in clues_toward.items():
                 if k.endswith("+xml") and v > top_xml_score:
+                    logger.info(
+                        log_prefix_local
+                        + f"increased precision of textual_mimetype={res} to {k} (~Tim~)"
+                    )
                     res = k
                     top_xml_score = v
 
@@ -1638,21 +2056,6 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
 
 
 if __name__ == "__main__":
-
-    class MicrosecondFormatter(logging.Formatter):
-        def format(self, record):
-            record_datetime = datetime.datetime.fromtimestamp(record.created)
-            # timestamp = record_datetime.strftime("%Y-%m-%d %H:%M:%S.%f %c")
-            timestamp = record_datetime.strftime("%Y-%m-%d")
-            record.asctime = timestamp
-            return super().format(record)
-
-        def formatTime(self, record, datefmt=None):
-            record_datetime = datetime.datetime.fromtimestamp(record.created)
-            s = record_datetime.strftime("%Y-%m-%d %H:%M:%S.%fZ")
-            # s = time.strftime("%Y-%m-%d %H:%M:%S", ct)
-            # s = f"{s}.{int(record.msecs):06d}"  # Add microseconds
-            return s
 
     logger.setLevel(logging.DEBUG)
     console_handler = logging.StreamHandler()

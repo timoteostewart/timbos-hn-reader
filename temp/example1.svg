@@ -1,0 +1,13 @@
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     xmlns:ev="http://www.w3.org/2001/xml-events"  width="660" height="220" style="outline: 1px solid red">
+<defs>
+<clipPath id="path-1">
+<path d="M0,0 l 75,100 150,75 -25,-125 Z"/>
+</clipPath>
+</defs>
+
+<circle cx="110" cy="110" r="100" fill="#9c6" clip-path="url(#path-1)" />
+
+    </svg>

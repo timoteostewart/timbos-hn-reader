@@ -55,11 +55,9 @@ def asdfft1(item_id=None, pos_on_page=None):
 
     try:
         asdfft2(item_id, pos_on_page)
-
     except Exception as exc:
         if isinstance(exc, UnsupportedStoryType):
             pass
-
         else:
             exc_name = exc.__class__.__name__
             exc_msg = str(exc)
@@ -103,19 +101,6 @@ def asdfft1(item_id=None, pos_on_page=None):
     story_object.time_of_last_firebaseio_query = (
         utils_time.get_time_now_in_epoch_seconds_int()
     )
-
-    if not story_object.has_outbound_link:
-        story_title = story_object.title
-        story_title_fragment = story_title[:16]
-        first_colon_index = story_title.find(":")
-        if 0 <= first_colon_index < 16:
-            story_title_fragment = story_title[: first_colon_index + 1]
-            pattern = r"^(.*[Hh][Nn])\b.*"
-            match = re.search(pattern, story_title_fragment)
-            if match:
-                story_title_fragment = match.group(1)
-            else:
-                story_title_fragment = story_title[:16]
 
     if story_object.has_outbound_link:
         domain, domain_minus_www = utils_text.get_domains_from_url(story_object.url)
@@ -374,6 +359,7 @@ def asdfft2(item_id=None, pos_on_page=None):
     log_prefix_id = f"id {item_id}: "
     log_prefix_local = log_prefix_id + "asdfft2(): "
 
+    # short delay since asdfft1() and asdfft2() are called in sequence and scrape the same page
     time.sleep(utils_random.random_real(0.5, 2.5))
 
     story_as_dict = None
@@ -408,42 +394,42 @@ def asdfft2(item_id=None, pos_on_page=None):
         logger.error(log_prefix_local + err_msg)
         raise Exception(log_prefix_local + err_msg)
 
-    if story_object.has_outbound_link:
-        asdfft2_preprocess_outbound_link(story_object, log_prefix=log_prefix_local)
-        # logger.info(log_prefix_local + f"linked url={story_object.url}")
+    story_object.time_of_last_firebaseio_query = (
+        utils_time.get_time_now_in_epoch_seconds_int()
+    )
 
-        # first try to download using requests.get()
+    if not story_object.url:
+        logger.info(log_prefix_local + "story has no url")
+
+    if story_object.has_outbound_link:
+
+        parsed_url = urlparse(story_object.url)
+
+        # do some processing of the outbound link in some cases
+        # dropbox.com
+        if (
+            parsed_url.netloc.endswith("dropbox.com")
+            and parsed_url.path.endswith(".pdf")
+            and "dl=0" in parsed_url.query
+        ):
+            new_url = parsed_url._replace(query="dl=1").geturl()
+            logger.info(
+                log_prefix_local + f"changing url from {story_object.url} to {new_url}"
+            )
+            story_object.url = new_url
+            parsed_url = urlparse(story_object.url)
 
         hash_of_url = utils_hash.get_hash_of_url(story_object.url)
-
-        # res_r = utils_http.download_file_via_requests(
-        #     url=story_object.url,
-        #     dest_local_file=config.settings["TEMP_DIR"] + hash_of_url + "-r",
-        #     log_prefix=log_prefix_local,
-        # )
-
-        # if not res_r:
-        #     pass
-
-        # response_object_requests = utils_http.get_response_object_via_requests(
-        #     url=story_object.url, log_prefix=log_prefix_local
-        # )
-        # response_object_hrequests = utils_http.get_response_object_via_hrequests(
-        #     url=story_object.url, log_prefix=log_prefix_local
-        # )
 
         response_objects = {}
         for each_gro_func in [
             utils_http.get_response_object_via_requests,
             utils_http.get_response_object_via_hrequests,
         ]:
+            time.sleep(utils_random.random_real(0, 1))
             ro = each_gro_func(url=story_object.url, log_prefix=log_prefix_local)
             if ro:
                 response_objects[each_gro_func.__name__] = ro
-                # logger.info(
-                #     log_prefix_local
-                #     + f"got response object via {each_gro_func.__name__}, type of ro.content={type(ro.content)} (~Tim~)"
-                # )
 
             else:
                 logger.info(
@@ -453,54 +439,21 @@ def asdfft2(item_id=None, pos_on_page=None):
 
         if not response_objects:
             logger.info(
-                log_prefix_local + f"failed to get any response objects for url (~Tim~)"
+                log_prefix_local
+                + f"failed to get any response objects for url {story_object.url} (~Tim~)"
             )
 
-            # create the story card with the details we have
+            # TODO: create the story card with the details we have
             pass  # populate_story_card_html_in_story_object(story_object=story_object)
 
-            # save pickle and json
+            # TODO: save pickle and json
             pass
 
             return
 
         # invariant now: we have at least one response object
 
-        content_type_to_use = None
-
-        parsed_url = urlparse(story_object.url)
-
-        # # force content types based on URL
-        # if parsed_url.netloc.endswith("github.com") and "/blob/" in parsed_url.path:
-        #     content_type_to_use = "text/html"
-        #     logger.info(
-        #         log_prefix_local
-        #         + f"forcing content_type_to_use={content_type_to_use} for url {story_object.url}"
-        #     )
-
-        # if content_type_to_use:
-        #     srct = "skipped"
-        #     content_types_guessed_from_uri_extension = "skipped"
-        #     possible_magic_types = "skipped"
-        #     textual_mimetype = "skipped"
-        srct = set(
-            [get_content_type_from_response(x) for x in response_objects.values()]
-        )
-
-        if not srct:
-            logger.info(
-                log_prefix_local
-                + f"failed to get any srct for {story_object.url=} (~Tim~)"
-            )
-
-        if len(srct) > 1:
-            logger.info(
-                log_prefix_local
-                + f"multiple srct values: {srct=}, {story_object.url=} (~Tim~)"
-            )
-        srct = srct.pop()
-
-        # no matter whether we have a reported_content_type or not, let's download the content and get its magic type
+        # let's download the content and get its magic type
         hash_of_url = utils_hash.get_hash_of_url(story_object.url)
         local_file_with_response_content = config.settings["TEMP_DIR"] + hash_of_url
 
@@ -511,38 +464,41 @@ def asdfft2(item_id=None, pos_on_page=None):
                 log_prefix=log_prefix_local,
             )
 
-        if response_objects:
+        # prefer the response object from requests, because the object from hrequests sometimes handles binary files as utf-8 strings
+        if response_objects["get_response_object_via_requests"]:
             local_file_with_response_content = (
-                local_file_with_response_content
-                + "-"
-                + list(response_objects.keys())[0]
+                local_file_with_response_content + "-get_response_object_via_requests"
+            )
+        else:
+            local_file_with_response_content = (
+                local_file_with_response_content + "-get_response_object_via_hrequests"
             )
 
-            # get magic type of the file
-            mimetype_via_python_magic = (
-                utils_mimetypes_magic.get_mimetype_via_python_magic(
-                    local_file=local_file_with_response_content,
-                    log_prefix=log_prefix_local,
-                )
-            )
+        # get magic type of the file
+        mimetype_via_python_magic = utils_mimetypes_magic.get_mimetype_via_python_magic(
+            local_file=local_file_with_response_content,
+            log_prefix=log_prefix_local,
+        )
 
-            mimetype_via_file_command = (
-                utils_mimetypes_magic.get_mimetype_via_file_command(
-                    local_file=local_file_with_response_content,
-                    log_prefix=log_prefix_local,
-                )
-            )
+        mimetype_via_file_command = utils_mimetypes_magic.get_mimetype_via_file_command(
+            local_file=local_file_with_response_content,
+            log_prefix=log_prefix_local,
+        )
 
-            mimetype_via_exiftool = utils_mimetypes_magic.get_mimetype_via_exiftool2(
-                local_file=local_file_with_response_content,
-                log_prefix=log_prefix_local,
-            )
+        mimetype_via_exiftool = utils_mimetypes_magic.get_mimetype_via_exiftool2(
+            local_file=local_file_with_response_content,
+            log_prefix=log_prefix_local,
+        )
 
-            textual_mimetype = utils_mimetypes_magic.get_textual_mimetype(
-                local_file=local_file_with_response_content,
-                log_prefix=log_prefix_local,
-                context={"url": story_object.url},
-            )
+        textual_mimetype = utils_mimetypes_magic.get_textual_mimetype(
+            local_file=local_file_with_response_content,
+            log_prefix=log_prefix_local,
+            context={"url": story_object.url},
+        )
+
+        is_probably_binary = False
+        if not textual_mimetype:
+            is_probably_binary = True
 
         content_types_guessed_from_uri_extension = (
             utils_mimetypes_magic.guess_mimetype_from_uri_extension(
@@ -564,22 +520,46 @@ def asdfft2(item_id=None, pos_on_page=None):
                     + f"{mimetype_via_exiftool=}, type(mimetype_via_exiftool)={type(mimetype_via_exiftool)} (~Tim~)"
                 )
 
-        if srct != "skipped":
-            all_values = set()
-            if srct:
-                all_values.add(srct)
-            all_values.update(content_types_guessed_from_uri_extension)
-            all_values.update(possible_magic_types)
-            if textual_mimetype:
-                all_values.add(textual_mimetype)
-            if content_type_to_use:
-                all_values.add(content_type_to_use)
+        content_type_to_use = None
+        parsed_url = urlparse(story_object.url)
+        # # force content types based on URL
+        # if parsed_url.netloc.endswith("github.com") and "/blob/" in parsed_url.path:
+        #     content_type_to_use = "text/html"
+        #     logger.info(
+        #         log_prefix_local
+        #         + f"forcing {content_type_to_use=} for url {story_object.url}"
+        #     )
 
-        # if srct != "skipped":
-        #     if textual_mimetype is not None:
-        #         content_type_to_use = textual_mimetype
-        #     else:
-        #         # forge consensus from the srct and the guesses and the mts
+        srct = set(
+            [
+                get_content_type_from_response(response=x, log_prefix=log_prefix_local)
+                for x in response_objects.values()
+                if x
+            ]
+        )
+
+        if not srct:
+            logger.info(
+                log_prefix_local
+                + f"failed to get any srct for {story_object.url=} (~Tim~)"
+            )
+
+        if len(srct) > 1:
+            logger.info(
+                log_prefix_local
+                + f"multiple srct values: {srct=}, {story_object.url=} (~Tim~)"
+            )
+        srct = srct.pop()
+
+        all_values = set()
+        if srct:
+            all_values.add(srct)
+        all_values.update(content_types_guessed_from_uri_extension)
+        all_values.update(possible_magic_types)
+        if textual_mimetype:
+            all_values.add(textual_mimetype)
+        if content_type_to_use:
+            all_values.add(content_type_to_use)
 
         consensus_content_type_to_use = None
         trusted_values = set(
@@ -590,118 +570,125 @@ def asdfft2(item_id=None, pos_on_page=None):
             ]
         )
 
-        if srct:
-            # 1. If all_values has length 1 and this value matches srct, use that:
-            if len(all_values) == 1 and srct in all_values:
-                consensus_content_type_to_use = srct
-                logger.info(
-                    log_prefix_local
-                    + f"{srct=} equals {all_values=} ; {consensus_content_type_to_use=} ; {textual_mimetype=}"
-                )
+        # if we have a textual mimetype, we use that
+        # if it's binary, we use our trusted sources
 
-            # 2. If srct is a generic binary mimetype and mimetype_via_python_magic, mimetype_via_file_command, mimetype_via_exiftool all agree, use that:
-            elif srct in generic_binary_mimetypes:
+        # debugging
+        if textual_mimetype == "application/json" and parsed_url.netloc == "github.com":
+            logger.info(
+                log_prefix_local
+                + f"got 'application/json' from {story_object.url} (~Tim~)"
+            )
+
+        if textual_mimetype:
+            consensus_content_type_to_use = textual_mimetype
+        else:
+            if srct:
+                url_slug = f"for url {story_object.url}"
+
+                # 1. If all_values has length 1 and this value matches srct, use that:
+                if len(all_values) == 1 and srct in all_values:
+                    consensus_content_type_to_use = srct
+                    logger.info(
+                        log_prefix_local
+                        + f"{srct=} equals {all_values=} ; {consensus_content_type_to_use=} {url_slug}"
+                    )
+
+                # 2. If srct is a generic binary mimetype and mimetype_via_python_magic, mimetype_via_file_command, mimetype_via_exiftool all agree, use that:
+                elif srct in generic_binary_mimetypes:
+                    if len(trusted_values) == 1:
+                        consensus_content_type_to_use = trusted_values.pop()
+                        logger.info(
+                            log_prefix_local
+                            + f"generic {srct=}, but {trusted_values=} ; {consensus_content_type_to_use=} {url_slug} (~Tim~)"
+                        )
+
+                # 3. If srct, mimetype_via_python_magic, mimetype_via_file_command, mimetype_via_exiftool all agree, use that:
+                elif len(trusted_values) == 1 and srct in trusted_values:
+                    consensus_content_type_to_use = srct
+                    logger.info(
+                        log_prefix_local
+                        + f"{srct=} equals {trusted_values=} ; {consensus_content_type_to_use=} {url_slug} (~Tim~)"
+                    )
+
+                # 4. If srct matches any value in trusted_values, use that:
+                elif srct in trusted_values:
+                    consensus_content_type_to_use = srct
+                    logger.info(
+                        log_prefix_local
+                        + f"{srct=} matches any of {trusted_values=} ; {consensus_content_type_to_use=} {url_slug} (~Tim~)"
+                    )
+
+                # 5. If srct matches any value in all_values, use that:
+                elif srct in all_values:
+                    consensus_content_type_to_use = srct
+                    logger.info(
+                        log_prefix_local
+                        + f"{srct=} matches any of {all_values=} ; {consensus_content_type_to_use=} {url_slug} (~Tim~)"
+                    )
+
+                # 6. Just use srct
+                else:
+                    consensus_content_type_to_use = srct
+                    logger.info(
+                        log_prefix_local
+                        + f"{srct=} instead of {all_values=} ; {consensus_content_type_to_use=} {url_slug} (~Tim~)"
+                    )
+
+            else:  # srct is None
+                # 7. If mimetype_via_python_magic, mimetype_via_file_command, mimetype_via_exiftool all agree, use that:
                 if len(trusted_values) == 1:
                     consensus_content_type_to_use = trusted_values.pop()
                     logger.info(
                         log_prefix_local
-                        + f"generic {srct=}, but {trusted_values=} ; {consensus_content_type_to_use=} ; {textual_mimetype=} (~Tim~)"
+                        + f"srct=None, but {trusted_values=} ; {consensus_content_type_to_use=} {url_slug} (~Tim~)"
                     )
 
-            # 3. If srct, mimetype_via_python_magic, mimetype_via_file_command, mimetype_via_exiftool all agree, use that:
-            elif len(trusted_values) == 1 and srct in trusted_values:
-                consensus_content_type_to_use = srct
-                logger.info(
-                    log_prefix_local
-                    + f"{srct=} equals {trusted_values=} ; {consensus_content_type_to_use=} ; {textual_mimetype=} (~Tim~)"
-                )
-
-            # 4. If srct matches any value in trusted_values, use that:
-            elif srct in trusted_values:
-                consensus_content_type_to_use = srct
-                logger.info(
-                    log_prefix_local
-                    + f"{srct=} matches any of {trusted_values=} ; {consensus_content_type_to_use=} ; {textual_mimetype=} (~Tim~)"
-                )
-
-            # 5. If srct matches any value in all_values, use that:
-            elif srct in all_values:
-                consensus_content_type_to_use = srct
-                logger.info(
-                    log_prefix_local
-                    + f"{srct=} matches any of {all_values=} ; {consensus_content_type_to_use=} ; {textual_mimetype=} (~Tim~)"
-                )
-
-            # 6. Just use srct
-            else:
-                consensus_content_type_to_use = srct
-                logger.info(
-                    log_prefix_local
-                    + f"{srct=} instead of {all_values=} ; {consensus_content_type_to_use=} ; {textual_mimetype=} (~Tim~)"
-                )
-
-        else:  # srct is None
-            # 7. If mimetype_via_python_magic, mimetype_via_file_command, mimetype_via_exiftool all agree, use that:
-            if len(trusted_values) == 1:
-                consensus_content_type_to_use = trusted_values.pop()
-                logger.info(
-                    log_prefix_local
-                    + f"srct=None, but {trusted_values=} ; {consensus_content_type_to_use=} ; {textual_mimetype=} (~Tim~)"
-                )
-
-            # 8. Fall back on generic 'application/octet-stream'
-            else:
-                consensus_content_type_to_use = "application/octet-stream"
-                logger.info(
-                    log_prefix_local
-                    + f"srct=None, and {all_values=} disagree ; {consensus_content_type_to_use=} ; {textual_mimetype=} (~Tim~)"
-                )
+                # 8. Fall back on generic 'application/octet-stream'
+                else:
+                    consensus_content_type_to_use = "application/octet-stream"
+                    logger.info(
+                        log_prefix_local
+                        + f"srct=None, and {all_values=} disagree ; {consensus_content_type_to_use=} {url_slug} (~Tim~)"
+                    )
 
         if textual_mimetype and consensus_content_type_to_use != textual_mimetype:
             logger.info(
                 log_prefix_local
-                + f"{consensus_content_type_to_use=} doesn't match {textual_mimetype=} (~Tim~)"
+                + f"{consensus_content_type_to_use=} doesn't match {textual_mimetype=} {url_slug} (~Tim~)"
             )
 
-        logger.info(
-            log_prefix_local
-            + f"srct: {srct}, guesses: {content_types_guessed_from_uri_extension}, mts: {possible_magic_types}, {consensus_content_type_to_use=}, {textual_mimetype=}, {content_type_to_use=} for url {story_object.url}"
-        )
+        # discard very common mimetypes as not interesting
+        uninteresting_mimetypes = [
+            "application/pdf",
+            "application/xhtml+xml",
+            "text/html",
+        ]
+        copy_of_all_values = set(all_values)
+        for each in uninteresting_mimetypes:
+            copy_of_all_values.discard(each)
 
-        if srct != "skipped":
-            # discard very common mimetypes as not interesting
-            uninteresting_mimetypes = [
-                "application/pdf",
-                "application/xhtml+xml",
-                "text/html",
-                None,
-            ]
-            copy_of_all_values = set(all_values)
+        is_interesting = True
 
-            for each in uninteresting_mimetypes:
-                copy_of_all_values.discard(each)
+        if not copy_of_all_values:
+            is_interesting = False
 
-            is_interesting = True
+        if (
+            textual_mimetype == "application/xhtml+xml"
+            and parsed_url.netloc.endswith("arxiv.org")
+            and len(copy_of_all_values) == 1
+            and "text/xml" in copy_of_all_values
+        ):
+            is_interesting = False
 
-            if not copy_of_all_values:
-                is_interesting = False
+        if is_interesting:
+            copy_of_all_values = list(copy_of_all_values)
+            copy_of_all_values.sort()
 
-            if (
-                textual_mimetype == "application/xhtml+xml"
-                and parsed_url.netloc.endswith("arxiv.org")
-                and len(copy_of_all_values) == 1
-                and "text/xml" in copy_of_all_values
-            ):
-                is_interesting = False
-
-            if is_interesting:
-                copy_of_all_values = list(copy_of_all_values)
-                copy_of_all_values.sort()
-
-                logger.info(
-                    log_prefix_local
-                    + f"interesting mimetypes from all_values={copy_of_all_values}, {textual_mimetype=} for url {story_object.url}"
-                )
+            logger.info(
+                log_prefix_local
+                + f"interesting mimetypes from all_values={copy_of_all_values}, {textual_mimetype=} for url {story_object.url}"
+            )
 
         return
 
@@ -849,6 +836,7 @@ def asdfft2(item_id=None, pos_on_page=None):
                 pass
 
             if cur_content_type == "text/html":
+                page_source_via_get = None
                 with open(
                     local_file_with_response_content,
                     mode="r",
@@ -857,12 +845,14 @@ def asdfft2(item_id=None, pos_on_page=None):
                     page_source_via_get = f.read()
 
                 # get render() of response object
-                page_source_via_render = (
-                    utils_http.get_rendered_page_source_via_response_object(
-                        response_object_hrequests,
-                        log_prefix=log_prefix_local,
+                page_source_via_render = None
+                if "get_response_object_via_hrequests" in response_objects:
+                    page_source_via_render = (
+                        utils_http.get_rendered_page_source_via_response_object(
+                            response_objects["get_response_object_via_hrequests"],
+                            log_prefix=log_prefix_local,
+                        )
                     )
-                )
 
                 page_source_to_use = choose_best_page_source(
                     page_source_via_get,
@@ -871,7 +861,7 @@ def asdfft2(item_id=None, pos_on_page=None):
                     log_prefix=log_prefix_local,
                 )
 
-                # if we can't get page_source, we don't go on to the block below
+                # proceed only if we have page_source_to_use
                 if page_source_to_use:
                     # get url domain
                     pass
@@ -1002,9 +992,6 @@ def asdfft2(item_id=None, pos_on_page=None):
                 break
 
             break  # while True
-
-    if not story_object.url:
-        logger.info(log_prefix_local + "story has no url")
 
     return story_object
 
@@ -1181,10 +1168,11 @@ def freshen_up(story_object=None, page_package=None):
             )
 
 
-def get_content_type_from_response(response):
+def get_content_type_from_response(response, log_prefix=""):
     if response and "Content-Type" in response.headers:
         return utils_text.parse_content_type_from_raw_header(
-            response.headers["Content-Type"]
+            response.headers["Content-Type"],
+            log_prefix=log_prefix,
         )
 
     return None
@@ -1234,6 +1222,7 @@ def item_factory(story_as_dict):
             story_as_dict["text"] = ""
         if "url" not in story_as_dict:
             story_as_dict["url"] = ""
+
         return Story(
             story_as_dict["by"],
             story_as_dict["descendants"],
@@ -1345,10 +1334,9 @@ def page_package_processor(page_package: PageOfStories):
                     log_prefix_rank_cur_id_loop
                     + f"cached story found, but its story_object_version {story_object.story_object_version} is below the minimum of {required_minimum_version}"
                 )
-                story_object = None  # reset so we have to asdfft1()
+                story_object = None  # reset so we know to invoke asdfft1()
 
             else:
-
                 minutes_ago_since_last_firebaseio_update = (
                     utils_time.get_time_now_in_epoch_seconds_int()
                     - story_object.time_of_last_firebaseio_query
@@ -1926,7 +1914,7 @@ def supervisor(cur_story_type):
     if len(rosters[cur_story_type]) == 0:
         logger.error(
             log_prefix
-            + f"failed to ingest roster '{cur_story_type}' after {config.settings['SCRAPING']['NUM_RETRIES_FOR_HN_FEEDS']} tries. See errors."
+            + f"failed to ingest roster '{cur_story_type}' after {config.settings['SCRAPING']['NUM_RETRIES_FOR_HN_FEEDS']} tries. will proceed with empty roster."
         )
         rosters[roster_story_type] = []
 

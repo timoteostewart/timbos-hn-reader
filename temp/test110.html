@@ -1,0 +1,892 @@
+
+<html>
+<head>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio"></script>
+    <meta name="description" content="Analytics for builders. Record and query billions of datapoints with Scratch Data.">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="index,follow" />
+    <meta charset="UTF-8" />
+    <title>Scratch Data</title>
+
+    <script>
+      !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.async=!0,p.src=s.api_host+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+      posthog.init('phc_NrhUTFKKTm4ephihU9HDYZp8QR5SsMrN2ZsQ0xWqssn',{api_host:'https://app.posthog.com'})
+    </script>
+
+
+
+<meta name="description" content="How to use an analytics database to build a ledger that can handle millions of rows." />
+<meta property="og:title" content="Building a Scalable Accounting Ledger | Scratch Data" />
+<meta property="og:description" content="How to use an analytics database to build a ledger that can handle millions of rows." />
+<meta property="og:url" content="http://scratchdata.com/blog/building-a-ledger/" />
+
+
+<meta property="og:image" content="http://scratchdata.com/blog/building-a-ledger/hero.png" />
+<meta property="og:image:alt" content="Building a Scalable Accounting Ledger | Scratch Data" />
+<link rel="canonical" href="http://scratchdata.com/blog/building-a-ledger/" />
+<meta property="og:site_name" content="Scratch Data" />
+<meta property="og:type" content="website" />
+
+
+
+
+
+  </head>
+
+  <body>
+
+    <div class="bg-white">
+      <!-- Header -->
+      <header class="absolute inset-x-0 top-0 z-50">
+        <nav class="flex items-center justify-between p-6 lg:px-8" aria-label="Global">
+          <div class="flex lg:flex-1">
+            <a href="/" class="-m-1.5 p-1.5">
+              <span class="sr-only">Scratch Data</span>
+              <img class="h-8 w-auto" src="/static/logo_dark.png" alt="">
+            </a>
+          </div>
+          <!-- <div class="flex lg:hidden">
+            <button type="button" class="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-gray-700">
+              <span class="sr-only">Open main menu</span>
+              <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+              </svg>
+            </button>
+          </div> -->
+          <div class="hiddexn lg:flex lg:gap-x-12">
+            <a href="/#use_cases" class="text-sm font-semibold leading-6 text-gray-900">Use Cases</a>
+            <a href="/customers" class="text-sm font-semibold leading-6 text-gray-900">Customers</a>
+            <a href="/blog" class="text-sm font-semibold leading-6 text-gray-900">Blog</a>
+            <a target="_blank" href="https://docs.scratchdata.com/" class="text-sm font-semibold leading-6 text-gray-900">Docs</a>
+            <a target="_blank" href="https://www.github.com/scratchdata/scratchdb" class="text-sm font-semibold leading-6 text-gray-900">Github</a>
+          </div>
+          <div class="hidden lg:flex lg:flex-1 lg:justify-end">
+            <a href="#" class="text-sm font-semibold leading-6 text-gray-900">Log in <span aria-hidden="true">&rarr;</span></a>
+          </div>
+        </nav>
+
+        <!-- Mobile menu, show/hide based on menu open state. -->
+        <!-- <div class="lg:hidden" role="dialog" aria-modal="true"> -->
+          <!-- Background backdrop, show/hide based on slide-over state. -->
+          <!-- <div class="fixed inset-0 z-50"></div>
+          <div class="fixed inset-y-0 right-0 z-50 w-full overflow-y-auto bg-white px-6 py-6 sm:max-w-sm sm:ring-1 sm:ring-gray-900/10">
+            <div class="flex items-center justify-between">
+              <a href="#" class="-m-1.5 p-1.5">
+                <span class="sr-only">Your Company</span>
+                <img class="h-8 w-auto" src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=600" alt="">
+              </a>
+              <button type="button" class="-m-2.5 rounded-md p-2.5 text-gray-700">
+                <span class="sr-only">Close menu</span>
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div class="mt-6 flow-root">
+              <div class="-my-6 divide-y divide-gray-500/10">
+                <div class="space-y-2 py-6">
+                  <a href="#" class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50">Product</a>
+                  <a href="#" class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50">Features</a>
+                  <a href="#" class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50">Marketplace</a>
+                  <a href="#" class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50">Company</a>
+                </div>
+                <div class="py-6">
+                  <a href="#" class="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50">Log in</a>
+                </div>
+              </div>
+            </div>
+          </div> -->
+        <!-- </div> -->
+
+      </header>
+
+      <main class="isolate">
+
+
+<!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/default.min.css"> -->
+<!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/atom-one-dark.min.css"> -->
+<link rel="stylesheet" href="/static/atom-one-dark.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+
+<!-- and it's easy to individually load additional languages -->
+<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/go.min.js"></script> -->
+
+
+<script>hljs.highlightAll();</script>
+
+
+<div class="bg-white px-6 py-32 lg:px-8">
+  <div class="mx-auto max-w-3xl text-base leading-7 text-gray-700">
+
+    <div class="prose">
+      <h1>Building a Scalable Accounting Ledger</h1>
+    <p>A number of <a href="https://beancount.github.io/docs/the_double_entry_counting_method.html#double-entry-bookkeeping">blog</a> <a href="https://www.moderntreasury.com/journal/accounting-for-developers-part-i">posts</a> have come to light explaining the basics of double-entry accounting for developers. I aim to share a simple - and elegant, I think - database schema for recording and tabulating ledger entries.</p>
+<p>Engineers tend to hand-wave over accounting terminology, dispensing with terms like “debit” and “credit” - after all, why not just use positive and negative numbers? I think this leads to confusing results. Take this example from ledger-cli’s <a href="https://www.ledger-cli.org/3.0/doc/ledger3.html#Stating-where-money-goes">documentation</a>:</p>
+<blockquote>
+<p>"When you look at the balance totals for your ledger, you may be surprised to see that Expenses are a positive figure, and Income is a negative figure. It may take some getting used to, but…"</p>
+</blockquote>
+<p>I understand the argument: since the normal balance for income is credit, and ledger-cli represents credits as negative numbers, then income would be show as negative. But this is not consistent at all with how financial statements are prepared.</p>
+<p>So let’s design a system which can be easily modeled in a database and consistent with how actual accounting is done.</p>
+<h2>Database Choice Matters</h2>
+<p>If you're building an application with millions of transactions, you'll inevitably
+find that calling SUM() on these columns is plain old slow. One way to solve this is
+to pre-aggregate data, perhaps by day, and store it in a separate table. This can be
+done in the application, materialized views, or triggers.</p>
+<p>Another option is to use a column-oriented database like Clickhouse. That's what we've chosen here:
+we prefer to keep the data model simple and use the technology to process data quickkly rather
+than complicate how data gets inserted.</p>
+<h2>The Chart of Accounts</h2>
+<p>The first thing we want to define is our list of accounts. Our accounts table has 3 columns:</p>
+<ul>
+<li><strong>Name</strong>. The name of the account (Assets, Liabilities, etc)</li>
+<li><strong>Number</strong>. Often, accounts are assigned a number hierarchy. For example: 100 Assets, 101 Cash, 106 Accounts Receivable, etc. The useful thing here is we can roll up the value of sub-accounts by using place value. We’ll get to an example later.</li>
+<li><strong>Normal balance</strong>. In our schema, we define <code>1</code> for credit and <code>-1</code> as debit. The user never sees this! But it is convenient for arithmetic.</li>
+</ul>
+<p>Here’s our table, using SQLite:</p>
+<pre class="highlight"><code class="language-sql">CREATE TABLE "accounts" (
+    "name"      TEXT,
+    "number"    INTEGER,
+    "normal"    INTEGER
+)</code></pre>
+<p>And we’ll populate it with some accounts:</p>
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th>number</th>
+<th>normal</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Assets</td>
+<td>100</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Cash</td>
+<td>110</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Merchandise</td>
+<td>120</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Liabilities</td>
+<td>200</td>
+<td>-1</td>
+</tr>
+<tr>
+<td>Deferred Revenue</td>
+<td>210</td>
+<td>-1</td>
+</tr>
+<tr>
+<td>Revenues</td>
+<td>300</td>
+<td>-1</td>
+</tr>
+<tr>
+<td>Expenses</td>
+<td>400</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Cost of Goods Sold</td>
+<td>410</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Equity</td>
+<td>500</td>
+<td>-1</td>
+</tr>
+<tr>
+<td>Capital</td>
+<td>510</td>
+<td>-1</td>
+</tr>
+</tbody>
+</table>
+<p>Note that Cash and Merchandise roll up into Assets (likewise for other sub-accounts.) All Asset accounts are in the “100” range. This is <a href="https://www.accountingtools.com/articles/chart-of-accounts-numbering.html">typical</a> for how firms set up their chart of accounts.</p>
+<p>This schema is already useful! Just based on knowing our accounts and their normal balances, we can derive the accounting equation:</p>
+<pre class="highlight"><code class="language-sql">SELECT
+  group_concat(name , ' + ') AS expression
+FROM accounts
+GROUP BY normal;</code></pre>
+<table>
+<thead>
+<tr>
+<th>expression</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Liabilities + Revenues + Equity + Deferred Revenue + Capital</td>
+</tr>
+<tr>
+<td>Assets + Expenses + Cash + Merchandise + Cost of Goods Sold</td>
+</tr>
+</tbody>
+</table>
+<p>Each line is one side of the equation. This is a rather, erm, comprehensive rendition of that equation. We can just get the high-level accounts by selecting those which are divisible by 100. The arithmetic is pretty nifty, and lets us roll up data as granularly as we like.</p>
+<pre class="highlight"><code class="language-sql">SELECT group_concat(name, ' + ') AS expression
+FROM accounts
+WHERE number % 100 = 0
+GROUP BY normal;</code></pre>
+<table>
+<thead>
+<tr>
+<th>expression</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Liabilities + Revenues + Equity</td>
+</tr>
+<tr>
+<td>Assets + Expenses</td>
+</tr>
+</tbody>
+</table>
+<p>Much better! With a little more SQL we can output the equation itself:</p>
+<pre class="highlight"><code class="language-sql">select
+  max(left_side) || ' = ' || max(right_side) as equation
+from
+  (
+    select
+      group_concat(
+        case when normal == 1 then name end, ' + '
+      ) as left_side,
+      group_concat(
+        case when normal == -1 then name end, ' + '
+      ) as right_side
+    from
+      accounts
+    where
+      number % 100 == 0
+    group by
+      normal
+  );</code></pre>
+<h2>Transactions</h2>
+<p>Now that we have a workable chart of accounts, let’s add transactions. Our transactions table is straightforward.</p>
+<pre class="highlight"><code class="language-sql">CREATE TABLE "transactions"
+  (
+     "id"        INTEGER,
+     "date"      TEXT,
+     "amount"    REAL,
+     "account"   INTEGER,
+     "direction" INTEGER
+  ) </code></pre>
+<ul>
+<li><strong>Transaction ID</strong>. This will identify all single-entry items (debits+credits) which make up a single transaction.</li>
+<li><strong>Date</strong>. The transaction date.</li>
+<li><strong>Amount</strong>. The dollar amount for the transaction. This is usually a positive number - we do not use negative numbers to represent credits, there is a separate column for that.)</li>
+<li><strong>Account</strong>. This is the account number (ie, 110 for Cash) for this transaction’s line item.</li>
+<li><strong>Direction</strong>. We choose <code>1</code> for debit and <code>-1</code> for credit, as before. This is a handy convention for arithmetic.</li>
+</ul>
+<h3>Example Transactions</h3>
+<p>For our example, we’ll record a number of ledger entries to show an opening account balance, buying inventory, and then selling the inventory to a customer. This post won’t go into the accounting explanation for each transaction (stay tuned!) but shows how to use this data to do basic queries.</p>
+<script src="https://snippets.journalize.io/snippets/js/59f9f5a426ec.js"></script>
+
+<p>In our DB, we add the following rows:</p>
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>date</th>
+<th>amount</th>
+<th>account</th>
+<th>direction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>2022-01-01</td>
+<td>500.0</td>
+<td>110</td>
+<td>1</td>
+</tr>
+<tr>
+<td>0</td>
+<td>2022-01-01</td>
+<td>500.0</td>
+<td>510</td>
+<td>-1</td>
+</tr>
+<tr>
+<td>1</td>
+<td>2022-01-01</td>
+<td>100.0</td>
+<td>120</td>
+<td>1</td>
+</tr>
+<tr>
+<td>1</td>
+<td>2022-01-01</td>
+<td>100.0</td>
+<td>110</td>
+<td>-1</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2022-02-01</td>
+<td>15.0</td>
+<td>110</td>
+<td>1</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2022-02-01</td>
+<td>15.0</td>
+<td>210</td>
+<td>-1</td>
+</tr>
+<tr>
+<td>3</td>
+<td>2022-02-05</td>
+<td>15.0</td>
+<td>210</td>
+<td>1</td>
+</tr>
+<tr>
+<td>3</td>
+<td>2022-02-05</td>
+<td>15.0</td>
+<td>300</td>
+<td>-1</td>
+</tr>
+<tr>
+<td>4</td>
+<td>2022-02-05</td>
+<td>3.0</td>
+<td>410</td>
+<td>1</td>
+</tr>
+<tr>
+<td>4</td>
+<td>2022-02-05</td>
+<td>3.0</td>
+<td>120</td>
+<td>-1</td>
+</tr>
+</tbody>
+</table>
+<p>Note there are multiple rows with the same ID. This is because both rows are part of the same transaction - the entirety of that transaction must have debits = credits.</p>
+<p>Breaking down transaction <code>0</code>:</p>
+<ul>
+<li>The amount is for $500.</li>
+<li>The first line is a debit, denoted as <code>direction=1</code>. The account is Cash, as the account number <code>110</code> matches with our accounts table. Because Cash shares the same prefix as “Assets” then this transaction rolls up to the “Assets” account.</li>
+<li>The second line is a credit, denoted as <code>direction=-1</code>. Similarly, the account number <code>510</code> is Capital, which is an Equity account.</li>
+</ul>
+<h2>Querying Transactions</h2>
+<p>Now that we have a full set of ledger entries, let’s run some SQL queries! These are all surprisingly understandable - dare I say elegant. The schema preserves the norms of accounting, the DB operations are cheap, and the output is consistent with any standard accounting statement.</p>
+<h3>JOIN Transactions with Account details</h3>
+<p>This is a basic query to show transaction and account information.</p>
+<pre class="highlight"><code class="language-sql">select
+  *
+from
+  transactions
+  left join accounts on transactions.account = accounts.number;</code></pre>
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>date</th>
+<th>amount</th>
+<th>account</th>
+<th>direction</th>
+<th>name</th>
+<th>number</th>
+<th>normal</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2</td>
+<td>2022-02-01</td>
+<td>15.0</td>
+<td>110</td>
+<td>1</td>
+<td>Cash</td>
+<td>110</td>
+<td>1</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2022-02-01</td>
+<td>15.0</td>
+<td>210</td>
+<td>-1</td>
+<td>Deferred Revenue</td>
+<td>210</td>
+<td>-1</td>
+</tr>
+<tr>
+<td>3</td>
+<td>2022-02-05</td>
+<td>15.0</td>
+<td>210</td>
+<td>1</td>
+<td>Deferred Revenue</td>
+<td>210</td>
+<td>-1</td>
+</tr>
+<tr>
+<td>3</td>
+<td>2022-02-05</td>
+<td>15.0</td>
+<td>300</td>
+<td>-1</td>
+<td>Revenues</td>
+<td>300</td>
+<td>-1</td>
+</tr>
+<tr>
+<td>1</td>
+<td>2022-01-01</td>
+<td>100.0</td>
+<td>110</td>
+<td>-1</td>
+<td>Cash</td>
+<td>110</td>
+<td>1</td>
+</tr>
+<tr>
+<td>1</td>
+<td>2022-01-01</td>
+<td>100.0</td>
+<td>120</td>
+<td>1</td>
+<td>Merchandise</td>
+<td>120</td>
+<td>1</td>
+</tr>
+<tr>
+<td>4</td>
+<td>2022-02-05</td>
+<td>3.0</td>
+<td>120</td>
+<td>-1</td>
+<td>Merchandise</td>
+<td>120</td>
+<td>1</td>
+</tr>
+<tr>
+<td>4</td>
+<td>2022-02-05</td>
+<td>3.0</td>
+<td>410</td>
+<td>1</td>
+<td>Cost of Goods Sold</td>
+<td>410</td>
+<td>1</td>
+</tr>
+<tr>
+<td>0</td>
+<td>2022-01-01</td>
+<td>500.0</td>
+<td>510</td>
+<td>-1</td>
+<td>Capital</td>
+<td>510</td>
+<td>-1</td>
+</tr>
+<tr>
+<td>0</td>
+<td>2022-01-01</td>
+<td>500.0</td>
+<td>110</td>
+<td>1</td>
+<td>Cash</td>
+<td>110</td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+<h3>Verifying debits = credits</h3>
+<p>This query helps us verify that, overall, debits and credits match.</p>
+<pre class="highlight"><code class="language-sql">select
+  sum(case when direction == 1 then amount end) as DR,
+  sum(case when direction == -1 then amount end) as CR
+from
+  transactions;</code></pre>
+<table>
+<thead>
+<tr>
+<th>DR</th>
+<th>CR</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>633.0</td>
+<td>633.0</td>
+</tr>
+</tbody>
+</table>
+<p>Debits and credits should sum to 0. We can verify this like so:</p>
+<pre class="highlight"><code class="language-sql">select
+  sum(direction * amount)
+from
+  transactions;</code></pre>
+<table>
+<thead>
+<tr>
+<th>sum(direction * amount)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0.0</td>
+</tr>
+</tbody>
+</table>
+<p>What if we want to find transactions where debits and credits don’t match? </p>
+<pre class="highlight"><code class="language-sql">select
+  id,
+  sum(direction * amount) as s
+from
+  transactions
+group by
+  id
+having
+  s != 0;</code></pre>
+<h3>Balances</h3>
+<p>Putting together a balance sheet is easy:</p>
+<pre class="highlight"><code class="language-sql">select
+  (account) as a,
+  name,
+  sum(amount * direction * normal) as balance
+from
+  transactions
+  left join accounts on a = accounts.number
+group by
+  name
+order by
+  a,
+  name;</code></pre>
+<table>
+<thead>
+<tr>
+<th>a</th>
+<th>name</th>
+<th>balance</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>110</td>
+<td>Cash</td>
+<td>415.0</td>
+</tr>
+<tr>
+<td>120</td>
+<td>Merchandise</td>
+<td>97.0</td>
+</tr>
+<tr>
+<td>210</td>
+<td>Deferred Revenue</td>
+<td>0.0</td>
+</tr>
+<tr>
+<td>300</td>
+<td>Revenues</td>
+<td>15.0</td>
+</tr>
+<tr>
+<td>410</td>
+<td>Cost of Goods Sold</td>
+<td>3.0</td>
+</tr>
+<tr>
+<td>510</td>
+<td>Capital</td>
+<td>500.0</td>
+</tr>
+</tbody>
+</table>
+<p>The most important part of this query is <code>SUM(amount * direction * normal)</code>. This ensures we are correctly increasing and decreasing our balances, and ensures the balance is positive.</p>
+<p>What if we want a report with the sub-accounts rolled into the main ones? We can use arithmetic to find the parent account number.</p>
+<pre class="highlight"><code class="language-sql">select
+  ((account / 100) * 100) as a,
+  name,
+  sum(amount * direction * normal) as balance
+from
+  transactions
+  left join accounts on a = accounts.number
+group by
+  name
+order by
+  a,
+  name;</code></pre>
+<table>
+<thead>
+<tr>
+<th>a</th>
+<th>name</th>
+<th>balance</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>100</td>
+<td>Assets</td>
+<td>512.0</td>
+</tr>
+<tr>
+<td>200</td>
+<td>Liabilities</td>
+<td>0.0</td>
+</tr>
+<tr>
+<td>300</td>
+<td>Revenues</td>
+<td>15.0</td>
+</tr>
+<tr>
+<td>400</td>
+<td>Expenses</td>
+<td>3.0</td>
+</tr>
+<tr>
+<td>500</td>
+<td>Equity</td>
+<td>500.0</td>
+</tr>
+</tbody>
+</table>
+<p>Here, we've rolled up Cash and Merchandise under Assets.</p>
+<p>Finally, here’s how we can display all transactions in a human-readable way:</p>
+<pre class="highlight"><code class="language-sql">select
+  id,
+  date,
+  name,
+  case when direction == 1 then amount end as DR,
+  case when direction == -1 then amount end as CR
+from
+  transactions
+  left join accounts on account = accounts.number
+order by
+  id,
+  date,
+  CR,
+  DR;</code></pre>
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>date</th>
+<th>name</th>
+<th>DR</th>
+<th>CR</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>2022-01-01</td>
+<td>Cash</td>
+<td>500.0</td>
+<td></td>
+</tr>
+<tr>
+<td>0</td>
+<td>2022-01-01</td>
+<td>Capital</td>
+<td></td>
+<td>500.0</td>
+</tr>
+<tr>
+<td>1</td>
+<td>2022-01-01</td>
+<td>Merchandise</td>
+<td>100.0</td>
+<td></td>
+</tr>
+<tr>
+<td>1</td>
+<td>2022-01-01</td>
+<td>Cash</td>
+<td></td>
+<td>100.0</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2022-02-01</td>
+<td>Cash</td>
+<td>15.0</td>
+<td></td>
+</tr>
+<tr>
+<td>2</td>
+<td>2022-02-01</td>
+<td>Deferred Revenue</td>
+<td></td>
+<td>15.0</td>
+</tr>
+<tr>
+<td>3</td>
+<td>2022-02-05</td>
+<td>Deferred Revenue</td>
+<td>15.0</td>
+<td></td>
+</tr>
+<tr>
+<td>3</td>
+<td>2022-02-05</td>
+<td>Revenues</td>
+<td></td>
+<td>15.0</td>
+</tr>
+<tr>
+<td>4</td>
+<td>2022-02-05</td>
+<td>Cost of Goods Sold</td>
+<td>3.0</td>
+<td></td>
+</tr>
+<tr>
+<td>4</td>
+<td>2022-02-05</td>
+<td>Merchandise</td>
+<td></td>
+<td>3.0</td>
+</tr>
+</tbody>
+</table>
+<h2>Streaming with Scratch Data</h2>
+<p>Finally, one can ask: how do we get all of this data into our database? If using a
+data warehouse (Clickhouse, Snowflake, etc) then it's impossible to do individual
+INSERT statements every time a transaction happens. You end up setting up a nightly
+bulk load process.</p>
+<p>What if you could stream journal entries in as transactions happen in real time? You could
+have up-to-the-minute balance sheets. Thankfully, Scratch Data makes this really easy.</p>
+<p>You can stream data to Scratch and we will automatically collect it, create database
+schemas, and safely batch insert.</p>
+<h3>Streaming Stripe and Shopify Data</h3>
+<p>Stripe and Shopify have webhooks to track every transaction. With our
+API endpoints, you can set Scratch Data as a webhook destination and every
+transaction will stream into the database in real time. Check out our blog
+posts for <a href="/blog/stripe-data-ingest/">Stripe</a> and <a href="/blog/shopify-data-ingest/">Shopfiy</a> as examples.</p>
+<h3>Streaming From Code</h3>
+<p>If you want to stream data from code - perhaps you have your own webhook, or
+application code - this is really easy too! Here's what the JSON would look like:</p>
+<pre class="highlight"><code class="language-json">{
+    "date": "2022-01-01",
+    "amount": 500.00,
+    "account": 110,
+    "direction": 1
+}</code></pre>
+<p>And then POST it:</p>
+<pre class="highlight"><code class="language-bash">$ curl -X POST "https://api.scratchdata.com/data?table=transactions" \
+    --json '{"amount": 500.00 ...}'</code></pre>
+<p>From here, data can be streamed to your application (if you're building a
+user-facing dashboard) or as an Excel file.</p>
+<h2>Conclusion</h2>
+<p>This is hopefully a starting point on how to design a ledgering system
+which has a high chance of producing data that can be used by your finance
+team using correct terminology.</p>
+<p>If you want to learn more about how we can help you build such a system, please
+<a href="https://q29ksuefpvm.typeform.com/to/baKR3j0p#source=building_a_ledger">reach out</a>!</p>
+    </div>
+
+  </div>
+</div>
+
+
+
+      </main>
+
+      <!-- Footer -->
+      <div class="mx-auto mt-32 max-w-7xl px-6 lg:px-8">
+        <footer aria-labelledby="footer-heading" class="relative border-t border-gray-900/10 py-24 sm:mt-56 sm:py-32">
+          <h2 id="footer-heading" class="sr-only">Footer</h2>
+          <div class="xl:grid xl:grid-cols-3 xl:gap-8">
+            <img class="h-7" src="/static/logo_dark.png" alt="Company name">
+            <!-- <div class="mt-16 grid grid-cols-2 gap-8 xl:col-span-2 xl:mt-0">
+              <div class="md:grid md:grid-cols-2 md:gap-8">
+                <div>
+                  <h3 class="text-sm font-semibold leading-6 text-gray-900">Solutions</h3>
+                  <ul role="list" class="mt-6 space-y-4">
+                    <li>
+                      <a href="#" class="text-sm leading-6 text-gray-600 hover:text-gray-900">Hosting</a>
+                    </li>
+                    <li>
+                      <a href="#" class="text-sm leading-6 text-gray-600 hover:text-gray-900">Data Services</a>
+                    </li>
+                    <li>
+                      <a href="#" class="text-sm leading-6 text-gray-600 hover:text-gray-900">Uptime Monitoring</a>
+                    </li>
+                    <li>
+                      <a href="#" class="text-sm leading-6 text-gray-600 hover:text-gray-900">Enterprise Services</a>
+                    </li>
+                  </ul>
+                </div>
+                <div class="mt-10 md:mt-0">
+                  <h3 class="text-sm font-semibold leading-6 text-gray-900">Support</h3>
+                  <ul role="list" class="mt-6 space-y-4">
+                    <li>
+                      <a href="#" class="text-sm leading-6 text-gray-600 hover:text-gray-900">Pricing</a>
+                    </li>
+                    <li>
+                      <a href="#" class="text-sm leading-6 text-gray-600 hover:text-gray-900">Documentation</a>
+                    </li>
+                    <li>
+                      <a href="#" class="text-sm leading-6 text-gray-600 hover:text-gray-900">Guides</a>
+                    </li>
+                    <li>
+                      <a href="#" class="text-sm leading-6 text-gray-600 hover:text-gray-900">API Reference</a>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              <div class="md:grid md:grid-cols-2 md:gap-8">
+                <div>
+                  <h3 class="text-sm font-semibold leading-6 text-gray-900">Company</h3>
+                  <ul role="list" class="mt-6 space-y-4">
+                    <li>
+                      <a href="#" class="text-sm leading-6 text-gray-600 hover:text-gray-900">About</a>
+                    </li>
+                    <li>
+                      <a href="#" class="text-sm leading-6 text-gray-600 hover:text-gray-900">Blog</a>
+                    </li>
+                    <li>
+                      <a href="#" class="text-sm leading-6 text-gray-600 hover:text-gray-900">Jobs</a>
+                    </li>
+                    <li>
+                      <a href="#" class="text-sm leading-6 text-gray-600 hover:text-gray-900">Press</a>
+                    </li>
+                    <li>
+                      <a href="#" class="text-sm leading-6 text-gray-600 hover:text-gray-900">Partners</a>
+                    </li>
+                  </ul>
+                </div>
+                <div class="mt-10 md:mt-0">
+                  <h3 class="text-sm font-semibold leading-6 text-gray-900">Legal</h3>
+                  <ul role="list" class="mt-6 space-y-4">
+                    <li>
+                      <a href="#" class="text-sm leading-6 text-gray-600 hover:text-gray-900">Claim</a>
+                    </li>
+                    <li>
+                      <a href="#" class="text-sm leading-6 text-gray-600 hover:text-gray-900">Privacy</a>
+                    </li>
+                    <li>
+                      <a href="#" class="text-sm leading-6 text-gray-600 hover:text-gray-900">Terms</a>
+                    </li>
+                  </ul>
+                </div>
+              </div> -->
+            </div>
+          </div>
+        </footer>
+      </div>
+    </div>
+
+
+  </body>
+ </html>

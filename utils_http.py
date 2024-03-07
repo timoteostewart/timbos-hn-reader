@@ -133,7 +133,7 @@ def get_content_type_via_head_request(url: str = None, log_prefix=""):
             logger.info(log_prefix_local + f"{content_type=} for {url} (~Tim~)")
             content_type = None
 
-        if "," in content_type:
+        if content_type and "," in content_type:
             comma_delimited_content_types = [x.strip() for x in content_type.split(",")]
             if len(set(comma_delimited_content_types)) == 1:
                 content_type = comma_delimited_content_types[0]
@@ -424,6 +424,7 @@ def get_response_object_via_hrequests(
         try:
             response = session.get(
                 allow_redirects=True,
+                headers={"Accept": "text/html,*/*"},
                 timeout=config.settings["SCRAPING"]["REQUESTS_GET_TIMEOUT_S"],
                 url=url,
             )
@@ -460,6 +461,7 @@ def get_response_object_via_requests(
         try:
             with session.get(
                 allow_redirects=True,
+                headers={"Accept": "text/html,*/*"},
                 stream=False,
                 timeout=config.settings["SCRAPING"]["REQUESTS_GET_TIMEOUT_S"],
                 url=url,
@@ -470,7 +472,7 @@ def get_response_object_via_requests(
                 else:
                     logger.info(
                         log_prefix_local
-                        + f"Failed to get response object, {response.status_code=} for url {url}"
+                        + f"Failed to get response object. {response.status_code=}. {url=}"
                     )
                     return None
 
@@ -512,6 +514,7 @@ hrequests_exceptions_suffixes = [
     "context deadline exceeded (Client.Timeout exceeded while awaiting headers)",
     "http2: unsupported scheme",
     "i/o timeout (Client.Timeout exceeded while awaiting headers)",
+    "i/o timeout",
     "no such host",
     "remote error: tls: unexpected message",
     "remote error: tls: user canceled",
@@ -534,6 +537,8 @@ def handle_exception(exc: Exception = None, log_prefix="", context=None):
     # - head_request
 
     # TODO: in future, for many of these exceptions, we could check archive.is, WBM, google cache, etc. for the url
+
+    log_prefix_local = log_prefix + "handle_exception(): "
 
     exc_module = exc.__class__.__module__
     exc_name = exc.__class__.__name__
@@ -573,21 +578,25 @@ def handle_exception(exc: Exception = None, log_prefix="", context=None):
 
             if expected_stacked_exceptions:
                 logger.info(
-                    log_prefix + "stacked exceptions: " + str(excs) + " " + url_slug
+                    log_prefix_local
+                    + "stacked exceptions: "
+                    + str(excs)
+                    + " "
+                    + url_slug
                 )
             else:
                 logger.info(
-                    log_prefix
+                    log_prefix_local
                     + "unexpected stacked exceptions: "
                     + str(excs)
                     + " "
                     + url_slug
                 )
-                logger.info(log_prefix + tb_str)
+                logger.info(log_prefix_local + tb_str)
 
                 for i in range(len(excs)):
                     for j in range(len(excs[0])):
-                        logger.info(log_prefix + f"excs[{i}][{j}]: {excs[i][j]}")
+                        logger.info(log_prefix_local + f"excs[{i}][{j}]: {excs[i][j]}")
 
             # assign intial exception to variable `exc`
             module_path, _, exc_class_name = excs[0][0].rpartition(".")
@@ -602,6 +611,15 @@ def handle_exception(exc: Exception = None, log_prefix="", context=None):
             exc_slug = fq_exc_name + ": " + exc_msg
 
     expected_exception = False
+
+    if "SSL: UNEXPECTED_EOF_WHILE_READING" in exc_msg:
+        logger.info(
+            log_prefix_local
+            + exc_slug
+            + url_slug
+            + " (~Tim~) SSL: UNEXPECTED_EOF_WHILE_READING"
+        )
+
     if exc_module == "hrequests.exceptions":
         if isinstance(exc, hrequests.exceptions.BrowserException):
             if exc_msg == "Browser closed.":
@@ -644,12 +662,20 @@ def handle_exception(exc: Exception = None, log_prefix="", context=None):
                 expected_exception = True
 
     elif exc_module == "requests.exceptions":
+        logger.info(
+            log_prefix_local
+            + f"{fq_exc_name=}, {exc_msg=}, {url_slug=}, module s.b. requests.exceptions)"
+        )
+
         if isinstance(exc, requests.exceptions.ConnectTimeout):
             if "Max retries exceeded with url" in exc_msg:
                 expected_exception = True
 
         elif isinstance(exc, requests.exceptions.ConnectionError):
-            if "No address associated with hostname" in exc_msg:
+            if exc_msg.endswith('Temporary failure in name resolution)"))'):
+                expected_exception = True
+
+            elif "No address associated with hostname" in exc_msg:
                 expected_exception = True
 
             elif "Connection refused" in exc_msg:
@@ -680,13 +706,16 @@ def handle_exception(exc: Exception = None, log_prefix="", context=None):
                 expected_exception = True
 
         elif isinstance(exc, requests.exceptions.SSLError):
-            if "SSL: UNEXPECTED_EOF_WHILE_READING" in exc_msg:
+            if "EOF occurred in violation of protocol" in exc_msg:
                 expected_exception = True
 
             elif "SSL: SSLV3_ALERT_HANDSHAKE_FAILURE" in exc_msg:
                 expected_exception = True
 
             elif "SSL: TLSV1_UNRECOGNIZED_NAME" in exc_msg:
+                expected_exception = True
+
+            elif "SSL: UNEXPECTED_EOF_WHILE_READING" in exc_msg:
                 expected_exception = True
 
             elif "SSL: UNSAFE_LEGACY_RENEGOTIATION_DISABLED" in exc_msg:
@@ -703,12 +732,16 @@ def handle_exception(exc: Exception = None, log_prefix="", context=None):
                 raise
 
     if expected_exception:
-        logger.info(log_prefix + exc_slug + url_slug)
+        logger.info(log_prefix_local + exc_slug + url_slug)
     else:
-        logger.error(log_prefix + "unexpected exception: " + exc_slug + url_slug)
+        logger.error(log_prefix_local + "unexpected exception: " + exc_slug + url_slug)
+        logger.error(
+            log_prefix_local
+            + f"unexpected exception name breakdown: {exc_module=} {exc_name=}"
+        )
         if not tb_str:
             tb_str = traceback.format_exc()
-        logger.error(log_prefix + tb_str)
+        logger.error(log_prefix_local + tb_str)
 
 
 def head_request(url=None, log_prefix=""):
