@@ -22,8 +22,12 @@ def get_sha1_of_bytes(bytes):
     return str(hf.hexdigest())
 
 
-def get_sha1_of_current_time(length=12):
-    time_as_string = str(time.time()).replace(".", "")
+def get_sha1_of_current_time(length=12, salt=None):
+    if salt:
+        time_to_use = time.time() + salt
+    else:
+        time_to_use = time.time()
+    time_as_string = str(time_to_use).replace(".", "")
     time_as_bytes = str(time_as_string).encode("utf-8")
     return get_sha1_of_bytes(time_as_bytes)[:length]
 

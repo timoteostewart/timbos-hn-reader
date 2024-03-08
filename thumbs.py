@@ -316,15 +316,16 @@ def draw_dogear(pdf_page_img, log_prefix=""):
 
 
 def fix_multipage_pdf(story_object):
-    if len(pdf_file.pages) > 1:
-        log_prefix_local = f"id {story_object.id}: fix_multipage_pdf(): "
-        try:
-            with open(
-                story_object.downloaded_orig_thumb_full_path, "rb"
-            ) as pdf_file_stream:
-                pdf_file = PdfReader(pdf_file_stream, strict=False)
+    log_prefix_local = f"id {story_object.id}: fix_multipage_pdf(): "
+    try:
+        with open(
+            story_object.downloaded_orig_thumb_full_path, "rb"
+        ) as pdf_file_stream:
+            pdf_file = PdfReader(pdf_file_stream, strict=False)
 
-            story_object.pdf_page_count = len(pdf_file.pages)
+        story_object.pdf_page_count = len(pdf_file.pages)
+
+        if len(story_object.pdf_page_count) > 1:
 
             outfile = PdfWriter()
             outfile.add_page(pdf_file.pages[0])
@@ -346,18 +347,26 @@ def fix_multipage_pdf(story_object):
             logger.info(
                 log_prefix_local + "success discarding all but first page of PDF"
             )
-
-        except Exception as exc:
-            exc_name = f"{exc.__class__.__module__}.{exc.__class__.__name__}"
-            exc_msg = str(exc)
-            exc_slug = f"{exc_name}: {exc_msg}"
-            logger.info(
+        elif len(story_object.pdf_page_count) == 1:
+            logger.info(log_prefix_local + "PDF is 1 page; nothing to do!")
+        else:
+            logger.error(
                 log_prefix_local
-                + f"error while handling multipage {story_object.downloaded_orig_thumb_full_path}: "
-                + exc_slug
+                + f"{story_object.pdf_page_count=} for url={story_object.url}"
             )
-            logger.info(log_prefix_local + traceback.format_exc())
-            raise exc
+
+    except Exception as exc:
+        exc_name = f"{exc.__class__.__module__}.{exc.__class__.__name__}"
+        exc_msg = str(exc)
+        exc_slug = f"{exc_name}: {exc_msg}"
+        logger.error(
+            log_prefix_local
+            + f"failed to discard all but first page of PDF."
+            + exc_slug
+            + f"url={story_object.url} (~Tim~)"
+        )
+        logger.info(log_prefix_local + traceback.format_exc())
+        raise exc
 
 
 def get_altered_img(img, aspect=None, force_aspect=None):
@@ -688,21 +697,13 @@ def populate_image_slug_in_story_object(
                 break
 
     # initialize webp compression levels from settings
-    WEBP_SMALL_THUMB_COMPRESSION_QUALITY = int(
-        config.settings["THUMBS"]["COMP_QUAL"]["SMALL"]
-    )
     WEBP_EXTRALARGE_THUMB_COMPRESSION_QUALITY = int(
         config.settings["THUMBS"]["COMP_QUAL"]["EXTRALARGE"]
     )
 
     # preferentially render thumbs from certain domains with better quality
     if og_image_domain_minus_www in domains_with_higher_quality_resizing:
-        WEBP_SMALL_THUMB_COMPRESSION_QUALITY = min(
-            100, WEBP_SMALL_THUMB_COMPRESSION_QUALITY + 5
-        )
-        WEBP_EXTRALARGE_THUMB_COMPRESSION_QUALITY = min(
-            100, WEBP_SMALL_THUMB_COMPRESSION_QUALITY + 20
-        )
+        WEBP_EXTRALARGE_THUMB_COMPRESSION_QUALITY = 100
 
     # if multipage PDF, keep only first page
     if mimetype == "application/pdf":
@@ -715,6 +716,8 @@ def populate_image_slug_in_story_object(
             # we keep it there in case we want to (in future) take additional actions to respond to errors in that function
             story_object.has_thumb = False
             return
+
+
 
     image_format = None
 

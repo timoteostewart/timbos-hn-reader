@@ -1329,19 +1329,15 @@ def item_factory(story_as_dict):
 
 
 def page_package_processor(page_package: PageOfStories):
-    ppp_log_prefix_with_pagenum = (
-        f"ppp(): page {page_package.page_number} of {page_package.story_type}: "
-    )
-    log_prefix_local = "ppp(): "
+
+    unique_id = utils_hash.get_sha1_of_current_time(salt=utils_random.random_real(0, 1))
+
+    log_prefix_local = f"ppp() with id {unique_id}, page={page_package.page_number}: "
 
     logger.info(
         log_prefix_local
-        + f"starting page {page_package.page_number} of {page_package.story_type}:"
+        + f"len(story_ids)={len(page_package.story_ids)}, story_ids={page_package.story_ids}"
     )
-
-    # logger.info(
-    #     ppp_log_prefix + f"len(page_package.story_ids)={len(page_package.story_ids)}"
-    # )
 
     page_processor_start_ts = utils_time.get_time_now_in_epoch_seconds_float()
 
@@ -1678,7 +1674,7 @@ def page_package_processor(page_package: PageOfStories):
         if upload_attempts_remaining == 0:
             logger.error(
                 log_prefix_local
-                + f"failed to upload page {page_package.page_number} of {page_package.story_type}"
+                + f"failed to upload page {page_package.page_number} of {page_package.story_type} (~Tim~)"
             )
             return None
 
@@ -1688,7 +1684,7 @@ def page_package_processor(page_package: PageOfStories):
                 f.close()
 
             utils_aws.upload_page_of_stories(
-                page_filename=filename_lm, log_prefix=ppp_log_prefix_with_pagenum
+                page_filename=filename_lm, log_prefix=log_prefix_local
             )
             break
         except Exception as exc:
@@ -1766,7 +1762,7 @@ def page_package_processor(page_package: PageOfStories):
             f.write(stories_html_page_template_dm)
 
         utils_aws.upload_page_of_stories(
-            page_filename=filename_dm, log_prefix=ppp_log_prefix_with_pagenum
+            page_filename=filename_dm, log_prefix=log_prefix_local
         )
     except Exception as exc:
         exc_name = exc.__class__.__name__
@@ -1784,7 +1780,7 @@ def page_package_processor(page_package: PageOfStories):
     )
 
     logger.info(
-        ppp_log_prefix_with_pagenum
+        log_prefix_local
         + f"shipped {num_stories_on_page} actual stories in {h:02d}:{m:02d}:{s:02d}"
     )
     return page_package.page_number
@@ -1937,9 +1933,10 @@ def save_story_object_to_disk(story_object=None, log_prefix=""):
 
 
 def supervisor(cur_story_type):
-    unique_id = utils_hash.get_sha1_of_current_time()
-    supervisor_start_ts = utils_time.get_time_now_in_epoch_seconds_float()
+    unique_id = utils_hash.get_sha1_of_current_time(salt=utils_random.random_real(0, 1))
     log_prefix = f"supervisor({cur_story_type}) with id {unique_id}: "
+
+    supervisor_start_ts = utils_time.get_time_now_in_epoch_seconds_float()
 
     logger.info(
         log_prefix

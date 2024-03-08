@@ -171,13 +171,13 @@ def download_og_image2(
     )
     if og_image_dict["og_image_content_type"]:
         logger.info(
-            log_prefix_id
+            log_prefix_local
             + f"content-type is '{og_image_dict['og_image_content_type']}'"
             + f" for og:image uri {possibly_redirected_url}"
         )
     else:
         logger.info(
-            log_prefix_id
+            log_prefix_local
             + f"content-type unavailable for og:image uri {possibly_redirected_url}"
         )
 
@@ -196,7 +196,7 @@ def download_og_image2(
     )
 
     logger.info(
-        log_prefix_id
+        log_prefix_local
         + f"magic type is '{og_image_dict['downloaded_og_image_magic_result']}'"
         + f" for downloaded og:image"
     )
@@ -335,7 +335,7 @@ def download_og_image1(
     if story_object.og_image_content_type:
         logger.info(
             log_prefix_id
-            + f"content-type is {story_object.og_image_content_type}"
+            + f"content-type is '{story_object.og_image_content_type}'"
             + f" for og:image uri {story_object.og_image_url_possibly_redirected}"
         )
     else:
