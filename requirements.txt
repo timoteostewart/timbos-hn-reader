@@ -41,3 +41,4 @@ urllib3
 wand
 websockets
 wsproto
+intervaltree

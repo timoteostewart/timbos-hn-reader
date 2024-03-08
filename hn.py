@@ -1,3 +1,4 @@
+import base64
 import concurrent.futures
 import json
 import logging
@@ -183,11 +184,68 @@ def asdfft1(item_id=None, pos_on_page=None):
             og_image_url_result = soup.find("meta", {"property": "og:image"})
             if og_image_url_result:
                 if og_image_url_result.has_attr("content"):
-                    story_object.og_image_url = og_image_url_result["content"]
-                    logger.info(
-                        log_prefix_local
-                        + f"found og:image url {story_object.og_image_url}"
-                    )
+
+                    meta_og_image_content = og_image_url_result["content"]
+
+                    if meta_og_image_content.startswith("data:"):
+                        # content="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAeUAAACeEAIAAADTU..."
+
+                        first_128 = meta_og_image_content[:128]
+                        logger.info(
+                            log_prefix_local
+                            + f"found og:image inline data: '{first_128}...'"
+                        )
+
+                        match = re.match(
+                            r"^data: *([a-z]+/[a-z\-\+]+) *; *", meta_og_image_content
+                        )
+                        if match:
+                            story_object.og_image_inline_data_srct = match.group(1)
+                            len_match = len(match.group())
+
+                            meta_og_image_content = meta_og_image_content[len_match:]
+
+                            if meta_og_image_content.startswith("base64"):
+                                match = re.match(r"^base64 *[;,] *")
+                                if match:
+                                    len_match = len(match.group())
+                                    meta_og_image_content = meta_og_image_content[
+                                        len_match:
+                                    ]
+
+                                    # using base64, convert meta_og_image_content to binary data and save to a temp file
+                                    local_file_with_og_image_inline_data_decoded = (
+                                        config.settings["TEMP_DIR"]
+                                        + f"og-image-via-inline-data-{story_object.id}"
+                                    )
+                                    binary_data = base64.b64decode(
+                                        meta_og_image_content
+                                    )
+
+                                    with open(
+                                        local_file_with_og_image_inline_data_decoded,
+                                        "wb",
+                                    ) as file:
+                                        file.write(binary_data)
+
+                                    story_object.og_image_is_inline_data = True
+                                    story_object.has_thumb = True  # provisionally
+
+                                    logger.info(
+                                        log_prefix_local
+                                        + f"saved og:image base64 inline data to {local_file_with_og_image_inline_data_decoded} url={story_object.url} (~Tim~)"
+                                    )
+
+                                    story_object.og_image_inline_data_decoded_local_path = (
+                                        local_file_with_og_image_inline_data_decoded
+                                    )
+
+                    else:
+                        story_object.og_image_url = og_image_url_result["content"]
+                        logger.info(
+                            log_prefix_local
+                            + f"found og:image url {story_object.og_image_url}"
+                        )
             else:
                 story_object.has_thumb = False
                 # TODO: in the absence of an og:image, I could always fall back on a generic banner image for the linked article's website
@@ -263,16 +321,24 @@ def asdfft1(item_id=None, pos_on_page=None):
                 + f"unexpected linked url content-type '{story_object.linked_url_reported_content_type}' for url {story_object.url}"
             )
 
-        if story_object.og_image_url:
+        if story_object.og_image_url or story_object.og_image_is_inline_data:
 
-            if thumbs.image_url_is_disqualified(
+            if story_object.og_image_url and thumbs.image_url_is_disqualified(
                 url=story_object.og_image_url, log_prefix=log_prefix_local
             ):
                 story_object.has_thumb = False
             else:
-                res = thnr_scrapers.download_og_image1(story_object)
-                if res == True:
+                if story_object.og_image_url and thnr_scrapers.download_og_image1(
+                    story_object
+                ):
                     story_object.has_thumb = True  # provisionally
+                else:
+                    logger.error(
+                        log_prefix_local + f"unexpected result from download_og_image()"
+                    )
+                    story_object.has_thumb = False
+
+                if story_object.has_thumb:
                     if pos_on_page < 5:
                         img_loading_attr = "eager"
                     else:
@@ -287,16 +353,6 @@ def asdfft1(item_id=None, pos_on_page=None):
                         )
                         if not story_object.image_slug:
                             story_object.has_thumb = False
-
-                elif res == False:
-                    story_object.has_thumb = False
-
-                else:
-                    logger.error(
-                        log_prefix_local
-                        + f"unexpected result from download_og_image(): {res=}, {type(res)=}"
-                    )
-                    story_object.has_thumb = True
 
         # add informative labels before and after the story card title, if possible
         if story_object.has_thumb and story_object.image_slug:
@@ -465,7 +521,7 @@ def asdfft2(item_id=None, pos_on_page=None):
             )
 
         # prefer the response object from requests, because the object from hrequests sometimes handles binary files as utf-8 strings
-        if response_objects["get_response_object_via_requests"]:
+        if "get_response_object_via_requests" in response_objects:
             local_file_with_response_content = (
                 local_file_with_response_content + "-get_response_object_via_requests"
             )
@@ -531,11 +587,12 @@ def asdfft2(item_id=None, pos_on_page=None):
         #     )
 
         srct = set(
-            [
+            x
+            for x in [
                 get_content_type_from_response(response=x, log_prefix=log_prefix_local)
                 for x in response_objects.values()
-                if x
             ]
+            if x
         )
 
         if not srct:

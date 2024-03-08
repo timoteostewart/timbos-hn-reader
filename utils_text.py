@@ -522,13 +522,16 @@ def parse_content_type_from_raw_header(content_type_header: str, log_prefix=""):
     if not content_type_header:
         return None
 
+    if isinstance(content_type_header, list) or "," in content_type_header:
+        logger.info(log_prefix_local + f"interesting {content_type_header=} (~Tim~)")
+
     ct_set = set()
 
     if isinstance(content_type_header, list):
         for each in content_type_header:
-            ct_set.update(re.split("[;,]", each))
+            ct_set.update(re.split("[;, ]+", each))
     elif isinstance(content_type_header, str):
-        ct_set.update(re.split("[;,]", content_type_header))
+        ct_set.update(re.split("[;, ]+", content_type_header))
     else:
         logger.info(
             log_prefix_local
@@ -556,8 +559,6 @@ def parse_content_type_from_raw_header(content_type_header: str, log_prefix=""):
             + f"multiple content-types found in http header {ct_set=} (~Tim~)"
         )
         return ct_set.pop().lower()
-
-    return content_type.lower() if content_type else None
 
 
 def sanitize(s: str):

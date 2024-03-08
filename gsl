@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+
+# debugging switches
+# set -o errexit   # abort on nonzero exitstatus; same as set -e
+# set -o nounset   # abort on unbound variable; same as set -u
+set -o pipefail  # don't hide errors within pipes
+# set -o xtrace    # show commands being executed; same as set -x
+# set -o verbose   # verbose mode; same as set -v
+
+source /srv/timbos-hn-reader/functions.sh
+source /srv/timbos-hn-reader/thnr_common_functions.sh
+
+day="$1"
+keyword="$2"
+
+cur_year=$(date +"%Y")
+
+if [[ $# -eq 0 ]]; then
+    echo "gsl: (G)rep (S)pecific (L)ogfile"
+    echo "Usage: gsl <day> <keyword>"
+    echo "Example: gsl 066 unexpected"
+    exit 1
+fi
+
+logfile="/srv/timbos-hn-reader/logs/thnr-combined-${cur_year}-${day}.log"
+
+printf "${logfile}\n"
+
+if [[ -f "${logfile}" ]]; then
+    grep --color --perl-regexp --text "${keyword}" "${logfile}"
+else
+    echo "${logfile} not found"
+fi

@@ -17,6 +17,7 @@ from urllib.parse import unquote, urlparse
 import exiftool
 import magic
 from bs4 import BeautifulSoup
+from intervaltree import Interval, IntervalTree
 
 from MarkupTag import MarkupTag
 from Trie import Trie
@@ -878,7 +879,7 @@ def get_mimetype(
         [
             get_mimetype_via_python_magic(local_file=local_file, log_prefix=log_prefix),
             get_mimetype_via_file_command(local_file=local_file, log_prefix=log_prefix),
-            get_mimetype_via_exiftool(local_file=local_file, log_prefix=log_prefix),
+            get_mimetype_via_exiftool2(local_file=local_file, log_prefix=log_prefix),
         ]
     )
 
@@ -908,41 +909,41 @@ def get_mimetype(
     # if file is probably not binary, invoke get_textual_mimetype
 
 
-def get_mimetype_via_exiftool(local_file: str, log_prefix="") -> str:
-    log_prefix_local = log_prefix + "get_mimetype_via_exiftool(): "
-    mimetype = None
-    try:
-        with exiftool.ExifToolHelper(executable="/usr/local/bin/exiftool") as et:
-            metadata = et.get_metadata(local_file)[0]
-            # file_type = metadata.get("File:FileType")
-            # file_type_extension = metadata.get("File:FileTypeExtension")
-            mimetype = metadata.get("File:MIMEType")
-        # logger.info(log_prefix_local + f"exiftool succeeded for {local_file}")
-        return mimetype
+# def get_mimetype_via_exiftool(local_file: str, log_prefix="") -> str:
+#     log_prefix_local = log_prefix + "get_mimetype_via_exiftool(): "
+#     mimetype = None
+#     try:
+#         with exiftool.ExifToolHelper(executable="/usr/local/bin/exiftool") as et:
+#             metadata = et.get_metadata(local_file)[0]
+#             # file_type = metadata.get("File:FileType")
+#             # file_type_extension = metadata.get("File:FileTypeExtension")
+#             mimetype = metadata.get("File:MIMEType")
+#         # logger.info(log_prefix_local + f"exiftool succeeded for {local_file}")
+#         return mimetype
 
-    except Exception as exc:
-        if isinstance(exc, exiftool.exceptions.ExifToolExecuteError):
-            logger.error(log_prefix_local + exc_slug)
-            tb_str = traceback.format_exc()
-            logger.error(log_prefix_local + tb_str)
+#     except Exception as exc:
+#         if isinstance(exc, exiftool.exceptions.ExifToolExecuteError):
+#             logger.error(log_prefix_local + exc_slug)
+#             tb_str = traceback.format_exc()
+#             logger.error(log_prefix_local + tb_str)
 
-        elif isinstance(exc, exiftool.exceptions.ExifToolVersionError):
-            logger.error(log_prefix_local + exc_slug)
-            tb_str = traceback.format_exc()
-            logger.error(log_prefix_local + tb_str)
+#         elif isinstance(exc, exiftool.exceptions.ExifToolVersionError):
+#             logger.error(log_prefix_local + exc_slug)
+#             tb_str = traceback.format_exc()
+#             logger.error(log_prefix_local + tb_str)
 
-        else:
-            short_exc_name = exc.__class__.__name__
-            exc_name = exc.__class__.__module__ + "." + short_exc_name
-            exc_msg = str(exc)
-            exc_slug = f"{exc_name}: {exc_msg}"
-            logger.error(log_prefix_local + "unexpected exception: " + exc_slug)
-            tb_str = traceback.format_exc()
-            logger.error(log_prefix_local + tb_str)
+#         else:
+#             short_exc_name = exc.__class__.__name__
+#             exc_name = exc.__class__.__module__ + "." + short_exc_name
+#             exc_msg = str(exc)
+#             exc_slug = f"{exc_name}: {exc_msg}"
+#             logger.error(log_prefix_local + "unexpected exception: " + exc_slug)
+#             tb_str = traceback.format_exc()
+#             logger.error(log_prefix_local + tb_str)
 
-        logger.info(log_prefix_local + f"exiftool failed for {local_file} (~Tim~)")
+#         logger.info(log_prefix_local + f"exiftool failed for {local_file} (~Tim~)")
 
-        return None
+#         return None
 
 
 def get_mimetype_via_exiftool2(local_file: str, log_prefix="") -> str:
@@ -1051,7 +1052,7 @@ def get_mimetype_via_python_magic(local_file, log_prefix="") -> str:
     return None
 
 
-def guess_mimetype_from_uri_extension(url, log_prefix=""):
+def guess_mimetype_from_uri_extension(url, log_prefix="", debug=False):
     # https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
     # https://www.digipres.org/formats/mime-types/#application/illustrator%0A
     # https://www.digipres.org/formats/sources/fdd/formats/#fdd000018
@@ -1066,10 +1067,11 @@ def guess_mimetype_from_uri_extension(url, log_prefix=""):
 
     path = unquote(parsed_url.path)
     paths_extension = os.path.splitext(path)[1]
-    logger.info(
-        log_prefix_local
-        + f"{parsed_url.netloc=} {tld=} {paths_extension=} {path=} {parsed_url.query=} {url=}"
-    )
+    if debug:
+        logger.info(
+            log_prefix_local
+            + f"{parsed_url.netloc=} {tld=} {paths_extension=} {path=} {parsed_url.query=} {url=}"
+        )
     if f".{tld}" == paths_extension:
         logger.info(
             log_prefix_local
@@ -1096,7 +1098,19 @@ def guess_mimetype_from_uri_extension(url, log_prefix=""):
             )
             if guess_by_urlparse:
                 guess_by_urlparse = guess_by_urlparse.lower()
+
+                if debug:
+                    logger.info(log_prefix_local + f"raw: {guess_by_urlparse=}")
+
+                if (
+                    guess_by_urlparse == "application/vnd.commonspace"
+                    and paths_extension == ".csp"
+                ):
+                    guess_by_urlparse = "text/html"
+
                 res.append(guess_by_urlparse)
+                if debug:
+                    logger.info(log_prefix_local + f"fixed: {guess_by_urlparse=}")
 
         # guess using mimetypes (anecdotally, it's sloppier than urlparse)
         guess_by_mimetypes = None
@@ -1104,9 +1118,12 @@ def guess_mimetype_from_uri_extension(url, log_prefix=""):
         if guess_by_mimetypes:
             guess_by_mimetypes = guess_by_mimetypes.lower()
 
+            if debug:
+                logger.info(log_prefix_local + f"raw: {guess_by_mimetypes=}")
+
             if (
                 tld == "ai"
-                and paths_extension != "ai"
+                and paths_extension != ".ai"
                 and (
                     guess_by_mimetypes == "application/vnd.adobe.illustrator"
                     or guess_by_mimetypes == "application/postscript"
@@ -1116,35 +1133,41 @@ def guess_mimetype_from_uri_extension(url, log_prefix=""):
 
             elif (
                 tld == "com"
-                and (paths_extension != "com" or path == "/")
+                and (paths_extension != ".com" or path == "/")
                 and guess_by_mimetypes == "application/x-msdos-program"
             ):
                 guess_by_mimetypes = None
 
             elif (
+                paths_extension == ".csp"
+                and guess_by_mimetypes == "application/vnd.commonspace"
+            ):
+                guess_by_mimetypes = "text/html"
+
+            elif (
                 tld == "info"
-                and paths_extension != "info"
+                and paths_extension != ".info"
                 and guess_by_mimetypes == "application/x-info"
             ):
                 guess_by_mimetypes = None
 
             elif (
                 tld == "org"
-                and paths_extension != "org"
+                and paths_extension != ".org"
                 and guess_by_mimetypes == "application/vnd.lotus-organizer"
             ):
                 guess_by_mimetypes = None
 
             elif (
                 tld == "xyz"
-                and paths_extension != "xyz"
+                and paths_extension != ".xyz"
                 and guess_by_mimetypes == "chemical/x-xyz"
             ):
                 guess_by_mimetypes = None
 
             elif (
                 tld == "zip"
-                and paths_extension != "zip"
+                and paths_extension != ".zip"
                 and guess_by_mimetypes
                 in [
                     "application/x-zip",
@@ -1156,6 +1179,9 @@ def guess_mimetype_from_uri_extension(url, log_prefix=""):
 
             if guess_by_mimetypes:
                 res.append(guess_by_mimetypes)
+
+                if debug:
+                    logger.info(log_prefix_local + f"fixed: {guess_by_mimetypes=}")
 
     return res
 
@@ -1260,24 +1286,17 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
     log_prefix_local = log_prefix + "get_textual_mimetype(): "
 
     if context and "url" in context:
-        url_slug = f"for url {context['url']} "
+        file_url_slug = f"{local_file=} url={context['url']} "
     else:
-        url_slug = ""
+        file_url_slug = f"{local_file=}"
 
     local_file = os.path.abspath(local_file)
 
     text_encodings = check_for_valid_text_encodings(local_file, log_prefix)
 
     if not text_encodings:
-        if context and "url" in context:
-            logger.info(
-                log_prefix_local
-                + f"file {local_file} is probably binary (url: {context['url']})"
-            )
-            return None
-        else:
-            logger.info(log_prefix_local + f"file {local_file} is probably binary")
-            return None
+        logger.info(log_prefix_local + f"robably binary file {file_url_slug}")
+        return None
 
     encoding_to_use = None
     if "UTF-8" in text_encodings:
@@ -1295,25 +1314,23 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
                 if ord(char) < 32:
                     if context and "url" in context:
                         logger.info(
-                            log_prefix_local
-                            + f"file {local_file} is probably binary (url: {context['url']})"
+                            log_prefix_local + f"probably binary file {file_url_slug}"
                         )
                         return None
                     else:
                         logger.info(
-                            log_prefix_local + f"file {local_file} is probably binary"
+                            log_prefix_local + f"probably binary file {file_url_slug}"
                         )
                         return None
                 elif 127 <= ord(char) <= 159:
                     if context and "url" in context:
                         logger.info(
-                            log_prefix_local
-                            + f"file {local_file} is probably binary (url: {context['url']})"
+                            log_prefix_local + f"probably binary file {file_url_slug}"
                         )
                         return None
                     else:
                         logger.info(
-                            log_prefix_local + f"file {local_file} is probably binary"
+                            log_prefix_local + f"probably binary file {file_url_slug}"
                         )
                         return None
 
@@ -1357,7 +1374,7 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
         content = file.read()
 
     if not content:
-        logger.info(log_prefix_local + f"file {local_file} is empty")
+        logger.info(log_prefix_local + f"empty file {local_file=}")
         return None
 
     while content[0] in white_space_chars:
@@ -1366,6 +1383,9 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
     logger.info(log_prefix_local + f"{len(content)=}")
 
     logger.info(log_prefix_local + f"{encoding_to_use=} out of {text_encodings=}")
+
+    content = re.sub(r"\s+", " ", content)
+
     first_128 = content[:128].replace("\n", " ")
     logger.info(log_prefix_local + f"content[:128]={first_128}")
 
@@ -1408,6 +1428,7 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
         clues_toward["image/x-eps"] = -float("inf")
 
     document = defaultdict(list)
+    document_data = {}
 
     # xml_attribute_name_re = r"""[^\t\n\f \/>'"=]+"""  # per https://html.spec.whatwg.org/multipage/syntax.html#attributes-2
     xml_attribute_name_re = "[^\\t\\n\\f \\/>'\"=]+"  # rewritten to avoid raw string
@@ -1518,29 +1539,37 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
 
             attrib_material = match.group(1).strip()
 
+            tree = IntervalTree()
+
+            matches_kv_attribs = []
+
             # collect attributes with single-quoted values
             matches = re.finditer(
-                f" ?({xml_attribute_name_re})='(.*?)'",
+                f" ?({xml_attribute_name_re})='([^']*?)'",
                 attrib_material,
             )
-            for match in matches:
-                the_tag.attribs[match.group(1).lower()] = match.group(2)
+            matches_kv_attribs.extend(matches)
 
             # collect attributes with double-quoted values
             matches = re.finditer(
-                f' ?({xml_attribute_name_re})="(.*?)"',
+                f' ?({xml_attribute_name_re})="([^"]*?)"',
                 attrib_material,
             )
-            for match in matches:
-                the_tag.attribs[match.group(1).lower()] = match.group(2)
+            matches_kv_attribs.extend(matches)
 
             # collect attributes with unquoted values
             matches = re.finditer(
                 f" ?({xml_attribute_name_re})=({xml_attribute_unquoted_value_re})",
                 attrib_material,
             )
-            for match in matches:
+            matches_kv_attribs.extend(matches)
+
+            for match in matches_kv_attribs:
+                if tree[match.start()]:
+                    continue
+
                 the_tag.attribs[match.group(1).lower()] = match.group(2)
+                tree[match.start() : match.end()] = True
 
             # collect empty attributes (no value; or implicitly the empty string)
             copy_of_attrib_material = attrib_material
@@ -1583,13 +1612,13 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
                     ]
                     logger.info(
                         log_prefix_local
-                        + f"{declared_root_element=}, xmlns={root_element_xmlns}, {is_wellformed_xml=} {url_slug}"
+                        + f"{declared_root_element=}, xmlns={root_element_xmlns}, {is_wellformed_xml=} {file_url_slug}"
                     )
 
         else:
             logger.info(
                 log_prefix_local
-                + f"unexpected declared_root_element {declared_root_element} in {local_file} (~Tim~)"
+                + f"unexpected {declared_root_element=} {file_url_slug}"
             )
             declared_root_element = None
 
@@ -1613,6 +1642,7 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
                 has_formal_public_identifier = True
                 match = re.search(r"-//(.*?)//DTD (.*?)//", empty_attrib)
                 if match:
+                    document_data["FPI"] = empty_attrib
                     if match.group(2).startswith("HTML"):
                         clues_toward["text/html"] += 1
                     elif match.group(2).startswith("MathML"):
@@ -1624,7 +1654,7 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
                     else:
                         logger.info(
                             log_prefix_local
-                            + f"unexpected FPI '{match.group(2)}' in {local_file} (~Tim~)"
+                            + f"unexpected FPI '{match.group(2)}' {file_url_slug}"
                         )
                 continue
 
@@ -1637,6 +1667,7 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
                 or empty_attrib.endswith(".dtd")
             ):
                 has_system_identifier = True
+                document_data["SI"] = empty_attrib
                 # http://www.w3.org/1999/html
                 # http://www.w3.org/1999/xhtml
                 # http://www.w3.org/TR/html4/loose.dtd
@@ -1644,10 +1675,10 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
                 # http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd
                 # http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd
                 # https://www.w3.org/1999/xhtml
-                match = re.search(r"(.*)/(.*?\.dtd)", empty_attrib)
+                match = re.search(r"(.*/)([^/]*)$", empty_attrib)
                 if match.group(2).startswith("xhtml"):
                     clues_toward["application/xhtml+xml"] += 1
-                elif match.group(1).endswith("://www.w3.org/TR/html4"):
+                elif match.group(1).endswith("/TR/html4/"):
                     clues_toward["text/html"] += 1
                 elif match.group(2).startswith("svg1"):
                     clues_toward["image/svg+xml"] += 1
@@ -1656,7 +1687,7 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
                 else:
                     logger.info(
                         log_prefix_local
-                        + f"unexpected system identifier '{empty_attrib}' in {local_file}"
+                        + f"unexpected system_identifier='{empty_attrib}' {file_url_slug}"
                     )
                 continue
 
@@ -1668,8 +1699,18 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
 
             logger.info(
                 log_prefix_local
-                + f"unexpected !doctype empty attrib {empty_attrib} found in {local_file} (~Tim~)"
+                + f"unexpected !doctype empty_attrib='{empty_attrib}' {file_url_slug}"
             )
+
+    fpi_si_slug = ""
+    if "FPI" in document_data:
+        fpi_si_slug += f"FPI='{document_data['FPI']}'"
+    if "SI" in document_data:
+        if fpi_si_slug:
+            fpi_si_slug += " "
+        fpi_si_slug += f"SI='{document_data['SI']}'"
+    if fpi_si_slug:
+        logger.info(log_prefix_local + f"{fpi_si_slug} {file_url_slug}")
 
     # quickly check if we're likely dealing with an html file, so we can delete superfluous root element tags
     #    to get a more accurate identification
@@ -1751,14 +1792,14 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
         clues_toward["application/xml"] += 1
         if "html" in document:
             clues_toward["application/xhtml+xml"] += 1
-    else:
-        clues_toward["application/xhtml+xml"] = -float("inf")
+    # else:
+    #     clues_toward["application/xhtml+xml"] = -float("inf")
 
+    found_meta_charset = False
+    found_meta_http_equiv = False
+    found_meta_viewport = False
     if "meta" in document:
         # check for clues in meta tags
-        found_meta_charset = False
-        found_meta_http_equiv = False
-        found_meta_viewport = False
         for each_meta_tag in document["meta"]:
 
             # <meta charset="utf-8">
@@ -1800,11 +1841,15 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
                                     )
 
             # <meta name="viewport" content="width=device-width, initial-scale=1">
+            # <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0 user-scalable=no, width=device-width">
+
             if "name" in each_meta_tag.attribs:
                 if each_meta_tag.attribs["name"].lower() == "viewport":
                     if "content" in each_meta_tag.attribs:
                         found_meta_viewport = True
-                        for each in re.split("[;,]", each_meta_tag.attribs["content"]):
+                        for each in re.split(
+                            "[;, ]+", each_meta_tag.attribs["content"]
+                        ):
                             try:
                                 k, v = each.split("=")
                             except IndexError:
@@ -2005,10 +2050,10 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
 
     if clues_toward:
         list_sorted = sorted(clues_toward.items(), key=lambda x: x[1], reverse=True)
-        list_sorted = [x for x in list_sorted if x[1] > 0]
+        list_sorted_pruned = [x for x in list_sorted if x[1] > 0]
 
         high_score = -1
-        for k, v in list_sorted:
+        for k, v in list_sorted_pruned:
             if v >= high_score:
                 high_score = v
                 res = k
@@ -2016,12 +2061,15 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
         if num_nonstandard_tag_names_seen > 0:
             # this indicates a possibly unreliable conclusion
             logger.info(
-                log_prefix_local + f"clues_toward={list_sorted}, "
+                log_prefix_local + f"clues_toward={list_sorted_pruned}, "
                 f"nonstd_as_pct_of_names={nonstd_as_pct_of_names:.1f}%, "
-                f"nonstd_as_pct_of_tags={nonstd_as_pct_of_tags:.1f}%"
+                f"nonstd_as_pct_of_tags={nonstd_as_pct_of_tags:.1f}% {file_url_slug}"
             )
         else:
-            logger.info(log_prefix_local + f"clues_toward={list_sorted}")
+            logger.info(log_prefix_local + f"clues_toward={list_sorted_pruned}")
+
+        if debug:
+            logger.info(log_prefix_local + f"list_sorted={list_sorted}")
 
         if res == "text/html5":
             res = "text/html"
@@ -2033,7 +2081,7 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
                 if k.endswith("+xml") and v > top_xml_score:
                     logger.info(
                         log_prefix_local
-                        + f"increased precision of textual_mimetype={res} to {k} (~Tim~)"
+                        + f"increased precision of textual_mimetype={res} to {k} {file_url_slug} (~Tim~)"
                     )
                     res = k
                     top_xml_score = v
@@ -2048,7 +2096,7 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
     if log_first_1k_chars:
         logger.info(
             log_prefix_local
-            + "first 1024 characters of content starts on next line: (~Tim~)\n"
+            + f"first 1024 characters of content starts on next line. {file_url_slug} (~Tim~)\n"
             + content[:1024]
         )
 
@@ -2072,19 +2120,23 @@ if __name__ == "__main__":
         print("Usage: python utils_mimetypes_magic.py <local_file>")
         sys.exit(1)
 
-    local_file = sys.argv[1]
-    # local_file = "/srv/timbos-hn-reader/temp/test1.xml"
-
     log_prefix = ""
 
-    try:
-        res = get_textual_mimetype(local_file=local_file, log_prefix="", debug=True)
-        print(f"\n{res}\n")
-    except Exception as exc:
-        short_exc_name = exc.__class__.__name__
-        exc_name = exc.__class__.__module__ + "." + short_exc_name
-        exc_msg = str(exc)
-        exc_slug = f"{exc_name}: {exc_msg}"
-        logger.error(log_prefix + exc_slug)
-        tb_str = traceback.format_exc()
-        logger.error(log_prefix + tb_str)
+    if sys.argv[1] == "--url":
+        url = sys.argv[2]
+        guess_mimetype_from_uri_extension(url, log_prefix, debug=True)
+
+    else:
+        local_file = sys.argv[1]
+
+        try:
+            res = get_textual_mimetype(local_file=local_file, log_prefix="", debug=True)
+            print(f"\n{res}\n")
+        except Exception as exc:
+            short_exc_name = exc.__class__.__name__
+            exc_name = exc.__class__.__module__ + "." + short_exc_name
+            exc_msg = str(exc)
+            exc_slug = f"{exc_name}: {exc_msg}"
+            logger.error(log_prefix + exc_slug)
+            tb_str = traceback.format_exc()
+            logger.error(log_prefix + tb_str)
