@@ -136,7 +136,7 @@ def upload_file_to_s3(
                 log_prefix
                 + f"problem uploading {full_local_filename} to {full_s3_key} ; will retry: "
                 + exc_slug
-                + " (~Tim~)"
+                + " ~Tim~"
             )
             logger.info(log_prefix + tb_str)
             time.sleep(1)

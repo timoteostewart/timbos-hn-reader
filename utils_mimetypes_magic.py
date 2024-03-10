@@ -542,7 +542,7 @@ tag_based_markup_languages = [
 def check_for_valid_text_encodings(local_file: str, log_prefix="") -> List[str]:
     # requires iconv (i.e., libiconv) command
 
-    log_prefix_local = log_prefix + "check_for_valid_text_encodings(): "
+    log_prefix_local = log_prefix + "check_for_valid_text_encodings: "
     valid_encodings = []
 
     text_encodings = [
@@ -598,7 +598,7 @@ def check_for_valid_text_encodings(local_file: str, log_prefix="") -> List[str]:
             valid_encodings.remove("UTF-8")
             logger.info(
                 log_prefix_local
-                + f"`iconv -f UTF-8` succeeded, but `isutf8` failed for {local_file} (~Tim~)"
+                + f"`iconv -f UTF-8` succeeded, but `isutf8` failed for {local_file} ~Tim~"
             )
 
     return valid_encodings
@@ -606,7 +606,7 @@ def check_for_valid_text_encodings(local_file: str, log_prefix="") -> List[str]:
 
 def is_wellformed_xml_func(local_file: str, log_prefix="") -> bool:
     # requires Linux xmlwf command
-    log_prefix_local = log_prefix + "is_wellformed_xml_func(): "
+    log_prefix_local = log_prefix + "is_wellformed_xml_func: "
 
     cmd = f"xmlwf -c {local_file}"
 
@@ -639,7 +639,7 @@ def is_wellformed_xml_func(local_file: str, log_prefix="") -> bool:
 
 def is_utf8(local_file: str, log_prefix="") -> bool:
     # requires Linux xmlwf command
-    log_prefix_local = log_prefix + "is_utf8(): "
+    log_prefix_local = log_prefix + "is_utf8: "
 
     cmd = f"isutf8 {local_file}"
 
@@ -672,7 +672,7 @@ def is_utf8(local_file: str, log_prefix="") -> bool:
 
 
 def is_utf8_via_python(local_file: str, log_prefix="") -> bool:
-    log_prefix_local = log_prefix + "is_utf8_via_python(): "
+    log_prefix_local = log_prefix + "is_utf8_via_python: "
     with open(local_file, "rb") as file:
         data = file.read()
         try:
@@ -695,7 +695,7 @@ def is_utf8_via_python(local_file: str, log_prefix="") -> bool:
 
 def is_valid_json(local_file: str, log_prefix="") -> bool:
     # requires Linux jq command
-    log_prefix_local = log_prefix + "is_valid_json(): "
+    log_prefix_local = log_prefix + "is_valid_json: "
 
     cmd = f"jq . {local_file}"
 
@@ -868,7 +868,7 @@ def get_mimetype(
     local_file: str, srct: str = None, url: str = None, story_object=None, log_prefix=""
 ) -> str:
 
-    log_prefix_local = log_prefix + "get_mimetype(): "
+    log_prefix_local = log_prefix + "get_mimetype: "
 
     if srct:
         srcts = re.split("[;,]", srct)
@@ -910,7 +910,7 @@ def get_mimetype(
 
 
 # def get_mimetype_via_exiftool(local_file: str, log_prefix="") -> str:
-#     log_prefix_local = log_prefix + "get_mimetype_via_exiftool(): "
+#     log_prefix_local = log_prefix + "get_mimetype_via_exiftool: "
 #     mimetype = None
 #     try:
 #         with exiftool.ExifToolHelper(executable="/usr/local/bin/exiftool") as et:
@@ -941,13 +941,13 @@ def get_mimetype(
 #             tb_str = traceback.format_exc()
 #             logger.error(log_prefix_local + tb_str)
 
-#         logger.info(log_prefix_local + f"exiftool failed for {local_file} (~Tim~)")
+#         logger.info(log_prefix_local + f"exiftool failed for {local_file} ~Tim~")
 
 #         return None
 
 
 def get_mimetype_via_exiftool2(local_file: str, log_prefix="") -> str:
-    log_prefix_local = log_prefix + "get_mimetype_via_exiftool2(): "
+    log_prefix_local = log_prefix + "get_mimetype_via_exiftool2: "
     mimetype = None
 
     cmd = f'/usr/local/bin/exiftool -File:MIMEType "{local_file}"'
@@ -989,13 +989,13 @@ def get_mimetype_via_exiftool2(local_file: str, log_prefix="") -> str:
 
         with open(local_file, mode="rb") as file:
             bytes = file.read(512)
-            logger.error(log_prefix_local + f"{bytes=} (~Tim~)")
+            logger.error(log_prefix_local + f"{bytes=} ~Tim~")
 
         return None
 
 
 def get_mimetype_via_file_command(local_file, log_prefix="") -> str:
-    log_prefix_local = log_prefix + "get_mimetype_via_file_command(): "
+    log_prefix_local = log_prefix + "get_mimetype_via_file_command: "
 
     cmd = f"/srv/timbos-hn-reader/getmt local {local_file}"
 
@@ -1036,7 +1036,7 @@ def get_mimetype_via_file_command(local_file, log_prefix="") -> str:
 
 
 def get_mimetype_via_python_magic(local_file, log_prefix="") -> str:
-    log_prefix_local = log_prefix + "get_mimetype_via_libmagic(): "
+    log_prefix_local = log_prefix + "get_mimetype_via_python_magic: "
     try:
         magic_type_as_mimetype = magic.from_file(local_file, mime=True)
         return magic_type_as_mimetype
@@ -1052,14 +1052,19 @@ def get_mimetype_via_python_magic(local_file, log_prefix="") -> str:
     return None
 
 
-def guess_mimetype_from_uri_extension(url, log_prefix="", debug=False):
+def guess_mimetype_from_uri_extension(url, log_prefix="", debug=False, context=None):
     # https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
     # https://www.digipres.org/formats/mime-types/#application/illustrator%0A
     # https://www.digipres.org/formats/sources/fdd/formats/#fdd000018
 
-    log_prefix_local = log_prefix + "guess_mimetype_from_uri_extension(): "
+    log_prefix_local = log_prefix + "guess_mimetype_from_uri_extension: "
 
-    res = []
+    if context and "url" in context:
+        url_slug = f" for url=({context['url']}) "
+    else:
+        url_slug = ""
+
+    guesses = defaultdict(list)
 
     # get tld for url
     parsed_url = urlparse(url)
@@ -1070,120 +1075,88 @@ def guess_mimetype_from_uri_extension(url, log_prefix="", debug=False):
     if debug:
         logger.info(
             log_prefix_local
-            + f"{parsed_url.netloc=} {tld=} {paths_extension=} {path=} {parsed_url.query=} {url=}"
+            + f"{parsed_url.netloc=} {tld=} {paths_extension=} {path=} {parsed_url.query=} {url_slug}"
         )
     if f".{tld}" == paths_extension:
         logger.info(
-            log_prefix_local
-            + f".tld .{tld} == paths_extension {paths_extension} for url {url} (~Tim~)"
+            log_prefix_local + f".tld=.{tld} equals {paths_extension=} {url_slug}~Tim~"
         )
+
+    # guess using urlparse
+    guess_by_urlparse = None
+    if paths_extension:
+        guess_by_urlparse, _ = mimetypes.guess_type(
+            f"file.{paths_extension}", strict=False
+        )
+        if guess_by_urlparse:
+            guesses[guess_by_urlparse.lower()].append("guess_by_urlparse")
+
+    # guess using mimetypes (anecdotally, it's sloppier than urlparse)
+    guess_by_mimetypes = None
+    guess_by_mimetypes, _ = mimetypes.guess_type(url, strict=False)
+    if guess_by_mimetypes:
+        guesses[guess_by_mimetypes.lower()].append("guess_by_mimetypes")
+
+    guesses_set = set(guesses.keys())
+
+    incorrect_associations_tld_to_mimetype = [
+        ("ai", "application/postscript"),
+        ("ai", "application/vnd.adobe.illustrator"),
+        ("com", "application/x-msdos-program"),
+        ("info", "application/x-info"),
+        ("org", "application/vnd.lotus-organizer"),
+        ("sh", "text/x-sh"),
+        ("xyz", "chemical/x-xyz"),
+        ("zip", "application/x-zip"),
+        ("zip", "application/x-zip-compressed"),
+        ("zip", "application/zip"),
+    ]
+
+    for each in incorrect_associations_tld_to_mimetype:
+        if tld == each[0] and each[1] in guesses_set and paths_extension != f".{tld}":
+            old_guess = each[1]
+            guessers_slug = ", ".join(guesses[old_guess])
+            logger.info(
+                log_prefix_local
+                + f"discarding '{old_guess}' by {guessers_slug} {url_slug}"
+            )
+            guesses_set.remove(old_guess)
+
+    incorrect_associations_paths_extension_to_mimetype = [
+        (".csp", "application/vnd.commonspace", "text/html"),
+        (".rs", "application/rls-services+xml", "text/rust"),  # nonstandard mimetype
+    ]
+
+    for each in incorrect_associations_paths_extension_to_mimetype:
+        if each[0] == paths_extension and each[1] in guesses_set:
+            old_guess = each[1]
+            new_guess = each[2]
+            guessers_slug = ", ".join(guesses[old_guess])
+            logger.info(
+                log_prefix_local
+                + f"changing '{old_guess}' to '{new_guess}' by {guessers_slug} {url_slug}"
+            )
+            guesses_set.remove(old_guess)
+            guesses_set.add(new_guess)
 
     # my overrides
     if (
         parsed_url.netloc == "github.com"
-        and paths_extension == ".md"
+        and paths_extension == ".md"  # TODO: delete this line?
         and "/blob/" in path
         or "/tree/" in path
     ):
+        # example URLs:
         # https://github.com/Doubiiu/DynamiCrafter/blob/main/README.md
         # https://github.com/facebook/hermes/blob/main/API%2Fhermes_sandbox%2FREADME.md
-        res.append("text/html")
+        new_guess = "text/html"
+        logger.info(
+            log_prefix_local + f"overriding {guesses_set=} to '{new_guess}' {url_slug}"
+        )
+        guesses_set.clear()
+        guesses_set.add(new_guess)
 
-    else:
-        # guess using urlparse
-        guess_by_urlparse = None
-        if paths_extension:
-            guess_by_urlparse, _ = mimetypes.guess_type(
-                f"file.{paths_extension}", strict=False
-            )
-            if guess_by_urlparse:
-                guess_by_urlparse = guess_by_urlparse.lower()
-
-                if debug:
-                    logger.info(log_prefix_local + f"raw: {guess_by_urlparse=}")
-
-                if (
-                    guess_by_urlparse == "application/vnd.commonspace"
-                    and paths_extension == ".csp"
-                ):
-                    guess_by_urlparse = "text/html"
-
-                res.append(guess_by_urlparse)
-                if debug:
-                    logger.info(log_prefix_local + f"fixed: {guess_by_urlparse=}")
-
-        # guess using mimetypes (anecdotally, it's sloppier than urlparse)
-        guess_by_mimetypes = None
-        guess_by_mimetypes, _ = mimetypes.guess_type(url, strict=False)
-        if guess_by_mimetypes:
-            guess_by_mimetypes = guess_by_mimetypes.lower()
-
-            if debug:
-                logger.info(log_prefix_local + f"raw: {guess_by_mimetypes=}")
-
-            if (
-                tld == "ai"
-                and paths_extension != ".ai"
-                and (
-                    guess_by_mimetypes == "application/vnd.adobe.illustrator"
-                    or guess_by_mimetypes == "application/postscript"
-                )
-            ):
-                guess_by_mimetypes = None
-
-            elif (
-                tld == "com"
-                and (paths_extension != ".com" or path == "/")
-                and guess_by_mimetypes == "application/x-msdos-program"
-            ):
-                guess_by_mimetypes = None
-
-            elif (
-                paths_extension == ".csp"
-                and guess_by_mimetypes == "application/vnd.commonspace"
-            ):
-                guess_by_mimetypes = "text/html"
-
-            elif (
-                tld == "info"
-                and paths_extension != ".info"
-                and guess_by_mimetypes == "application/x-info"
-            ):
-                guess_by_mimetypes = None
-
-            elif (
-                tld == "org"
-                and paths_extension != ".org"
-                and guess_by_mimetypes == "application/vnd.lotus-organizer"
-            ):
-                guess_by_mimetypes = None
-
-            elif (
-                tld == "xyz"
-                and paths_extension != ".xyz"
-                and guess_by_mimetypes == "chemical/x-xyz"
-            ):
-                guess_by_mimetypes = None
-
-            elif (
-                tld == "zip"
-                and paths_extension != ".zip"
-                and guess_by_mimetypes
-                in [
-                    "application/x-zip",
-                    "application/x-zip-compressed",
-                    "application/zip",
-                ]
-            ):
-                logger.info(log_prefix_local + f"{guess_by_mimetypes=} {tld=} (~Tim~)")
-
-            if guess_by_mimetypes:
-                res.append(guess_by_mimetypes)
-
-                if debug:
-                    logger.info(log_prefix_local + f"fixed: {guess_by_mimetypes=}")
-
-    return res
+    return list(x for x in guesses_set if x)
 
 
 def collect_empty_attributes(s: str):
@@ -1206,6 +1179,19 @@ def collect_empty_attributes(s: str):
                     current_substr = ""
                 current_substr = char  # Include the opening quote
             in_quote = not in_quote
+
+        elif char == "'":  # Toggle the in_quote flag when we hit a quote
+            if in_quote:  # If we're ending a quoted string, add it to the list
+                current_substr += char  # Include the closing quote
+                substrings.append(current_substr[1:-1])
+                current_substr = ""
+            else:  # If we're starting a quoted string, save any current substring
+                if current_substr:
+                    substrings.append(current_substr)
+                    current_substr = ""
+                current_substr = char  # Include the opening quote
+            in_quote = not in_quote
+
         elif char == "\n" or char == "\t" or char == "\f" or char == " ":
             if in_quote:
                 current_substr += char
@@ -1260,13 +1246,12 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
 
     todo:
 
-    - add check for UTF 7, UTF 8, 16LE, 16BE, 32LE, 32BE BOMs at start of file: https://unicodebook.readthedocs.io/unicode_encodings.html#utf-7
 
     - figure out checks for markdown
 
     - document the prerequisites of installing xmlwf, jq, iconv, libiconv, exiftool, isutf8 etc. to stand up THNR server (not to mention ghostscript, imagemagic 6, imagemagick 7, etc.)
 
-    - elsewhere, create way of invoking specific version of imagemagick, so we can fall back to version 6 in case of the pamcmyk32 error
+
 
     - add check for atom+xml format. https://www.ibm.com/docs/en/baw/22.x?topic=formats-atom-feed-format
     https://validator.w3.org/feed/docs/atom.html
@@ -1276,14 +1261,11 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
 
     """
 
-    # 2024-02-10T21:09:43Z [active]  INFO     id 39324847: asdfft2(): srct: text/html, guesses: ['text/html', 'text/html'], mts: ['text/html', 'text/html', 'text/html'], textual_mimetype='image/svg+xml' for url https://kmaasrud.com/blog/opml-is-underrated.html
-    # 2024-02-11T17:54:16Z [new]     INFO     id 39336677: asdfft2(): timbos_textfile_format_identifier(): clues_toward=[('text/plain', 0), ('text/html', 0), ('application/xml', 0), ('application/json', 0), ('text/markdown', 0), ('application/postscript', 0), ('image/x-eps', 0), ('application/pdf', 0), ('text/x-shellscript', 0), ('application/xhtml+xml', -inf), ('image/svg+xml', -inf)] (~Tim~)
-
     # TODO: compare "tags seen" with textfile_format_identifier result, particular the tag soup when the result is text/plain or None
     # for text/html, what are the top 5 tags seen? for xhtml+xml? for text/html5?
     # compare "tags seen" with textfile_format_identifier result, particular the tag soup when the result is text/plain or None
 
-    log_prefix_local = log_prefix + "get_textual_mimetype(): "
+    log_prefix_local = log_prefix + "get_textual_mimetype: "
 
     if context and "url" in context:
         file_url_slug = f"{local_file=} url={context['url']} "
@@ -1543,21 +1525,21 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
 
             matches_kv_attribs = []
 
-            # collect attributes with single-quoted values
+            # collect non-empty attributes with single-quoted values
             matches = re.finditer(
                 f" ?({xml_attribute_name_re})='([^']*?)'",
                 attrib_material,
             )
             matches_kv_attribs.extend(matches)
 
-            # collect attributes with double-quoted values
+            # collect non-empty attributes with double-quoted values
             matches = re.finditer(
                 f' ?({xml_attribute_name_re})="([^"]*?)"',
                 attrib_material,
             )
             matches_kv_attribs.extend(matches)
 
-            # collect attributes with unquoted values
+            # collect non-empty attributes with unquoted values
             matches = re.finditer(
                 f" ?({xml_attribute_name_re})=({xml_attribute_unquoted_value_re})",
                 attrib_material,
@@ -1567,7 +1549,6 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
             for match in matches_kv_attribs:
                 if tree[match.start()]:
                     continue
-
                 the_tag.attribs[match.group(1).lower()] = match.group(2)
                 tree[match.start() : match.end()] = True
 
@@ -2081,7 +2062,7 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
                 if k.endswith("+xml") and v > top_xml_score:
                     logger.info(
                         log_prefix_local
-                        + f"increased precision of textual_mimetype={res} to {k} {file_url_slug} (~Tim~)"
+                        + f"increased precision of textual_mimetype={res} to {k} {file_url_slug} ~Tim~"
                     )
                     res = k
                     top_xml_score = v
@@ -2096,9 +2077,11 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
     if log_first_1k_chars:
         logger.info(
             log_prefix_local
-            + f"first 1024 characters of content starts on next line. {file_url_slug} (~Tim~)\n"
+            + f"first 1024 characters of content starts on next line. {file_url_slug} ~Tim~\n"
             + content[:1024]
         )
+
+    logger.info(log_prefix_local + f"{res=}")
 
     return res
 

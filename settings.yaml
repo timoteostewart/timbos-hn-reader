@@ -37,7 +37,7 @@ SCRAPING:
   - best
   - active
   - classic
-  REQUESTS_GET_TIMEOUT_S: 30
+  REQUESTS_GET_TIMEOUT_S: 15
   STORY_ROSTERS:
   - top
   - new

@@ -37,7 +37,7 @@ empty_page_source = "<html><head></head><body></body></html>"
 
 
 def endpoint_query_via_requests(url=None, retries=3, delay=8, log_prefix=""):
-    log_prefix_local = log_prefix + "endpoint_query_via_requests(): "
+    log_prefix_local = log_prefix + "endpoint_query_via_requests: "
     if retries == 0:
         logger.info(log_prefix_local + f"failed to GET endpoint {url}")
         raise FailedAfterRetrying()
@@ -98,7 +98,7 @@ def firebaseio_endpoint_query(query=None, log_prefix=""):
 
 
 def get_content_type_via_head_request(url: str = None, log_prefix=""):
-    log_prefix_local = log_prefix + "get_content_type_via_head_request(): "
+    log_prefix_local = log_prefix + "get_content_type_via_head_request: "
     if not url:
         raise Exception("no URL provided")
 
@@ -113,7 +113,7 @@ def get_content_type_via_head_request(url: str = None, log_prefix=""):
 
     if not headers:
         # suppress logging if we're coming from download_og_image() since we log there
-        if log_prefix.endswith("d_og_i(): "):
+        if log_prefix.endswith("d_og_i: "):
             pass
         else:
             logger.info(log_prefix_local + f"failed to get HTTP headers for {url}")
@@ -130,7 +130,7 @@ def get_content_type_via_head_request(url: str = None, log_prefix=""):
                 break
 
         if content_type == "*/*":
-            logger.info(log_prefix_local + f"{content_type=} for {url} (~Tim~)")
+            logger.info(log_prefix_local + f"{content_type=} for {url} ~Tim~")
             content_type = None
 
         if content_type and "," in content_type:
@@ -140,7 +140,7 @@ def get_content_type_via_head_request(url: str = None, log_prefix=""):
             else:
                 logger.info(
                     log_prefix_local
-                    + f"multiple content-types {comma_delimited_content_types} found in HTTP headers for url {url} (~Tim~)"
+                    + f"multiple content-types {comma_delimited_content_types} found in HTTP headers for url {url} ~Tim~"
                 )
                 content_type = None
 
@@ -161,7 +161,6 @@ def get_content_type_via_head_request(url: str = None, log_prefix=""):
 
 
 def get_list_of_hrequests_exceptions(traceback: str = ""):
-    # excs = []
 
     excs = [
         (
@@ -182,7 +181,7 @@ def get_list_of_hrequests_exceptions(traceback: str = ""):
 
 
 def get_page_source(url=None, log_prefix=""):
-    log_prefix_local = log_prefix + "get_page_source(): "
+    log_prefix_local = log_prefix + "get_page_source: "
 
     if not url:
         logger.error(log_prefix_local + f"{url} required")
@@ -226,8 +225,8 @@ def get_page_source(url=None, log_prefix=""):
             exc_slug = exc_name + ": " + exc_msg
             tb_str = traceback.format_exc()
 
-            logger.info(log_prefix + f"{exc_module=} (~Tim~)")
-            logger.info(log_prefix + f"{exc_short_name=} (~Tim~)")
+            logger.info(log_prefix + f"{exc_module=} ~Tim~")
+            logger.info(log_prefix + f"{exc_short_name=} ~Tim~")
 
             logger.error(log_prefix_local + f"unexpected exception: " + exc_slug)
 
@@ -244,8 +243,6 @@ def get_page_source_via_hrequests(
     if not url:
         return None
 
-    # logger.info(log_prefix + f"getting {url}")
-
     page_source_via_get = None
     page_source_via_render = None
 
@@ -257,14 +254,14 @@ def get_page_source_via_hrequests(
             if content_encoding_hint:
                 logger.info(
                     log_prefix
-                    + f"using content_encoding_hint: {content_encoding_hint} (~Tim~)"
+                    + f"using content_encoding_hint: {content_encoding_hint} ~Tim~"
                 )
                 response.encoding = content_encoding_hint
             page_source_via_get = response.text
         except Exception as exc:
             handle_exception(
                 exc=exc,
-                log_prefix=log_prefix + "gps_via_hr(): get(): ",
+                log_prefix=log_prefix + "gps_via_hr(): get: ",
                 context={"url": url},
             )
 
@@ -284,14 +281,14 @@ def get_page_source_via_hrequests(
         except Exception as exc:
             handle_exception(
                 exc=exc,
-                log_prefix=log_prefix + "gps_via_hr(): render(): ",
+                log_prefix=log_prefix + "gps_via_hr(): render: ",
                 context={"url": url},
             )
 
     if page_source_via_get:
         if page_source_via_get == empty_page_source:
             logger.info(
-                log_prefix + f"matched empty_page_source on response for {url} (~Tim~)"
+                log_prefix + f"matched empty_page_source on response for {url} ~Tim~"
             )
             len_page_source_via_get = 0
         else:
@@ -302,7 +299,7 @@ def get_page_source_via_hrequests(
     if page_source_via_render:
         if page_source_via_render == empty_page_source:
             logger.info(
-                log_prefix + f"matched empty_page_source on response for {url} (~Tim~)"
+                log_prefix + f"matched empty_page_source on response for {url} ~Tim~"
             )
             len_page_source_via_render = 0
         else:
@@ -325,66 +322,66 @@ def get_page_source_via_hrequests(
         return page_source
 
 
-def gps_via_hro(response_object=None, log_prefix=""):
+# def gps_via_hro(response_object=None, log_prefix=""):
 
-    log_prefix_local = log_prefix + "gps_via_hro(): "
+#     log_prefix_local = log_prefix + "gps_via_hro: "
 
-    # get page source via GET
-    page_source_via_get = response_object.text
-    page_source_via_render = None
+#     # get page source via GET
+#     page_source_via_get = response_object.text
+#     page_source_via_render = None
 
-    # try to get page source via render()
-    url = response_object.url
-    try:
-        with response_object.render(headless=True, mock_human=True) as page:
-            time.sleep(utils_random.random_real(0, 1))
-            page.goto(url)
-            time.sleep(utils_random.random_real(0, 1))
+#     # try to get page source via render()
+#     url = response_object.url
+#     try:
+#         with response_object.render(headless=True, mock_human=True) as page:
+#             time.sleep(utils_random.random_real(0, 1))
+#             page.goto(url)
+#             time.sleep(utils_random.random_real(0, 1))
 
-            if page.html and page.html.find("html"):
-                page_source_via_render = page.html.find("html").html
-            else:
-                page_source_via_render = ""
+#             if page.html and page.html.find("html"):
+#                 page_source_via_render = page.html.find("html").html
+#             else:
+#                 page_source_via_render = ""
 
-    except Exception as exc:
-        logger.info(log_prefix_local + "got exception in render(): " + str(exc))
-        handle_exception(
-            exc=exc, log_prefix=log_prefix_local + "render(): ", context={"url": url}
-        )
+#     except Exception as exc:
+#         logger.info(log_prefix_local + "got exception in render: " + str(exc))
+#         handle_exception(
+#             exc=exc, log_prefix=log_prefix_local + "render: ", context={"url": url}
+#         )
 
-    if page_source_via_get:
-        if page_source_via_get == empty_page_source:
-            len_page_source_via_get = 0
-        else:
-            len_page_source_via_get = len(page_source_via_get)
-    else:
-        len_page_source_via_get = 0
+#     if page_source_via_get:
+#         if page_source_via_get == empty_page_source:
+#             len_page_source_via_get = 0
+#         else:
+#             len_page_source_via_get = len(page_source_via_get)
+#     else:
+#         len_page_source_via_get = 0
 
-    if page_source_via_render:
-        if page_source_via_render == empty_page_source:
-            len_page_source_via_render = 0
-        else:
-            len_page_source_via_render = len(page_source_via_render)
-    else:
-        len_page_source_via_render = 0
+#     if page_source_via_render:
+#         if page_source_via_render == empty_page_source:
+#             len_page_source_via_render = 0
+#         else:
+#             len_page_source_via_render = len(page_source_via_render)
+#     else:
+#         len_page_source_via_render = 0
 
-    if len_page_source_via_get + len_page_source_via_render == 0:
-        logger.info(log_prefix_local + f"failed to get page source for {url}")
-        return None
-    else:
-        if len_page_source_via_render >= len_page_source_via_get:
-            page_source = page_source_via_render
-            logger.info(log_prefix_local + f"got page_source (via render) for {url}")
-        else:
-            page_source = page_source_via_get
-            logger.info(log_prefix_local + f"got page_source (via GET) for {url}")
+#     if len_page_source_via_get + len_page_source_via_render == 0:
+#         logger.info(log_prefix_local + f"failed to get page source for {url}")
+#         return None
+#     else:
+#         if len_page_source_via_render >= len_page_source_via_get:
+#             page_source = page_source_via_render
+#             logger.info(log_prefix_local + f"got page_source (via render) for {url}")
+#         else:
+#             page_source = page_source_via_get
+#             logger.info(log_prefix_local + f"got page_source (via GET) for {url}")
 
-        # logger.info(log_prefix_local + f"got page source for {url}")
-        return page_source
+#         # logger.info(log_prefix_local + f"got page source for {url}")
+#         return page_source
 
 
 def get_rendered_page_source_via_response_object(response_object, log_prefix=""):
-    log_prefix_local = log_prefix + "get_rendered_page_source_via_response_object(): "
+    log_prefix_local = log_prefix + "get_rendered_page_source_via_response_object: "
     url = response_object.url
     try:
         with response_object.render(headless=True, mock_human=True) as page:
@@ -398,9 +395,9 @@ def get_rendered_page_source_via_response_object(response_object, log_prefix="")
                 page_source_via_render = ""
 
     except Exception as exc:
-        logger.info(log_prefix_local + "got exception in render(): " + str(exc))
+        logger.info(log_prefix_local + "got exception in render: " + str(exc))
         handle_exception(
-            exc=exc, log_prefix=log_prefix_local + "render(): ", context={"url": url}
+            exc=exc, log_prefix=log_prefix_local + "render: ", context={"url": url}
         )
 
 
@@ -412,7 +409,7 @@ def get_response_object_via_hrequests(
     if not url:
         return None
 
-    log_prefix_local = log_prefix + "gro_via_hr(): "
+    log_prefix_local = log_prefix + "gro_via_hr: "
 
     with hrequests.Session(
         browser=browser,
@@ -433,7 +430,7 @@ def get_response_object_via_hrequests(
             else:
                 logger.info(
                     log_prefix_local
-                    + f"Failed to get response object, {response.status_code=} for url {url}"
+                    + f"Failed to get response object. {response.status_code=}. {url=}"
                 )
                 return None
 
@@ -454,7 +451,7 @@ def get_response_object_via_requests(
     if not url:
         return None
 
-    log_prefix_local = log_prefix + "gro_via_r(): "
+    log_prefix_local = log_prefix + "gro_via_r:  "
 
     with requests.Session() as session:
         session.headers.update({"User-Agent": config.settings["SCRAPING"]["UA_STR"]})
@@ -538,7 +535,7 @@ def handle_exception(exc: Exception = None, log_prefix="", context=None):
 
     # TODO: in future, for many of these exceptions, we could check archive.is, WBM, google cache, etc. for the url
 
-    log_prefix_local = log_prefix + "handle_exception(): "
+    log_prefix_local = log_prefix + "handle_exception: "
 
     exc_module = exc.__class__.__module__
     exc_name = exc.__class__.__name__
@@ -612,14 +609,6 @@ def handle_exception(exc: Exception = None, log_prefix="", context=None):
 
     expected_exception = False
 
-    if "SSL: UNEXPECTED_EOF_WHILE_READING" in exc_msg:
-        logger.info(
-            log_prefix_local
-            + exc_slug
-            + url_slug
-            + " (~Tim~) SSL: UNEXPECTED_EOF_WHILE_READING"
-        )
-
     if exc_module == "hrequests.exceptions":
         if isinstance(exc, hrequests.exceptions.BrowserException):
             if exc_msg == "Browser closed.":
@@ -664,7 +653,7 @@ def handle_exception(exc: Exception = None, log_prefix="", context=None):
     elif exc_module == "requests.exceptions":
         logger.info(
             log_prefix_local
-            + f"{fq_exc_name=}, {exc_msg=}, {url_slug=}, module s.b. requests.exceptions)"
+            + f"{type(exc)=}, {fq_exc_name=}, {exc_msg=}, {url_slug=}, module s.b. requests.exceptions)"
         )
 
         if isinstance(exc, requests.exceptions.ConnectTimeout):
@@ -721,6 +710,9 @@ def handle_exception(exc: Exception = None, log_prefix="", context=None):
             elif "SSL: UNSAFE_LEGACY_RENEGOTIATION_DISABLED" in exc_msg:
                 expected_exception = True
 
+        elif isinstance(exc, requests.exceptions.TooManyRedirects):
+            expected_exception = True
+
     elif exc_module == "lxml.etree":
         if isinstance(exc, lxml.etree.ParserError):
             if "Document is empty" in exc_msg:
@@ -745,7 +737,7 @@ def handle_exception(exc: Exception = None, log_prefix="", context=None):
 
 
 def head_request(url=None, log_prefix=""):
-    log_prefix += "head_request(): "
+    log_prefix += "head_request: "
     if not url:
         # logger.error(log_prefix + "no URL provided")
         raise Exception("no URL provided")
@@ -769,7 +761,7 @@ def head_request(url=None, log_prefix=""):
 
 
 def download_file_via_requests(url, dest_local_file, log_prefix="") -> bool:
-    log_prefix_local = log_prefix + "download_file_via_requests(): "
+    log_prefix_local = log_prefix + "download_file_via_requests: "
     try:
         with requests.get(
             allow_redirects=True,
@@ -800,7 +792,7 @@ def download_file_via_requests(url, dest_local_file, log_prefix="") -> bool:
 
 
 def download_file_via_hrequests(url, dest_local_file, log_prefix="") -> bool:
-    log_prefix_local = log_prefix + "download_file_via_hrequests(): "
+    log_prefix_local = log_prefix + "download_file_via_hrequests: "
 
     # get hrequests response object
     response = get_response_object_via_hrequests(
@@ -932,7 +924,7 @@ async def monkeypatched_goto_0_7_1(self, url):
     if resp:
         self.status_code = resp.status
     else:
-        logger.error(f"monkeypatched_goto_0_7_1(): resp is None. (~Tim~)")
+        logger.error(f"monkeypatched_goto_0_7_1(): resp is None. ~Tim~")
     return resp
 
 
@@ -942,7 +934,7 @@ async def monkeypatched_goto_0_8_1(self, url):
     if resp:
         self.status_code = resp.status
     else:
-        logger.error(f"monkeypatched_goto_0_8_1(): resp is None. (~Tim~)")
+        logger.error(f"monkeypatched_goto_0_8_1(): resp is None. ~Tim~")
     return resp
 
 

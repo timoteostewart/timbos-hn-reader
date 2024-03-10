@@ -211,7 +211,7 @@ html_tags["html5"] = set(
 def check_for_valid_text_encodings(local_file: str, log_prefix="") -> List[str]:
     # requires iconv (i.e., libiconv) command
 
-    log_prefix_local = log_prefix + "check_for_valid_text_encodings(): "
+    log_prefix_local = log_prefix + "check_for_valid_text_encodings: "
     valid_encodings = []
 
     text_encodings = [
@@ -258,7 +258,7 @@ def check_for_valid_text_encodings(local_file: str, log_prefix="") -> List[str]:
 
 def check_for_wellformed_xml(local_file: str, log_prefix="") -> bool:
     # requires Linux xmlwf command
-    log_prefix_local = log_prefix + "is_wellformed_xml(): "
+    log_prefix_local = log_prefix + "is_wellformed_xml: "
 
     cmd = f"xmlwf -c {local_file}"
 
@@ -290,7 +290,7 @@ def check_for_wellformed_xml(local_file: str, log_prefix="") -> bool:
 
 def is_valid_json(local_file: str, log_prefix="") -> bool:
     # requires Linux jq command
-    log_prefix_local = log_prefix + "get_mimetype_via_file_command(): "
+    log_prefix_local = log_prefix + "get_mimetype_via_file_command: "
 
     cmd = f"jq . {local_file}"
 
@@ -322,7 +322,7 @@ def is_valid_json(local_file: str, log_prefix="") -> bool:
 
 
 def get_mimetype_via_exiftool(local_file: str, log_prefix="") -> str:
-    log_prefix_local = log_prefix + "get_mimetype_via_exiftool(): "
+    log_prefix_local = log_prefix + "get_mimetype_via_exiftool: "
     mimetype = None
     try:
         with exiftool.ExifToolHelper(executable="/usr/local/bin/exiftool") as et:
@@ -348,13 +348,13 @@ def get_mimetype_via_exiftool(local_file: str, log_prefix="") -> str:
             tb_str = traceback.format_exc()
             logger.error(log_prefix_local + tb_str)
 
-        logger.info(log_prefix_local + f"exiftool failed for {local_file} (~Tim~)")
+        logger.info(log_prefix_local + f"exiftool failed for {local_file} ~Tim~")
 
         return None
 
 
 def get_mimetype_via_file_command(local_file, log_prefix="") -> str:
-    log_prefix_local = log_prefix + "get_mimetype_via_file_command(): "
+    log_prefix_local = log_prefix + "get_mimetype_via_file_command: "
 
     cmd = f"/srv/timbos-hn-reader/getmt local {local_file}"
 
@@ -392,7 +392,7 @@ def get_mimetype_via_file_command(local_file, log_prefix="") -> str:
 
 
 def get_mimetype_via_python_magic(local_file, log_prefix="") -> str:
-    log_prefix_local = log_prefix + "get_mimetype_via_libmagic(): "
+    log_prefix_local = log_prefix + "get_mimetype_via_libmagic: "
     try:
         magic_type_as_mimetype = magic.from_file(local_file, mime=True)
     except Exception as exc:
@@ -413,7 +413,7 @@ def guess_mimetype_from_uri_extension(url, log_prefix=""):
     # https://www.digipres.org/formats/mime-types/#application/illustrator%0A
     # https://www.digipres.org/formats/sources/fdd/formats/#fdd000018
 
-    log_prefix_local = log_prefix + "guess_mimetype_from_uri_extension(): "
+    log_prefix_local = log_prefix + "guess_mimetype_from_uri_extension: "
 
     res = []
 
@@ -430,7 +430,7 @@ def guess_mimetype_from_uri_extension(url, log_prefix=""):
     if f".{tld}" == paths_extension:
         logger.info(
             log_prefix_local
-            + f".tld .{tld} == paths_extension {paths_extension} for url {url} (~Tim~)"
+            + f".tld .{tld} == paths_extension {paths_extension} for url {url} ~Tim~"
         )
 
     # my overrides
@@ -509,7 +509,7 @@ def guess_mimetype_from_uri_extension(url, log_prefix=""):
                     "application/zip",
                 ]
             ):
-                logger.info(log_prefix_local + f"{guess_by_mimetypes=} {tld=} (~Tim~)")
+                logger.info(log_prefix_local + f"{guess_by_mimetypes=} {tld=} ~Tim~")
 
             if guess_by_mimetypes:
                 res.append(guess_by_mimetypes)
@@ -591,11 +591,11 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
 
     # 2024-02-10T21:09:43Z [active]  INFO     id 39324847: asdfft2(): srct: text/html, guesses: ['text/html', 'text/html'], mts: ['text/html', 'text/html', 'text/html'], textual_mimetype='image/svg+xml' for url https://kmaasrud.com/blog/opml-is-underrated.html
     # 2024-02-11T06:56:32Z [new]     INFO     id 39327596: asdfft2(): srct: text/plain, guesses: ['text/html'], mts: ['application/json', 'application/json', 'application/json'], textual_mimetype='application/json' for url https://github.com/denkspuren/BitboardC4/blob/master/BitboardDesign.md
-    # 2024-02-11T17:54:16Z [new]     INFO     id 39336677: asdfft2(): timbos_textfile_format_identifier(): clues_toward=[('text/plain', 0), ('text/html', 0), ('application/xml', 0), ('application/json', 0), ('text/markdown', 0), ('application/postscript', 0), ('image/x-eps', 0), ('application/pdf', 0), ('text/x-shellscript', 0), ('application/xhtml+xml', -inf), ('image/svg+xml', -inf)] (~Tim~)
+    # 2024-02-11T17:54:16Z [new]     INFO     id 39336677: asdfft2(): timbos_textfile_format_identifier(): clues_toward=[('text/plain', 0), ('text/html', 0), ('application/xml', 0), ('application/json', 0), ('text/markdown', 0), ('application/postscript', 0), ('image/x-eps', 0), ('application/pdf', 0), ('text/x-shellscript', 0), ('application/xhtml+xml', -inf), ('image/svg+xml', -inf)] ~Tim~
 
     # defaults
 
-    log_prefix_local = log_prefix + "timbos_textfile_format_identifier(): "
+    log_prefix_local = log_prefix + "timbos_textfile_format_identifier: "
 
     CHARS_TO_READ = None  # 4096
 
@@ -1084,13 +1084,13 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
             res = k
 
     if res == "text/html5":
-        logger.info(log_prefix_local + f"text/html5 (~Tim~)")
+        logger.info(log_prefix_local + f"text/html5 ~Tim~")
         res = "text/html"
 
     logger.info(log_prefix_local + f"clues_toward={list_sorted}")
 
     if res not in ["text/html", "application/xhtml+xml"]:
-        logger.info(log_prefix_local + "(~Tim~)\n" + content[:1024])
+        logger.info(log_prefix_local + "~Tim~\n" + content[:1024])
 
     return res
 
@@ -1117,4 +1117,3 @@ if __name__ == "__main__":
         logger.error(log_prefix + exc_slug)
         tb_str = traceback.format_exc()
         logger.error(log_prefix + tb_str)
-

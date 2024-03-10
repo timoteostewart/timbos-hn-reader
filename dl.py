@@ -2,7 +2,7 @@ import requests
 
 
 def download_file(url, dest_local_file, log_prefix="") -> bool:
-    log_prefix_local = log_prefix + "download_file(): "
+    log_prefix_local = log_prefix + "download_file: "
     try:
         with requests.get(url, stream=True) as response:
             if response and response.status_code == 200:

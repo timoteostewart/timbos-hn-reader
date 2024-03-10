@@ -24,7 +24,7 @@ def download_og_image2(
     story_id, hostname_dict, og_image_dict, first_time=True, url_queue=None
 ):
     log_prefix_id = f"id {story_id}: "
-    log_prefix_local = log_prefix_id + f"d_og_i2(): "
+    log_prefix_local = log_prefix_id + f"d_og_i2: "
 
     if first_time:
         url_queue = []
@@ -112,7 +112,7 @@ def download_og_image2(
         cur_url = healed_url
         logger.info(
             log_prefix_local
-            + f"healed localhost og:image URL {localhost_url} to {healed_url} (~Tim~)"
+            + f"healed localhost og:image URL {localhost_url} to {healed_url} ~Tim~"
         )
 
     # by now, we have somewhat validated and possibly healed the URL
@@ -148,14 +148,14 @@ def download_og_image2(
     except Exception as exc:
         utils_http.handle_exception(
             exc=exc,
-            log_prefix=log_prefix_local + "get(): ",
+            log_prefix=log_prefix_local + "get: ",
             context={"url": cur_url},
         )
         return False
 
     if not get_response:
         # I think we won't enter this block, because an exception would have occurred to cause this situation
-        logger.error(log_prefix_local + "no get_response (~Tim~)")
+        logger.error(log_prefix_local + "no get_response ~Tim~")
         return False
 
     og_image_dict["og_image_filename_details_from_url"] = (
@@ -182,7 +182,7 @@ def download_og_image2(
         )
 
     # download og:image
-    og_image_dict["normalized_og_image_filename"] = f"orig-{story_id}"
+    og_image_dict["normalized_og_image_filename"] = f"{story_id}-og-image"
     og_image_dict["downloaded_orig_thumb_full_path"] = os.path.join(
         config.settings["TEMP_DIR"],
         og_image_dict["normalized_og_image_filename"],
@@ -208,7 +208,7 @@ def download_og_image1(
     story_object, alt_url=None, use_url_queue=False, url_queue=None
 ) -> bool:
     log_prefix_id = f"id {story_object.id}: "
-    log_prefix_local = log_prefix_id + f"d_og_i1(): "
+    log_prefix_local = log_prefix_id + f"d_og_i1: "
 
     if not use_url_queue:
         url_queue = []
@@ -241,7 +241,7 @@ def download_og_image1(
         cur_url = possibly_healed_url
         logger.info(
             log_prefix_local
-            + f"healed localhost og:image URL {localhost_url} to {possibly_healed_url} (~Tim~)"
+            + f"healed localhost og:image URL {localhost_url} to {possibly_healed_url} ~Tim~"
         )
 
     # # check whether we disqualify this og:image url
@@ -279,7 +279,7 @@ def download_og_image1(
             )
             logger.info(
                 log_prefix_local
-                + "get(): "
+                + "get: "
                 + f"attempting to heal and retry schemeless og:image URL {cur_url} as {possibly_healed_url}"
             )
             time.sleep(utils_random.random_real(0.5, 1.5))
@@ -291,17 +291,17 @@ def download_og_image1(
             )
             logger.info(
                 log_prefix_local
-                + "get(): "
+                + "get: "
                 + f"attempting to heal and retry schemeless og:image URL {cur_url} as {possibly_healed_url}"
             )
             time.sleep(utils_random.random_real(0.5, 1.5))
             return download_og_image1(story_object, alt_url=possibly_healed_url)
 
         else:
-            logger.info(log_prefix_local + "get(): " + "failed to get og:image")
-            logger.info(log_prefix_local + "get(): " + exc_slug)
+            logger.info(log_prefix_local + "get: " + "failed to get og:image")
+            logger.info(log_prefix_local + "get: " + exc_slug)
             tb_str = traceback.format_exc()
-            logger.info(log_prefix_local + "get(): " + tb_str)
+            logger.info(log_prefix_local + "get: " + tb_str)
             story_object.og_image_url = ""
             story_object.og_image_url_possibly_redirected = ""
             return False
@@ -309,13 +309,13 @@ def download_og_image1(
     except Exception as exc:
         utils_http.handle_exception(
             exc=exc,
-            log_prefix=log_prefix_local + "get(): ",
+            log_prefix=log_prefix_local + "get: ",
             context={"url": cur_url},
         )
         return False
 
     if not get_response:
-        logger.error(log_prefix_local + "no get_response (~Tim~)")
+        logger.error(log_prefix_local + "no get_response ~Tim~")
         return False
 
     story_object.og_image_filename_details_from_url = (
@@ -345,7 +345,7 @@ def download_og_image1(
         )
 
     # download og:image
-    story_object.normalized_og_image_filename = f"orig-{story_object.id}"
+    story_object.normalized_og_image_filename = f"{story_object.id}-og-image"
     story_object.downloaded_orig_thumb_full_path = os.path.join(
         config.settings["TEMP_DIR"],
         story_object.normalized_og_image_filename,
@@ -431,7 +431,7 @@ def get_roster_via_endpoint(story_type: str, log_prefix=""):
 
 
 def get_roster_via_screen_scraping(roster_story_type: str = None, log_prefix=""):
-    log_prefix += "get_roster_via_screen_scraping(): "
+    log_prefix += "get_roster_via_screen_scraping: "
     if roster_story_type not in ["active", "classic"]:
         raise Exception(
             log_prefix

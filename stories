@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# Assuming your input string is the first command line argument
+input_string="$1"
+
+# Remove brackets and commas from the string
+cleaned_string=$(echo $input_string | tr -d '=[],')
+
+# Loop through each integer and print it
+for number in $cleaned_string; do
+    echo $number
+done

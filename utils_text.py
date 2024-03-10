@@ -82,7 +82,7 @@ def create_domains_slug(hostname_dict: str, log_prefix=""):
     if not hostname_dict["minus_www"]:
         return
 
-    log_prefix_local = log_prefix + "create_domains_slug(): "
+    log_prefix_local = log_prefix + "create_domains_slug: "
 
     # TODO: try using urlparse and netloc to extract domain, and see which is faster/more accurate. maybe log when results of both methods differ
 
@@ -104,7 +104,7 @@ def create_domains_slug(hostname_dict: str, log_prefix=""):
     if index <= -4:
         logger.info(
             log_prefix_local
-            + f"very long domain name constructed for search: {domains_for_hn_search} (~Tim~)"
+            + f"very long domain name constructed for search: {domains_for_hn_search} ~Tim~"
         )
 
     domains_for_search_as_list = domains_for_hn_search.split(".")
@@ -208,7 +208,7 @@ def get_frac(number, precision):
 
 
 def get_domains_from_url_via_urllib(url: str, log_prefix=""):
-    log_prefix_local = log_prefix + "get_domains_from_url_via_urllib(): "
+    log_prefix_local = log_prefix + "get_domains_from_url_via_urllib: "
     if not url:
         return None
     parsed_url = urlparse(url)
@@ -234,7 +234,7 @@ def get_domains_from_url(url: str, log_prefix=""):
     if not url:
         return None, None
 
-    log_prefix_local = log_prefix + "get_domains_from_url(): "
+    log_prefix_local = log_prefix + "get_domains_from_url: "
 
     original_url = url
 
@@ -296,7 +296,7 @@ def get_domains_from_url(url: str, log_prefix=""):
 
     if hostname_full_via_urllib != hostname_full:
         logger.info(
-            log_prefix_local + f"{hostname_full=}, {hostname_full_via_urllib=} (~Tim~)"
+            log_prefix_local + f"{hostname_full=}, {hostname_full_via_urllib=} ~Tim~"
         )
     # else:
     #     logger.info(log_prefix_local + "hostname_full == hostname_full_via_urllib")
@@ -304,7 +304,7 @@ def get_domains_from_url(url: str, log_prefix=""):
     if hostname_minus_www_via_urllib != hostname_minus_www:
         logger.info(
             log_prefix_local
-            + f"{hostname_minus_www=}, {hostname_minus_www_via_urllib=} (~Tim~)"
+            + f"{hostname_minus_www=}, {hostname_minus_www_via_urllib=} ~Tim~"
         )
     # else:
     #     logger.info(
@@ -371,7 +371,7 @@ def get_filename_details_from_url(full_url):
 
 
 def get_reading_time_via_goose(page_source=None, log_prefix=""):
-    log_prefix += "grt_via_g(): "
+    log_prefix += "grt_via_g: "
 
     try:
         if not page_source:
@@ -517,13 +517,23 @@ def insert_possible_line_breaks(orig_title):
     return " ".join(words_by_spaces)
 
 
-def parse_content_type_from_raw_header(content_type_header: str, log_prefix=""):
-    log_prefix_local = log_prefix + "parse_content_type_from_raw_header(): "
+def parse_content_type_from_raw_header(
+    content_type_header: str, log_prefix="", context=None
+):
+    log_prefix_local = log_prefix + "parse_content_type_from_raw_header: "
     if not content_type_header:
         return None
 
+    if context and "url" in context:
+        url_slug = f"for url=({context['url']}) "
+    else:
+        url_slug = ""
+
     if isinstance(content_type_header, list) or "," in content_type_header:
-        logger.info(log_prefix_local + f"interesting {content_type_header=} (~Tim~)")
+        logger.info(
+            log_prefix_local
+            + f"interesting {content_type_header=}, {type(content_type_header)=} {url_slug}~Tim~"
+        )
 
     ct_set = set()
 
@@ -535,7 +545,7 @@ def parse_content_type_from_raw_header(content_type_header: str, log_prefix=""):
     else:
         logger.info(
             log_prefix_local
-            + f"unexpected type {str(type(content_type_header))} for content_type_header {str(content_type_header)} (~Tim~)"
+            + f"unexpected type={str(type(content_type_header))} for content_type_header={str(content_type_header)} {url_slug}~Tim~"
         )
 
     ct_set = {x.strip() for x in ct_set if x.strip()}
@@ -549,14 +559,18 @@ def parse_content_type_from_raw_header(content_type_header: str, log_prefix=""):
             ct_set.remove(each)
 
     if len(ct_set) == 1:
-        return ct_set.pop().lower()
+        srct = ct_set.pop().lower()
+        logger.info(log_prefix_local + f"srct='{srct}' {url_slug}")
+        return srct
     elif not ct_set:
-        logger.info(log_prefix_local + f"no content-type found in http header (~Tim~)")
+        logger.info(
+            log_prefix_local + f"no content-type found in http header {url_slug}~Tim~"
+        )
         return None
     else:
         logger.info(
             log_prefix_local
-            + f"multiple content-types found in http header {ct_set=} (~Tim~)"
+            + f"multiple content-types found in http header {ct_set=} {url_slug}~Tim~"
         )
         return ct_set.pop().lower()
 
@@ -568,7 +582,7 @@ def sanitize(s: str):
     for char in s:
         if char in allowed_chars:
             sanitized += char
-    sanitized = re.sub(" {2,}", " ", sanitized)
+    sanitized = re.sub(r"\s+", " ", sanitized)
     return sanitized.strip()
 
 
@@ -713,7 +727,7 @@ def monkeypatched_get_meta_encoding_3_1_19(self):
     ]:
         if res == each:
             logger.info(
-                f"monkeypatched_get_meta_encoding_3_1_19(): defaulting to 'utf-8' for {self.article.final_url} since original was '{each}' (~Tim~)"
+                f"monkeypatched_get_meta_encoding_3_1_19: defaulting to 'utf-8' for {self.article.final_url} since original was '{each}' ~Tim~"
             )
             res = "utf-8"
 

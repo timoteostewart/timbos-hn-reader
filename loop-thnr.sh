@@ -37,8 +37,11 @@ fi
 
 PAUSE_BETWEEN_CYCLES_IN_MINUTES=30
 MAX_AGE_OF_TEMP_FILES_IN_SLASH_TMP_IN_MINUTES=180
+MAX_AGE_OF_TEMP_DIRS_IN_SLASH_TMP_IN_MINUTES=180
+MAX_AGE_OF_RESPONSE_OBJECT_FILES_IN_SLASH_TMP_IN_MINUTES=1800
 LOOPS_BEFORE_RESTART=25
-LOG_PREFIX_LOCAL="loop-thnr.sh:"
+script_invocation_id=$(get-sha1-of-current-time-plus-random)
+LOG_PREFIX_LOCAL="loop-thnr.sh id ${script_invocation_id}: "
 combined_log_identifier="combined"
 SETTINGS_FILE="${project_base_dir}settings.yaml"
 
@@ -68,7 +71,7 @@ handle_error() {
 # }
 
 log_dump_via_email() {
-    dump_id=$(get-sha1-of-current-time)
+    dump_id=$(get-sha1-of-current-time-plus-random)
     local error_msg="$1"
     /srv/timbos-hn-reader/send-email.sh "${error_msg} - dump id ${dump_id}" "see incoming log files for details"
     # email_mock "${error_msg} - dump id ${dump_id}" "see incoming log files for details"
@@ -82,23 +85,19 @@ log_dump_via_email() {
         '/srv/timbos-hn-reader/logs/thnr-vpn-*.log'
     )
 
-    for each_pattern in "${log_files_patterns[@]}"; do
-        cur_log_file=$(get-last-filename "${each_pattern}")
-        if [[ -z ${cur_log_file} ]]; then
-            /srv/timbos-hn-reader/send-email.sh "dump id ${dump_id} - warning: no matches for log file pattern ${each_pattern}" "(body intentionally left blank)"
-            # email_mock "dump id ${dump_id} - warning: no matches for log file pattern ${each_pattern}" "(body intentionally left blank)"
-            continue
-        fi
-        ext_error_msg="${error_msg} - ${cur_log_file}"
-        log_tail=$(tail -n 50 ${cur_log_file})
-        /srv/timbos-hn-reader/send-email.sh "dump id ${dump_id} - 'tail -n 50 of ${cur_log_file}' " "${log_tail}"
-        # email_mock "dump id ${dump_id} - 'tail -n 50 of ${cur_log_file}' " "${log_tail}"
-    done
+    cur_log_file=$(get-last-filename '/srv/timbos-hn-reader/logs/thnr-combined-*.log')
+    ext_error_msg="${error_msg} - ${cur_log_file}"
+    log_tail=$(tail -n 50 ${cur_log_file})
+    /srv/timbos-hn-reader/send-email.sh "dump id ${dump_id} - 'tail -n 250 of ${cur_log_file}' " "${log_tail}"
+    # email_mock "dump id ${dump_id} - 'tail -n 50 of ${cur_log_file}' " "${log_tail}"
 }
 
 cleanup_tmp_dir() {
     TARGET_DIR="/tmp"
+
     num_tmp_files=0
+
+    # MAX_AGE_OF_TEMP_FILES_IN_SLASH_TMP_IN_MINUTES
     while IFS= read -r file; do
         if ! rm "${file}"; then
             write-log-message loop error "${LOG_PREFIX_LOCAL} Failed to delete ${file}"
@@ -107,6 +106,26 @@ cleanup_tmp_dir() {
         fi
     done < <(find "${TARGET_DIR}" -mindepth 1 -user "${utility_account_username}" -name "*" -type f -mmin "+${MAX_AGE_OF_TEMP_FILES_IN_SLASH_TMP_IN_MINUTES}")
 
+    # "*-get_response_object_via_hrequests"
+    while IFS= read -r file; do
+        if ! rm "${file}"; then
+            write-log-message loop error "${LOG_PREFIX_LOCAL} Failed to delete ${file}"
+        else
+            (( num_tmp_files += 1 ))
+        fi
+    done < <(find "${TARGET_DIR}" -mindepth 1 -user "${utility_account_username}" -name "*-response_object_via_hrequests" -type f -mmin "+${MAX_AGE_OF_RESPONSE_OBJECT_FILES_IN_SLASH_TMP_IN_MINUTES}")
+
+    # "*-get_response_object_via_requests"
+    while IFS= read -r file; do
+        if ! rm "${file}"; then
+            write-log-message loop error "${LOG_PREFIX_LOCAL} Failed to delete ${file}"
+        else
+            (( num_tmp_files += 1 ))
+        fi
+    done < <(find "${TARGET_DIR}" -mindepth 1 -user "${utility_account_username}" -name "*-response_object_via_requests" -type f -mmin "+${MAX_AGE_OF_RESPONSE_OBJECT_FILES_IN_SLASH_TMP_IN_MINUTES}")
+
+
+    # delete old temporary directories
     num_tmp_dirs=0
     while IFS= read -r dir; do
         if ! rm -rf "${dir}"; then
@@ -114,7 +133,7 @@ cleanup_tmp_dir() {
         else
             (( num_tmp_dirs += 1 ))
         fi
-    done < <(find "${TARGET_DIR}" -mindepth 1 -user "${utility_account_username}" -name "*" -type d -mmin "+${MAX_AGE_OF_TEMP_FILES_IN_SLASH_TMP_IN_MINUTES}")
+    done < <(find "${TARGET_DIR}" -mindepth 1 -user "${utility_account_username}" -name "*" -type d -mmin "+${MAX_AGE_OF_TEMP_DIRS_IN_SLASH_TMP_IN_MINUTES}")
 
     write-log-message loop info "${LOG_PREFIX_LOCAL} Deleted ${num_tmp_files} files and ${num_tmp_dirs} dirs in ${TARGET_DIR}"
 }

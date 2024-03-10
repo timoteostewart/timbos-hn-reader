@@ -6,7 +6,7 @@ logger.setLevel(logging.INFO)
 
 
 def delete_file(file_full_path, log_prefix=""):
-    log_prefix_local = log_prefix + "delete_file(): "
+    log_prefix_local = log_prefix + "delete_file: "
     try:
         p = Path(file_full_path)
         p.unlink(missing_ok=True)
@@ -15,7 +15,7 @@ def delete_file(file_full_path, log_prefix=""):
 
 
 def save_response_content_to_disk(response, dest_local_file, log_prefix=""):
-    log_prefix_local = log_prefix + "save_response_content_to_disk(): "
+    log_prefix_local = log_prefix + "save_response_content_to_disk: "
 
     if isinstance(response.content, bytes):
         content_to_use = response.content

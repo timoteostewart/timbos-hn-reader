@@ -50,6 +50,13 @@ get-sha1-of-current-time() {
     echo -n "$current_time" | sha1sum | cut -c 1-12
 }
 
+get-sha1-of-current-time-plus-random() {
+    local cur_time=$(date +%s)
+    local salt=$(( $RANDOM * 32768 + $RANDOM ))
+    (( value_to_hash = cur_time + salt ))
+    echo -n "${value_to_hash}" | sha1sum | cut -c 1-12
+}
+
 write-log-message() {
     # usage: write-log-message $log_identifier $level $message [$write_to_combined_log_flag]
     # example: write-log-message loop error "${LOG_PREFIX_LOCAL} Failed to delete ${file}"

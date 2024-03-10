@@ -4,6 +4,7 @@ import os
 import re
 import shutil
 import subprocess
+import tempfile
 import time
 import traceback
 from urllib.parse import unquote, urlparse
@@ -102,7 +103,7 @@ ignore_images_with_these_exact_filenames = {
 
 
 def image_url_is_disqualified(url: str, mimetype_via_magic=None, log_prefix="") -> bool:
-    log_prefix_local = log_prefix + "image_url_is_disqualified(): "
+    log_prefix_local = log_prefix + "image_url_is_disqualified: "
 
     # check if we ignore this URL
     if url in ignore_images_at_these_exact_urls:
@@ -227,17 +228,10 @@ def create_img_slug_html(story_object, img_loading="lazy"):
     return (
         '<div class="thumb">'
         f'<a href="{story_object.url}">'
-        "<img "
-        # "srcset="
-        # f'"{config.settings["THUMBS_URL"]}{get_webp_filename(story_object, "extralarge")} 4x, '
-        # f'{config.settings["THUMBS_URL"]}{get_webp_filename(story_object, "extralarge")} 3x, '
-        # f'{config.settings["THUMBS_URL"]}{get_webp_filename(story_object, "extralarge")} 2x, '
-        # f'{config.settings["THUMBS_URL"]}{get_webp_filename(story_object, "medium")} 1x" '
-        # 'sizes="(min-width: 1440px) 350px, (min-width: 1080px) 350px, (min-width: 768px) 350px, 350px" '
-        f'src="{config.settings["THUMBS_URL"]}{get_webp_filename(story_object, "extralarge")}" '
+        f'<img src="{config.settings["THUMBS_URL"]}{get_webp_filename(story_object, "extralarge")}" '
         f'alt="{utils_text.sanitize(story_object.title)}" '
         'class="thumb" '
-        f'loading="{img_loading}" />'
+        f'loading="{img_loading}">'
         "</a>"
         "</div>"
     )
@@ -316,54 +310,58 @@ def draw_dogear(pdf_page_img, log_prefix=""):
 
 
 def fix_multipage_pdf(story_object):
-    log_prefix_local = f"id {story_object.id}: fix_multipage_pdf(): "
+    log_prefix_local = f"id {story_object.id}: fix_multipage_pdf: "
+    file_url_slug = (
+        f"file={story_object.downloaded_orig_thumb_full_path}, url={story_object.url}"
+    )
+
     try:
         with open(
-            story_object.downloaded_orig_thumb_full_path, "rb"
+            story_object.downloaded_orig_thumb_full_path, mode="rb"
         ) as pdf_file_stream:
             pdf_file = PdfReader(pdf_file_stream, strict=False)
 
-        story_object.pdf_page_count = len(pdf_file.pages)
+            story_object.pdf_page_count = len(pdf_file.pages)
 
-        if len(story_object.pdf_page_count) > 1:
+            if story_object.pdf_page_count == 1:
+                logger.info(log_prefix_local + "PDF is 1 page; nothing to do!")
+            elif story_object.pdf_page_count > 1:
+                with tempfile.NamedTemporaryFile(
+                    delete=False,
+                    delete_on_close=False,
+                    dir=config.settings["TEMP_DIR"],
+                    prefix=f"{story_object.id}-",
+                    suffix=".pdf",
+                ) as temp_pdf:
+                    outfile = PdfWriter()
+                    outfile.add_page(pdf_file.pages[0])
+                    outfile.write(temp_pdf)
+                    temp_pdf_path = temp_pdf.name
 
-            outfile = PdfWriter()
-            outfile.add_page(pdf_file.pages[0])
-            temp_pdf_full_path = os.path.join(
-                config.settings["TEMP_DIR"], f"temp-{story_object.id}.pdf"
-            )
-            with open(temp_pdf_full_path, "wb") as output_stream:
-                outfile.write(output_stream)
+                shutil.copyfile(
+                    temp_pdf_path, story_object.downloaded_orig_thumb_full_path
+                )
 
-            shutil.copyfile(
-                temp_pdf_full_path, story_object.downloaded_orig_thumb_full_path
-            )
-
-            logger.info(
-                log_prefix_local
-                + f"story_object.downloaded_orig_thumb_full_path: {story_object.downloaded_orig_thumb_full_path}"
-            )
-            story_object.thumb_aspect_hint = "PDF page"
-            logger.info(
-                log_prefix_local + "success discarding all but first page of PDF"
-            )
-        elif len(story_object.pdf_page_count) == 1:
-            logger.info(log_prefix_local + "PDF is 1 page; nothing to do!")
-        else:
-            logger.error(
-                log_prefix_local
-                + f"{story_object.pdf_page_count=} for url={story_object.url}"
-            )
+                story_object.thumb_aspect_hint = "PDF page"
+                logger.info(
+                    log_prefix_local
+                    + f"successfully discarded all but first page of PDF. {file_url_slug}"
+                )
+            else:
+                logger.error(
+                    log_prefix_local
+                    + f"unexpected {story_object.pdf_page_count=}. {file_url_slug}"
+                )
 
     except Exception as exc:
         exc_name = f"{exc.__class__.__module__}.{exc.__class__.__name__}"
         exc_msg = str(exc)
         exc_slug = f"{exc_name}: {exc_msg}"
-        logger.error(
+        logger.info(
             log_prefix_local
             + f"failed to discard all but first page of PDF."
             + exc_slug
-            + f"url={story_object.url} (~Tim~)"
+            + f"{file_url_slug} ~Tim~"
         )
         logger.info(log_prefix_local + traceback.format_exc())
         raise exc
@@ -633,7 +631,7 @@ def handle_exception(exc: Exception = None, log_prefix="", context=None):
         logger.error(log_prefix + tb_str)
 
     else:
-        logger.error(log_prefix + "unexpected exception: " + exc_slug + " (~Tim~)")
+        logger.error(log_prefix + "unexpected exception: " + exc_slug + " ~Tim~")
         logger.error(context)
         logger.error(log_prefix + tb_str)
 
@@ -648,10 +646,12 @@ def populate_image_slug_in_story_object(
     story_object, img_loading="lazy", force_im6=False
 ) -> None:
     log_prefix_id = f"id {story_object.id}: "
-    log_prefix = log_prefix_id + "populate_image_slug(): "
+    log_prefix = log_prefix_id + "populate_image_slug: "
     force_aspect = None
     no_trim = False
     no_pad = False
+
+    # - elsewhere, create way of invoking specific version of imagemagick, so we can fall back to version 6 in case of the pamcmyk32 error
 
     mimetype = utils_mimetypes_magic.get_mimetype_via_python_magic(
         story_object.downloaded_orig_thumb_full_path, log_prefix=log_prefix
@@ -716,8 +716,6 @@ def populate_image_slug_in_story_object(
             # we keep it there in case we want to (in future) take additional actions to respond to errors in that function
             story_object.has_thumb = False
             return
-
-
 
     image_format = None
 
@@ -835,7 +833,7 @@ def populate_image_slug_in_story_object(
                 exc_msg = str(exc)
                 exc_slug = f"{exc_name}: {exc_msg}"
 
-                logger.info(log_prefix + "problem in get_image_to_use(): " + exc_slug)
+                logger.info(log_prefix + "problem in get_image_to_use: " + exc_slug)
                 story_object.has_thumb = False
                 return
 
@@ -897,7 +895,7 @@ def populate_image_slug_in_story_object(
         context["img_loading"] = img_loading
 
         handle_exception(
-            exc=exc, log_prefix=log_prefix + "with Image(): ", context=context
+            exc=exc, log_prefix=log_prefix + "with Image: ", context=context
         )
 
         # populate_image_slug_in_story_object(story_object, img_loading="lazy", force_im6=False)
@@ -958,7 +956,7 @@ def rasterize_pdf_using_ghostscript(story_object):
 
 
 def save_thumb_where_it_should_go(webp_image, story_object, size):
-    log_prefix = f"id {story_object.id}: save_thumb_where_it_should_go(): "
+    log_prefix = f"id {story_object.id}: save_thumb_where_it_should_go: "
     thumb_filename = get_webp_filename(story_object, size)
     webp_image.save(filename=os.path.join(config.settings["TEMP_DIR"], thumb_filename))
     try:

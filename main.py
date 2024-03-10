@@ -17,7 +17,7 @@ import utils_text
 
 logger = None
 
-# TODO: 2024-01-30T07:41:55Z [new]     ERROR    id 39187286: asdfft(): has_thumb is True, but there's no image_slug, so updating as_thumb to False (~Tim~)
+# TODO: 2024-01-30T07:41:55Z [new]     ERROR    id 39187286: asdfft(): has_thumb is True, but there's no image_slug, so updating as_thumb to False ~Tim~
 # TODO: 2024-01-30T07:59:10Z [new]     INFO     id 39187463: d_og_i(): get(): MissingSchema: Invalid URL '../../uploads/farewell_djangosites.jpg': No scheme supplied. Perhaps you meant https://../../uploads/farewell_djangosites.jpg?
 # TODO: endpoint_query_via_requests(): problem querying url https://api.ipify.org?format=json: SSLError: HTTPSConnectionPool(host='api.ipify.org', port=443): Max retries exceeded with url: /?format=json (Caused by SSLError(SSLEOFError(8, '[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1007)'))) ; will delay 4 seconds and retry (retries left 10)
 # TODO: 2024-01-31T06:13:33Z [active]  INFO     id 39196532: asdfft(): found og:image url //stsci-opo.org/STScI-01HM9KB3F5RCZ5KPA4P9V3B987.png
@@ -46,7 +46,7 @@ def check_for_required_dirs():
 
 def main():
 
-    log_prefix = "main(): "
+    log_prefix = "main: "
 
     story_type = sys.argv[1]
     config.load_settings(sys.argv[2], sys.argv[3])

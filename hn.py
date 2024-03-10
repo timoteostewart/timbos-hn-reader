@@ -52,7 +52,7 @@ skip_getting_content_type_via_head_request_for_domains = {
 
 def asdfft1(item_id=None, pos_on_page=None):
     log_prefix_id = f"id {item_id}: "
-    log_prefix_local = log_prefix_id + "asdfft1(): "
+    log_prefix_local = log_prefix_id + "asdfft1: "
 
     try:
         asdfft2(item_id, pos_on_page)
@@ -64,10 +64,10 @@ def asdfft1(item_id=None, pos_on_page=None):
             exc_msg = str(exc)
             exc_slug = f"{exc_name}: {exc_msg}"
             logger.info(
-                log_prefix_id + "asdfft2(): " + "unexpected exception: " + exc_slug
+                log_prefix_id + "asdfft2: " + "unexpected exception: " + exc_slug
             )
             tb_str = traceback.format_exc()
-            logger.info(log_prefix_id + "asdfft2(): " + tb_str)
+            logger.info(log_prefix_id + "asdfft2: " + tb_str)
 
     story_as_dict = None
     try:
@@ -96,7 +96,7 @@ def asdfft1(item_id=None, pos_on_page=None):
 
     if not story_object:
         raise Exception(
-            log_prefix_local + "item_factory(): failed to create story object"
+            log_prefix_local + "item_factory: failed to create story object"
         )
 
     story_object.time_of_last_firebaseio_query = (
@@ -133,7 +133,7 @@ def asdfft1(item_id=None, pos_on_page=None):
                     log_prefix_local
                     + "srct has multiple values: "
                     + story_object.linked_url_reported_content_type
-                    + " (~Tim~)"
+                    + " ~Tim~"
                 )
                 if "text/html" in types:
                     story_object.linked_url_reported_content_type = "text/html"
@@ -233,7 +233,7 @@ def asdfft1(item_id=None, pos_on_page=None):
 
                                     logger.info(
                                         log_prefix_local
-                                        + f"saved og:image base64 inline data to {local_file_with_og_image_inline_data_decoded} url={story_object.url} (~Tim~)"
+                                        + f"saved og:image base64 inline data to {local_file_with_og_image_inline_data_decoded} url={story_object.url} ~Tim~"
                                     )
 
                                     story_object.og_image_inline_data_decoded_local_path = (
@@ -264,7 +264,7 @@ def asdfft1(item_id=None, pos_on_page=None):
                 exc_slug = f"{exc_name}: {exc_msg}"
                 logger.error(
                     log_prefix_id
-                    + "get_reading_time(): unexpected exception: "
+                    + "get_reading_time: unexpected exception: "
                     + exc_slug
                 )
                 tb_str = traceback.format_exc()
@@ -328,10 +328,13 @@ def asdfft1(item_id=None, pos_on_page=None):
             ):
                 story_object.has_thumb = False
             else:
-                if story_object.og_image_url and thnr_scrapers.download_og_image1(
-                    story_object
-                ):
+                d_og_image_res = thnr_scrapers.download_og_image1(story_object)
+                if story_object.og_image_url and d_og_image_res:
                     story_object.has_thumb = True  # provisionally
+                elif not d_og_image_res:
+                    logger.info(log_prefix_local + f"failed to download_og_image()")
+                    story_object.has_thumb = False
+
                 else:
                     logger.error(
                         log_prefix_local + f"unexpected result from download_og_image()"
@@ -361,7 +364,7 @@ def asdfft1(item_id=None, pos_on_page=None):
         if story_object.has_thumb and not story_object.image_slug:
             logger.error(
                 log_prefix_local
-                + "has_thumb is True, but there's no image_slug, so updating as_thumb to False (~Tim~)"
+                + "has_thumb is True, but there's no image_slug, so updating as_thumb to False ~Tim~"
             )
             story_object.has_thumb = False
 
@@ -383,7 +386,7 @@ def asdfft1(item_id=None, pos_on_page=None):
 
 
 def asdfft2_preprocess_outbound_link(story_object, log_prefix: str) -> None:
-    log_prefix_local = log_prefix + "asdfft2_preprocess_outbound_link(): "
+    log_prefix_local = log_prefix + "asdfft2_preprocess_outbound_link: "
 
     parsed_url = urlparse(story_object.url)
 
@@ -413,7 +416,7 @@ generic_binary_mimetypes = set(
 
 def asdfft2(item_id=None, pos_on_page=None):
     log_prefix_id = f"id {item_id}: "
-    log_prefix_local = log_prefix_id + "asdfft2(): "
+    log_prefix_local = log_prefix_id + "asdfft2: "
 
     # short delay since asdfft1() and asdfft2() are called in sequence and scrape the same page
     time.sleep(utils_random.random_real(0.5, 2.5))
@@ -446,7 +449,7 @@ def asdfft2(item_id=None, pos_on_page=None):
 
     if not story_object:
         # we have to give up
-        err_msg = "item_factory(): failed to create story object"
+        err_msg = "item_factory: failed to create story object"
         logger.error(log_prefix_local + err_msg)
         raise Exception(log_prefix_local + err_msg)
 
@@ -462,6 +465,7 @@ def asdfft2(item_id=None, pos_on_page=None):
         parsed_url = urlparse(story_object.url)
 
         # do some processing of the outbound link in some cases
+        # TODO: extract this url processing logic to its own function
         # dropbox.com
         if (
             parsed_url.netloc.endswith("dropbox.com")
@@ -474,8 +478,6 @@ def asdfft2(item_id=None, pos_on_page=None):
             )
             story_object.url = new_url
             parsed_url = urlparse(story_object.url)
-
-        hash_of_url = utils_hash.get_hash_of_url(story_object.url)
 
         response_objects = {}
         for each_gro_func in [
@@ -496,7 +498,7 @@ def asdfft2(item_id=None, pos_on_page=None):
         if not response_objects:
             logger.info(
                 log_prefix_local
-                + f"failed to get any response objects for url {story_object.url} (~Tim~)"
+                + f"failed to get any response objects for url {story_object.url} ~Tim~"
             )
 
             # TODO: create the story card with the details we have
@@ -510,24 +512,25 @@ def asdfft2(item_id=None, pos_on_page=None):
         # invariant now: we have at least one response object
 
         # let's download the content and get its magic type
-        hash_of_url = utils_hash.get_hash_of_url(story_object.url)
-        local_file_with_response_content = config.settings["TEMP_DIR"] + hash_of_url
+        local_file_with_response_content = config.settings["TEMP_DIR"] + str(
+            story_object.id
+        )
 
         for k, v in response_objects.items():
             utils_file.save_response_content_to_disk(
                 response=v,
-                dest_local_file=local_file_with_response_content + "-" + k,
+                dest_local_file=local_file_with_response_content + "-" + k[4:],
                 log_prefix=log_prefix_local,
             )
 
         # prefer the response object from requests, because the object from hrequests sometimes handles binary files as utf-8 strings
         if "get_response_object_via_requests" in response_objects:
             local_file_with_response_content = (
-                local_file_with_response_content + "-get_response_object_via_requests"
+                local_file_with_response_content + "-response_object_via_requests"
             )
         else:
             local_file_with_response_content = (
-                local_file_with_response_content + "-get_response_object_via_hrequests"
+                local_file_with_response_content + "-response_object_via_hrequests"
             )
 
         # get magic type of the file
@@ -573,7 +576,7 @@ def asdfft2(item_id=None, pos_on_page=None):
             else:
                 logger.info(
                     log_prefix_local
-                    + f"{mimetype_via_exiftool=}, type(mimetype_via_exiftool)={type(mimetype_via_exiftool)} (~Tim~)"
+                    + f"{mimetype_via_exiftool=}, type(mimetype_via_exiftool)={type(mimetype_via_exiftool)} ~Tim~"
                 )
 
         content_type_to_use = None
@@ -598,15 +601,17 @@ def asdfft2(item_id=None, pos_on_page=None):
         if not srct:
             logger.info(
                 log_prefix_local
-                + f"failed to get any srct for {story_object.url=} (~Tim~)"
+                + f"failed to get any srct for {story_object.url=} ~Tim~"
             )
-
-        if len(srct) > 1:
+            srct = None
+        elif len(srct) == 1:
+            srct = srct.pop()
+        elif len(srct) > 1:
             logger.info(
                 log_prefix_local
-                + f"multiple srct values: {srct=}, {story_object.url=} (~Tim~)"
+                + f"multiple srct values: {srct=}, {story_object.url=} ~Tim~"
             )
-        srct = srct.pop()
+            srct = srct.pop()
 
         all_values = set()
         if srct:
@@ -634,7 +639,7 @@ def asdfft2(item_id=None, pos_on_page=None):
         if textual_mimetype == "application/json" and parsed_url.netloc == "github.com":
             logger.info(
                 log_prefix_local
-                + f"got 'application/json' from {story_object.url} (~Tim~)"
+                + f"got 'application/json' from {story_object.url} ~Tim~"
             )
 
         if textual_mimetype:
@@ -657,7 +662,7 @@ def asdfft2(item_id=None, pos_on_page=None):
                         consensus_content_type_to_use = trusted_values.pop()
                         logger.info(
                             log_prefix_local
-                            + f"generic {srct=}, but {trusted_values=} ; {consensus_content_type_to_use=} {url_slug} (~Tim~)"
+                            + f"generic {srct=}, but {trusted_values=} ; {consensus_content_type_to_use=} {url_slug} ~Tim~"
                         )
 
                 # 3. If srct, mimetype_via_python_magic, mimetype_via_file_command, mimetype_via_exiftool all agree, use that:
@@ -665,7 +670,7 @@ def asdfft2(item_id=None, pos_on_page=None):
                     consensus_content_type_to_use = srct
                     logger.info(
                         log_prefix_local
-                        + f"{srct=} equals {trusted_values=} ; {consensus_content_type_to_use=} {url_slug} (~Tim~)"
+                        + f"{srct=} equals {trusted_values=} ; {consensus_content_type_to_use=} {url_slug} ~Tim~"
                     )
 
                 # 4. If srct matches any value in trusted_values, use that:
@@ -673,7 +678,7 @@ def asdfft2(item_id=None, pos_on_page=None):
                     consensus_content_type_to_use = srct
                     logger.info(
                         log_prefix_local
-                        + f"{srct=} matches any of {trusted_values=} ; {consensus_content_type_to_use=} {url_slug} (~Tim~)"
+                        + f"{srct=} matches any of {trusted_values=} ; {consensus_content_type_to_use=} {url_slug} ~Tim~"
                     )
 
                 # 5. If srct matches any value in all_values, use that:
@@ -681,7 +686,7 @@ def asdfft2(item_id=None, pos_on_page=None):
                     consensus_content_type_to_use = srct
                     logger.info(
                         log_prefix_local
-                        + f"{srct=} matches any of {all_values=} ; {consensus_content_type_to_use=} {url_slug} (~Tim~)"
+                        + f"{srct=} matches any of {all_values=} ; {consensus_content_type_to_use=} {url_slug} ~Tim~"
                     )
 
                 # 6. Just use srct
@@ -689,7 +694,7 @@ def asdfft2(item_id=None, pos_on_page=None):
                     consensus_content_type_to_use = srct
                     logger.info(
                         log_prefix_local
-                        + f"{srct=} instead of {all_values=} ; {consensus_content_type_to_use=} {url_slug} (~Tim~)"
+                        + f"{srct=} instead of {all_values=} ; {consensus_content_type_to_use=} {url_slug} ~Tim~"
                     )
 
             else:  # srct is None
@@ -698,7 +703,7 @@ def asdfft2(item_id=None, pos_on_page=None):
                     consensus_content_type_to_use = trusted_values.pop()
                     logger.info(
                         log_prefix_local
-                        + f"srct=None, but {trusted_values=} ; {consensus_content_type_to_use=} {url_slug} (~Tim~)"
+                        + f"srct=None, but {trusted_values=} ; {consensus_content_type_to_use=} {url_slug} ~Tim~"
                     )
 
                 # 8. Fall back on generic 'application/octet-stream'
@@ -706,13 +711,13 @@ def asdfft2(item_id=None, pos_on_page=None):
                     consensus_content_type_to_use = "application/octet-stream"
                     logger.info(
                         log_prefix_local
-                        + f"srct=None, and {all_values=} disagree ; {consensus_content_type_to_use=} {url_slug} (~Tim~)"
+                        + f"srct=None, and {all_values=} disagree ; {consensus_content_type_to_use=} {url_slug} ~Tim~"
                     )
 
         if textual_mimetype and consensus_content_type_to_use != textual_mimetype:
             logger.info(
                 log_prefix_local
-                + f"{consensus_content_type_to_use=} doesn't match {textual_mimetype=} {url_slug} (~Tim~)"
+                + f"{consensus_content_type_to_use=} doesn't match {textual_mimetype=} {url_slug} ~Tim~"
             )
 
         # discard very common mimetypes as not interesting
@@ -936,7 +941,7 @@ def asdfft2(item_id=None, pos_on_page=None):
                             log_prefix_local
                             + f"problem making soup from {story_object.url}:"
                             + exc_slug
-                            + " (~Tim~)"
+                            + " ~Tim~"
                         )
 
                     # if we can't make soup, we don't go on to the block below
@@ -1056,7 +1061,7 @@ def asdfft2(item_id=None, pos_on_page=None):
 def choose_best_page_source(
     page_source_via_get, page_source_via_render, url, log_prefix=""
 ):
-    log_prefix_local = log_prefix + "choose_best_page_source(): "
+    log_prefix_local = log_prefix + "choose_best_page_source: "
     empty_page_source = "<html><head></head><body></body></html>"
     if page_source_via_get:
         if page_source_via_get == empty_page_source:
@@ -1136,14 +1141,14 @@ def freshen_up(story_object=None, page_package=None):
     except Exception as exc:
         logger.info(
             log_prefix_local
-            + f"freshen_up(): query to hacker-news.firebaseio.com failed for story id {story_object.id} ; so re-using old story details"
+            + f"freshen_up: query to hacker-news.firebaseio.com failed for story id {story_object.id} ; so re-using old story details"
         )
         raise Exception("failed to freshen story")
 
     if not updated_story_data_as_dict:
         logger.info(
             log_prefix_local
-            + f"freshen_up(): query to hacker-news.firebaseio.com failed for story id {story_object.id} ; so re-using old story details"
+            + f"freshen_up: query to hacker-news.firebaseio.com failed for story id {story_object.id} ; so re-using old story details"
         )
         raise Exception("failed to freshen story")
 
@@ -1170,7 +1175,7 @@ def freshen_up(story_object=None, page_package=None):
             ):
                 story_object.story_content_type_slug = ""
                 logger.info(
-                    f"id {story_object.id}: removed [pdf] label after title (~Tim~)"
+                    f"id {story_object.id}: removed [pdf] label after title ~Tim~"
                 )
 
     else:
@@ -1230,6 +1235,7 @@ def get_content_type_from_response(response, log_prefix=""):
         return utils_text.parse_content_type_from_raw_header(
             response.headers["Content-Type"],
             log_prefix=log_prefix,
+            context={"url": response.url},
         )
 
     return None
@@ -1330,9 +1336,11 @@ def item_factory(story_as_dict):
 
 def page_package_processor(page_package: PageOfStories):
 
-    unique_id = utils_hash.get_sha1_of_current_time(salt=utils_random.random_real(0, 1))
+    ppp_unique_id = utils_hash.get_sha1_of_current_time(
+        salt=utils_random.random_real(0, 1)
+    )
 
-    log_prefix_local = f"ppp() with id {unique_id}, page={page_package.page_number}: "
+    log_prefix_local = f"ppp={ppp_unique_id} page={page_package.page_number}: "
 
     logger.info(
         log_prefix_local
@@ -1363,7 +1371,7 @@ def page_package_processor(page_package: PageOfStories):
 
     for rank, cur_id in enumerate(page_package.story_ids):
         log_prefix_id = f"id {cur_id}: "
-        log_prefix_rank_cur_id_loop = log_prefix_id + "ppp(): "
+        log_prefix_rank_cur_id_loop = log_prefix_id + f"ppp={ppp_unique_id}: "
 
         # logger.info(id_log_prefix + f"page:rank={page_package.page_number}:{rank}")
 
@@ -1447,12 +1455,12 @@ def page_package_processor(page_package: PageOfStories):
                             exc_slug = f"{exc_name}: {exc_msg}"
                             logger.error(
                                 log_prefix_id
-                                + "freshen_up(): "
+                                + "freshen_up: "
                                 + "unexpected exception: "
                                 + exc_slug
                             )
                             tb_str = traceback.format_exc()
-                            logger.error(log_prefix_id + "freshen_up(): " + tb_str)
+                            logger.error(log_prefix_id + "freshen_up: " + tb_str)
 
         if not story_object:
             try:
@@ -1474,7 +1482,7 @@ def page_package_processor(page_package: PageOfStories):
                 exc_slug = f"{exc_name}: {exc_msg}"
                 logger.error(
                     log_prefix_rank_cur_id_loop
-                    + f"asdfft(): unexpected exception: "
+                    + f"asdfft: unexpected exception: "
                     + exc_slug
                 )
                 tb_str = traceback.format_exc()
@@ -1674,7 +1682,7 @@ def page_package_processor(page_package: PageOfStories):
         if upload_attempts_remaining == 0:
             logger.error(
                 log_prefix_local
-                + f"failed to upload page {page_package.page_number} of {page_package.story_type} (~Tim~)"
+                + f"failed to upload page {page_package.page_number} of {page_package.story_type} ~Tim~"
             )
             return None
 
@@ -1693,7 +1701,7 @@ def page_package_processor(page_package: PageOfStories):
             exc_msg = str(exc)
             exc_slug = f"{exc_name}: {exc_msg}"
             logger.error(
-                log_prefix_local + exc_slug + f" {upload_attempts_remaining=} (~Tim~)"
+                log_prefix_local + exc_slug + f" {upload_attempts_remaining=} ~Tim~"
             )
             time.sleep(delay_between_upload_attempts)
             delay_between_upload_attempts *= 2
@@ -1768,7 +1776,7 @@ def page_package_processor(page_package: PageOfStories):
         exc_name = exc.__class__.__name__
         exc_msg = str(exc)
         exc_slug = f"{exc_name}: {exc_msg}"
-        logger.error(log_prefix_local + exc_slug + " (~Tim~)")
+        logger.error(log_prefix_local + exc_slug + " ~Tim~")
         return None
 
     # compute how long it took to ship this page
@@ -1781,7 +1789,7 @@ def page_package_processor(page_package: PageOfStories):
 
     logger.info(
         log_prefix_local
-        + f"shipped {num_stories_on_page} actual stories in {h:02d}:{m:02d}:{s:02d}"
+        + f"shipped {num_stories_on_page} stories in {h:02d}:{m:02d}:{s:02d}"
     )
     return page_package.page_number
 
@@ -1899,7 +1907,7 @@ def query_firebaseio_for_story_data(item_id=None):
 
 
 def save_story_object_to_disk(story_object=None, log_prefix=""):
-    log_prefix += "save_story_object_to_disk(): "
+    log_prefix += "save_story_object_to_disk: "
     try:
         with open(
             os.path.join(
@@ -1934,7 +1942,7 @@ def save_story_object_to_disk(story_object=None, log_prefix=""):
 
 def supervisor(cur_story_type):
     unique_id = utils_hash.get_sha1_of_current_time(salt=utils_random.random_real(0, 1))
-    log_prefix = f"supervisor({cur_story_type}) with id {unique_id}: "
+    log_prefix = f"supervisor={unique_id}: "
 
     supervisor_start_ts = utils_time.get_time_now_in_epoch_seconds_float()
 
@@ -1955,20 +1963,20 @@ def supervisor(cur_story_type):
                     + f"ingested roster for {roster_story_type} stories; length: {len(rosters[roster_story_type])}"
                 )
             else:
-                logger.error(
+                logger.info(
                     log_prefix
-                    + f"failed to ingest roster for {roster_story_type} stories"
+                    + f"failed to ingest roster for {roster_story_type} stories ~Tim~"
                 )
         except Exception as exc:
-            logger.error(
+            logger.info(
                 log_prefix
-                + f"failed to ingest roster for {roster_story_type} stories: {exc}"
+                + f"failed to ingest roster for {roster_story_type} stories: {exc} ~Tim~"
             )
 
     if len(rosters[cur_story_type]) == 0:
-        logger.error(
+        logger.info(
             log_prefix
-            + f"failed to ingest roster '{cur_story_type}' after {config.settings['SCRAPING']['NUM_RETRIES_FOR_HN_FEEDS']} tries. will proceed with empty roster."
+            + f"failed to ingest roster '{cur_story_type}' after {config.settings['SCRAPING']['NUM_RETRIES_FOR_HN_FEEDS']} tries. will proceed with empty roster. ~Tim~"
         )
         rosters[roster_story_type] = []
 
@@ -2032,7 +2040,7 @@ def supervisor(cur_story_type):
 
     if pages_in_progress:
         logger.warning(
-            log_prefix + f"shipped some pages: missing {pages_in_progress} (~Tim~)"
+            log_prefix + f"shipped some pages: missing {pages_in_progress} ~Tim~"
         )
     else:
         logger.info(log_prefix + "shipped all pages")
