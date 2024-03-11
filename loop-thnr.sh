@@ -36,9 +36,10 @@ if [[ -z ${utility_account_username} ]]; then
 fi
 
 PAUSE_BETWEEN_CYCLES_IN_MINUTES=30
-MAX_AGE_OF_TEMP_FILES_IN_SLASH_TMP_IN_MINUTES=180
-MAX_AGE_OF_TEMP_DIRS_IN_SLASH_TMP_IN_MINUTES=180
-MAX_AGE_OF_RESPONSE_OBJECT_FILES_IN_SLASH_TMP_IN_MINUTES=1800
+MAX_AGE_OF_TEMP_FILES_IN_SLASH_TMP_IN_MINUTES=2880  # 2 days
+MAX_AGE_OF_RESPONSE_OBJECT_FILES_IN_SLASH_TMP_IN_MINUTES=2160  # 1½ days
+MAX_AGE_OF_OG_IMAGE_FILES_IN_SLASH_TMP_IN_MINUTES=60  # 1 hour
+MAX_AGE_OF_TEMP_DIRS_IN_SLASH_TMP_IN_MINUTES=60  # 1 hour
 LOOPS_BEFORE_RESTART=25
 script_invocation_id=$(get-sha1-of-current-time-plus-random)
 LOG_PREFIX_LOCAL="loop-thnr.sh id ${script_invocation_id}: "
@@ -106,6 +107,15 @@ cleanup_tmp_dir() {
         fi
     done < <(find "${TARGET_DIR}" -mindepth 1 -user "${utility_account_username}" -name "*" -type f -mmin "+${MAX_AGE_OF_TEMP_FILES_IN_SLASH_TMP_IN_MINUTES}")
 
+    # MAX_AGE_OF_OG_IMAGE_FILES_IN_SLASH_TMP_IN_MINUTES
+    while IFS= read -r file; do
+        if ! rm "${file}"; then
+            write-log-message loop error "${LOG_PREFIX_LOCAL} Failed to delete ${file}"
+        else
+            (( num_tmp_files += 1 ))
+        fi
+    done < <(find "${TARGET_DIR}" -mindepth 1 -user "${utility_account_username}" -name "*-og-image" -type f -mmin "+${MAX_AGE_OF_OG_IMAGE_FILES_IN_SLASH_TMP_IN_MINUTES}")
+
     # "*-get_response_object_via_hrequests"
     while IFS= read -r file; do
         if ! rm "${file}"; then
@@ -123,7 +133,6 @@ cleanup_tmp_dir() {
             (( num_tmp_files += 1 ))
         fi
     done < <(find "${TARGET_DIR}" -mindepth 1 -user "${utility_account_username}" -name "*-response_object_via_requests" -type f -mmin "+${MAX_AGE_OF_RESPONSE_OBJECT_FILES_IN_SLASH_TMP_IN_MINUTES}")
-
 
     # delete old temporary directories
     num_tmp_dirs=0
@@ -195,7 +204,7 @@ do
     ping_failures=0
     min_pings=3
     for cur_website in "${websites_to_ping[@]}"; do
-        if ping -c 1 ${cur_website} >/dev/null &2>1; then
+        if ping -c 1 ${cur_website} >/dev/null 2>&1; then
             (( ping_successes += 1 ))
         else
             (( ping_failures += 1 ))
@@ -216,7 +225,7 @@ do
         fi
     fi
 
-    if ! "${project_base_dir}connect_to_vpn.sh"; then
+    if ! "${project_base_dir}connect-to-vpn.sh"; then
         exit 1
     fi
 

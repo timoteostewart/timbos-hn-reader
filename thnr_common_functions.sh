@@ -34,7 +34,7 @@ get-cur-year-and-doy() {
 }
 
 get-last-filename() {
-    local pattern="$1"
+    local pattern="${1}"
     local last_file=""
     # Use a glob pattern without word splitting
     for file in $pattern; do
@@ -62,8 +62,8 @@ write-log-message() {
     # example: write-log-message loop error "${LOG_PREFIX_LOCAL} Failed to delete ${file}"
     # example: write-log-message loop info "${LOG_PREFIX_LOCAL} ${min_pings} or more pings succeeded. Continuing."
     local cur_year_and_doy=$(get-cur-year-and-doy)
-    local log_identifier="$1"
-    local write_to_combined_log_flag="$4"
+    local log_identifier="${1}"
+    local write_to_combined_log_flag="${4}"
 
     if [[ -z "${write_to_combined_log_flag}" ]]; then
         write_to_combined_log_flag="true"

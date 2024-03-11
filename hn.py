@@ -592,8 +592,15 @@ def asdfft2(item_id=None, pos_on_page=None):
         srct = set(
             x
             for x in [
-                get_content_type_from_response(response=x, log_prefix=log_prefix_local)
-                for x in response_objects.values()
+                get_content_type_from_response(
+                    response=v,
+                    log_prefix=log_prefix_local,
+                    context={
+                        "url": story_object.url,
+                        "response_object_creator": k,
+                    },
+                )
+                for (k, v) in response_objects.items()
             ]
             if x
         )
@@ -1230,12 +1237,16 @@ def freshen_up(story_object=None, page_package=None):
             )
 
 
-def get_content_type_from_response(response, log_prefix=""):
+def get_content_type_from_response(response, log_prefix="", context=None):
     if response and "Content-Type" in response.headers:
+        if context:
+            context.update({"url": response.url})
+        else:
+            context = {"url": response.url}
         return utils_text.parse_content_type_from_raw_header(
             response.headers["Content-Type"],
             log_prefix=log_prefix,
-            context={"url": response.url},
+            context=context,
         )
 
     return None

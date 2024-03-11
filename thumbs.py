@@ -328,7 +328,6 @@ def fix_multipage_pdf(story_object):
             elif story_object.pdf_page_count > 1:
                 with tempfile.NamedTemporaryFile(
                     delete=False,
-                    delete_on_close=False,
                     dir=config.settings["TEMP_DIR"],
                     prefix=f"{story_object.id}-",
                     suffix=".pdf",

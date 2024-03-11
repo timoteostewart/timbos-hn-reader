@@ -903,21 +903,21 @@ def get_youtube_channel_slug(youtube_url: str, story_object=None):
                 account_url = f"https://www.youtube.com/channel/{channel_id}"
         except Exception as exc:
             if story_object:
-                logger.warning(
+                logger.info(
                     f"id {story_object.id}: failed to get playlist details for YouTube URL {youtube_url}: {exc}"
                 )
             else:
-                logger.warning(
+                logger.info(
                     f"failed to get playlist details for YouTube URL {youtube_url}: {exc}"
                 )
             return ""
     else:
         if story_object:
-            logger.warning(
+            logger.info(
                 f"id {story_object.id}: failed to understand format or structure of YouTube URL: {youtube_url}"
             )
         else:
-            logger.warning(
+            logger.info(
                 f"failed to understand format or structure of YouTube URL: {youtube_url}"
             )
 

@@ -23,7 +23,7 @@ class Story(Item):
 
         self.hn_comments_url: str = f"https://news.ycombinator.com/item?id={id}"
 
-        log_prefix = f"id {id}:"
+        log_prefix = f"id {id}: "
 
         if url:
             self.url: str = url
@@ -71,10 +71,9 @@ class Story(Item):
         self.og_image_filename_details_from_url: Dict = {}
         self.thumb_aspect_hint: str = None
 
-        self.og_image_is_inline_data: bool= False
+        self.og_image_is_inline_data: bool = False
         self.og_image_inline_data_srct: str = None
         self.og_image_inline_data_decoded_local_path: str = None
-
 
         # for download_og_image2()
         self.og_image_dict: Dict[str, str] = {}

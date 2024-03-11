@@ -238,57 +238,40 @@ def get_domains_from_url(url: str, log_prefix=""):
 
     original_url = url
 
+    # lowercase scheme, if present
+    if "://" in url:
+        orig_scheme = url.split("://")[0]
+        new_scheme = orig_scheme.lower()
+        url = url.replace(orig_scheme, new_scheme, 1)
+
     # remove scheme
-    if url.startswith("http"):
-        iodfs = url.index("//")
-        url = url[(iodfs + 2) :]
+    match = re.match(r"^https?://", url)
+    if match:
+        url = url.replace(match.group(), "", 1)
 
-    try:  # remove path symbol (i.e., forward slash) and remainder of string
-        iofs = url.index("/")
-        url = url[:iofs]
-    except:
-        pass
+    # url decode, if applicable
+    url = unquote(url)
 
-    try:  # remove percent-encoded path symbol (i.e., forward slash) and remainder of string
-        iofs = url.index("%2F")
-        url = url[:iofs]
-    except:
-        pass
-
-    try:  # remove query marker (i.e., question mark) and remainder of string
-        ioqm = url.index("?")
-        url = url[:ioqm]
-    except:
-        pass
-
-    try:  # remove percent-encoded query marker (i.e., question mark) and remainder of string
-        ioqm = url.index("%3F")
-        url = url[:ioqm]
-    except:
-        pass
-
-    try:  # remove port number symbol and remainder of string
-        ioc = url.index(":")
-        url = url[:ioc]
-    except:
-        pass
-
-    try:  # remove URI fragment and remainder of string
-        # more info: https://en.wikipedia.org/wiki/URI_fragment
-        iohm = url.index("#")
-        url = url[:iohm]
-    except:
-        pass
+    # remove:
+    # - first forward slash and on
+    # - query marker (i.e., question mark) and on
+    # - port number symbol and on
+    # - URI fragment indicator and on
+    special_characters = ["/", "?", ":", "#"]
+    for each in special_characters:
+        url = url.split(each)[0]
 
     hostname_full = url
 
-    # remove any www, www1, www2, www3 subdomains
+    # remove the www or r"[w]{2,3}\d" subdomain, if present
     if url.startswith("www."):
         hostname_minus_www = hostname_full[4:]
-    elif url.startswith("www") and url[3:4].isnumeric() and url[4:5] == ".":
-        hostname_minus_www = url[5:]
     else:
-        hostname_minus_www = hostname_full
+        match = re.match(r"w{2,3}\d", hostname_full)
+        if match:
+            hostname_minus_www = hostname_full.replace(match.group(), "", 1)
+        else:
+            hostname_minus_www = hostname_full
 
     hostname_full_via_urllib, hostname_minus_www_via_urllib = (
         get_domains_from_url_via_urllib(url=original_url, log_prefix=log_prefix)
@@ -298,18 +281,12 @@ def get_domains_from_url(url: str, log_prefix=""):
         logger.info(
             log_prefix_local + f"{hostname_full=}, {hostname_full_via_urllib=} ~Tim~"
         )
-    # else:
-    #     logger.info(log_prefix_local + "hostname_full == hostname_full_via_urllib")
 
     if hostname_minus_www_via_urllib != hostname_minus_www:
         logger.info(
             log_prefix_local
             + f"{hostname_minus_www=}, {hostname_minus_www_via_urllib=} ~Tim~"
         )
-    # else:
-    #     logger.info(
-    #         log_prefix_local + "hostname_minus_www == hostname_minus_www_via_urllib"
-    #     )
 
     return hostname_full, hostname_minus_www
 
@@ -524,15 +501,21 @@ def parse_content_type_from_raw_header(
     if not content_type_header:
         return None
 
-    if context and "url" in context:
-        url_slug = f"for url=({context['url']}) "
-    else:
-        url_slug = ""
+    if context:
+        if "url" in context:
+            url_slug = f"for url=({context['url']}) "
+        else:
+            url_slug = ""
+
+        if "response_object_creator" in context:
+            response_object_creator_slug = f"via {context['response_object_creator']} "
+        else:
+            response_object_creator_slug = ""
 
     if isinstance(content_type_header, list) or "," in content_type_header:
         logger.info(
             log_prefix_local
-            + f"interesting {content_type_header=}, {type(content_type_header)=} {url_slug}~Tim~"
+            + f"interesting {content_type_header=}, {type(content_type_header)=} {response_object_creator_slug}{url_slug}~Tim~"
         )
 
     ct_set = set()
@@ -545,7 +528,7 @@ def parse_content_type_from_raw_header(
     else:
         logger.info(
             log_prefix_local
-            + f"unexpected type={str(type(content_type_header))} for content_type_header={str(content_type_header)} {url_slug}~Tim~"
+            + f"unexpected type={str(type(content_type_header))} for content_type_header={str(content_type_header)} {response_object_creator_slug}{url_slug}~Tim~"
         )
 
     ct_set = {x.strip() for x in ct_set if x.strip()}
