@@ -17,24 +17,28 @@ class Story(Item):
         time: int,
         title: str,
         text: str,
+        type: str,
         url: str,
     ) -> None:
         self.story_object_version: int = 1
 
         self.hn_comments_url: str = f"https://news.ycombinator.com/item?id={id}"
 
-        log_prefix = f"id {id}: "
+        # TODO: indicate or group which attributes are queried during story freshening;
+        # these are the ones I can't modify their names or else the pickled Story files won't work
+
+        log_prefix = f"id={id}: "
 
         if url:
             self.url: str = url
-            self.has_outbound_link: bool = True
+            self.has_outbound_url: bool = True
             self.has_thumb: bool = None
             self.url_content_type: str = ""
             self.title_hyperlink = url
 
-        else:
+        else:  # url == None
             self.url: str = self.hn_comments_url
-            self.has_outbound_link: bool = False
+            self.has_outbound_url: bool = False
             self.has_thumb: bool = False
             self.url_content_type: str = ""
             self.title_hyperlink = self.hn_comments_url
@@ -120,7 +124,14 @@ class Story(Item):
         self.is_wellformed_xml: bool = False
         self.declared_root_element: str = None
 
-        super().__init__(id, "story", text, by, time, kids)
+        super().__init__(
+            id=id,
+            type=type,
+            text=text,
+            by=by,
+            time=time,
+            kids=kids,
+        )
 
     def __str__(self):
         res = ""

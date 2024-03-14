@@ -90,4 +90,4 @@ reading_speed_words_per_minute = (
 
 # debug flags
 debug_flags = {}
-debug_flags["DEBUG_FLAG_FORCE_SINGLE_THREAD_EXECUTION"] = True
+debug_flags["DEBUG_FLAG_FORCE_SINGLE_THREAD_EXECUTION"] = False

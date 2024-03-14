@@ -49,25 +49,65 @@ skip_getting_content_type_via_head_request_for_domains = {
     "bloomberg.com",
 }
 
+log_levels_to_funcs = {
+    logging.INFO: logging.info,
+    logging.WARNING: logging.warning,
+    logging.ERROR: logging.error,
+}
+
+
+def generic_exception_handler(
+    exc: Exception = None,
+    include_tb: bool = False,
+    log_detail: str = "",
+    log_level: int = logging.INFO,
+    log_prefix: str = "",
+    postscript: str = "",
+    raise_after: bool = False,
+) -> None:
+    log_prefix_local = log_prefix + "generic_exception_handler: "
+
+    if log_detail:
+        log_detail += ": "
+
+    if postscript:
+        postscript = " " + postscript
+
+    log_func = log_levels_to_funcs[log_level]
+
+    exc_module = exc.__class__.__module__
+    exc_name = exc.__class__.__name__
+    fq_exc_name = exc_module + "." + exc_name
+    exc_msg = str(exc)
+    exc_slug = fq_exc_name + ": " + exc_msg
+    log_func(log_prefix_local + log_detail + exc_slug + postscript)
+
+    if include_tb:
+        tb_str = traceback.format_exc()
+        log_func(log_prefix_local + tb_str)
+
+    if raise_after:
+        raise exc
+
 
 def asdfft1(item_id=None, pos_on_page=None):
-    log_prefix_id = f"id {item_id}: "
+    log_prefix_id = f"id={item_id}: "
     log_prefix_local = log_prefix_id + "asdfft1: "
 
-    try:
-        asdfft2(item_id, pos_on_page)
-    except Exception as exc:
-        if isinstance(exc, UnsupportedStoryType):
-            pass
-        else:
-            exc_name = exc.__class__.__name__
-            exc_msg = str(exc)
-            exc_slug = f"{exc_name}: {exc_msg}"
-            logger.info(
-                log_prefix_id + "asdfft2: " + "unexpected exception: " + exc_slug
-            )
-            tb_str = traceback.format_exc()
-            logger.info(log_prefix_id + "asdfft2: " + tb_str)
+    # try:
+    #     asdfft2(item_id, pos_on_page)
+    # except Exception as exc:
+    #     if isinstance(exc, UnsupportedStoryType):
+    #         pass
+    #     else:
+    #         exc_name = exc.__class__.__name__
+    #         exc_msg = str(exc)
+    #         exc_slug = f"{exc_name}: {exc_msg}"
+    #         logger.info(
+    #             log_prefix_id + "asdfft2: " + "unexpected exception: " + exc_slug
+    #         )
+    #         tb_str = traceback.format_exc()
+    #         logger.info(log_prefix_id + "asdfft2: " + tb_str)
 
     story_as_dict = None
     try:
@@ -87,8 +127,8 @@ def asdfft1(item_id=None, pos_on_page=None):
         raise Exception(
             log_prefix_local + "failed to receive story details from firebaseio.com"
         )
-    elif story_as_dict["type"] not in ["story", "job", "comment"]:
-        # TODO: eventually handle poll, job, etc. other types
+    elif story_as_dict["type"] not in ["story", "job"]:
+        # TODO: eventually handle poll, etc. other types
         logger.info(log_prefix_local + f"ignoring item of type {story_as_dict['type']}")
         raise UnsupportedStoryType(story_as_dict["type"])
 
@@ -103,7 +143,8 @@ def asdfft1(item_id=None, pos_on_page=None):
         utils_time.get_time_now_in_epoch_seconds_int()
     )
 
-    if story_object.has_outbound_link:
+    if story_object.has_outbound_url:
+        # get srct
         domain, domain_minus_www = utils_text.get_domains_from_url(story_object.url)
         if domain in skip_getting_content_type_via_head_request_for_domains:
             logger.info(log_prefix_local + f"skip HEAD request for {domain}")
@@ -166,13 +207,12 @@ def asdfft1(item_id=None, pos_on_page=None):
                 try:
                     soup = BeautifulSoup(page_source, parser_to_use)
                 except Exception as exc:
-                    exc_name = exc.__class__.__name__
-                    exc_msg = str(exc)
-                    exc_slug = f"{exc_name}: {exc_msg}"
-                    logger.info(
-                        log_prefix_local
-                        + f"unexpected problem making soup from {story_object.url}:"
-                        + exc_slug
+                    generic_exception_handler(
+                        exc=exc,
+                        include_tb=True,
+                        log_detail=f"unexpected problem making soup from {story_object.url}",
+                        log_prefix=log_prefix_local,
+                        postscript="~Tim~",
                     )
 
             if not page_source or not soup:
@@ -318,7 +358,7 @@ def asdfft1(item_id=None, pos_on_page=None):
         else:
             logger.info(
                 log_prefix_local
-                + f"unexpected linked url content-type '{story_object.linked_url_reported_content_type}' for url {story_object.url}"
+                + f"unexpected srct '{story_object.linked_url_reported_content_type}' for url {story_object.url}"
             )
 
         if story_object.og_image_url or story_object.og_image_is_inline_data:
@@ -357,7 +397,6 @@ def asdfft1(item_id=None, pos_on_page=None):
                         if not story_object.image_slug:
                             story_object.has_thumb = False
 
-        # add informative labels before and after the story card title, if possible
         if story_object.has_thumb and story_object.image_slug:
             logger.info(log_prefix_local + "story card will have a thumbnail")
 
@@ -368,9 +407,6 @@ def asdfft1(item_id=None, pos_on_page=None):
             )
             story_object.has_thumb = False
 
-    if not story_object.has_thumb:
-        logger.info(log_prefix_local + "story card will not have a thumbnail")
-
     # apply "[pdf]" label after title if it's not there but is probably applicable
     if (
         story_object.downloaded_og_image_magic_result
@@ -380,7 +416,7 @@ def asdfft1(item_id=None, pos_on_page=None):
             story_object.story_content_type_slug = (
                 ' <span class="story-content-type">[pdf]</span>'
             )
-            logger.info(f"id {story_object.id}: added [pdf] label after title")
+            logger.info(f"id={story_object.id}: added [pdf] label after title")
 
     return story_object
 
@@ -415,24 +451,26 @@ generic_binary_mimetypes = set(
 
 
 def asdfft2(item_id=None, pos_on_page=None):
-    log_prefix_id = f"id {item_id}: "
+    log_prefix_id = f"id={item_id}: "
     log_prefix_local = log_prefix_id + "asdfft2: "
 
     # short delay since asdfft1() and asdfft2() are called in sequence and scrape the same page
-    time.sleep(utils_random.random_real(0.5, 2.5))
+    time.sleep(utils_random.random_real(0.5, 1.5))
 
     story_as_dict = None
     try:
         story_as_dict = query_firebaseio_for_story_data(item_id=item_id)
     except Exception as exc:
-        exc_name = f"{exc.__class__.__module__}.{exc.__class__.__name__}"
-        exc_msg = str(exc)
-        exc_slug = f"{exc_name}: {exc_msg}"
-        logger.info(log_prefix_local + exc_slug)
-        raise exc
+        generic_exception_handler(
+            exc=exc,
+            include_tb=True,
+            log_detail=f"unexpected problem querying firebaseio",
+            log_prefix=log_prefix_local,
+            raise_after=True,
+        )
 
     if not story_as_dict:
-        logger.warning(
+        logger.info(
             log_prefix_local + "failed to receive story details from firebaseio.com"
         )
         raise Exception("failed to receive story details from firebaseio.com")
@@ -457,81 +495,100 @@ def asdfft2(item_id=None, pos_on_page=None):
         utils_time.get_time_now_in_epoch_seconds_int()
     )
 
-    if not story_object.url:
-        logger.info(log_prefix_local + "story has no url")
+    if not story_object.has_outbound_url:
+        # probably an Ask HN, etc.
+        logger.info(log_prefix_local + "story has no outbound url")
+        return story_object
 
-    if story_object.has_outbound_link:
+    # invariant now: story_object.has_outbound_url == True
 
+    # do some processing of the outbound link in some cases
+    # TODO: extract this url processing logic to its own function
+    parsed_url = urlparse(story_object.url)
+    # dropbox.com
+    if (
+        parsed_url.netloc.endswith("dropbox.com")
+        and parsed_url.path.endswith(".pdf")
+        and "dl=0" in parsed_url.query
+    ):
+        new_url = parsed_url._replace(query="dl=1").geturl()
+        logger.info(
+            log_prefix_local + f"changing url from {story_object.url} to {new_url}"
+        )
+        story_object.url = new_url
         parsed_url = urlparse(story_object.url)
 
-        # do some processing of the outbound link in some cases
-        # TODO: extract this url processing logic to its own function
-        # dropbox.com
-        if (
-            parsed_url.netloc.endswith("dropbox.com")
-            and parsed_url.path.endswith(".pdf")
-            and "dl=0" in parsed_url.query
-        ):
-            new_url = parsed_url._replace(query="dl=1").geturl()
-            logger.info(
-                log_prefix_local + f"changing url from {story_object.url} to {new_url}"
-            )
-            story_object.url = new_url
-            parsed_url = urlparse(story_object.url)
+    response_objects = {}
+    for each_gro_func in [
+        utils_http.get_response_object_via_requests,
+        utils_http.get_response_object_via_hrequests,
+    ]:
+        time.sleep(utils_random.random_real(0, 1))
+        ro = each_gro_func(url=story_object.url, log_prefix=log_prefix_local)
+        if ro:
+            response_objects[each_gro_func.__name__] = ro
 
-        response_objects = {}
-        for each_gro_func in [
-            utils_http.get_response_object_via_requests,
-            utils_http.get_response_object_via_hrequests,
-        ]:
-            time.sleep(utils_random.random_real(0, 1))
-            ro = each_gro_func(url=story_object.url, log_prefix=log_prefix_local)
-            if ro:
-                response_objects[each_gro_func.__name__] = ro
-
-            else:
-                logger.info(
-                    log_prefix_local
-                    + f"failed to get response object via {each_gro_func.__name__}"
-                )
-
-        if not response_objects:
+        else:
             logger.info(
                 log_prefix_local
-                + f"failed to get any response objects for url {story_object.url} ~Tim~"
+                + f"failed to get response object via {each_gro_func.__name__}"
             )
 
-            # TODO: create the story card with the details we have
-            pass  # populate_story_card_html_in_story_object(story_object=story_object)
+    if not response_objects:
+        logger.info(
+            log_prefix_local
+            + f"failed to get any response objects for url {story_object.url} ~Tim~"
+        )
+        # create story card with what little we have
+        story_object.has_thumb = False
+        populate_story_card_html_in_story_object(story_object)
+        logger.info(log_prefix_local + "saving item to disk for the first time")
+        save_story_object_to_disk(
+            story_object=story_object, log_prefix=log_prefix_local
+        )
+        return story_object
 
-            # TODO: save pickle and json
-            pass
+    # invariant now: we have at least one response object
 
-            return
+    # let's download the content and determine its content type
+    local_file_with_response_content_prefix = config.settings["TEMP_DIR"] + str(
+        story_object.id
+    )
 
-        # invariant now: we have at least one response object
-
-        # let's download the content and get its magic type
-        local_file_with_response_content = config.settings["TEMP_DIR"] + str(
-            story_object.id
+    for k, v in response_objects.items():
+        utils_file.save_response_content_to_disk(
+            response=v,
+            dest_local_file=local_file_with_response_content_prefix + "-" + k[4:],
+            log_prefix=log_prefix_local,
         )
 
-        for k, v in response_objects.items():
-            utils_file.save_response_content_to_disk(
-                response=v,
-                dest_local_file=local_file_with_response_content + "-" + k[4:],
-                log_prefix=log_prefix_local,
-            )
+    # prefer the response object from requests, because the object from hrequests sometimes handles binary files as utf-8 strings
+    if "get_response_object_via_requests" in response_objects:
+        local_file_with_response_content = (
+            local_file_with_response_content_prefix + "-response_object_via_requests"
+        )
+    else:
+        # TODO: we REALLY REALLY don't want to use hrequest's ro, because it sometimes handles binary files as utf-8 strings
+        # TODO: use curl or something as a fallback to get the content, in order to avoid using the hrequests ro
+        # TODO: or maybe wait 30 seconds and try again to get the content via requests
+        local_file_with_response_content = (
+            local_file_with_response_content_prefix + "-response_object_via_hrequests"
+        )
 
-        # prefer the response object from requests, because the object from hrequests sometimes handles binary files as utf-8 strings
-        if "get_response_object_via_requests" in response_objects:
-            local_file_with_response_content = (
-                local_file_with_response_content + "-response_object_via_requests"
-            )
-        else:
-            local_file_with_response_content = (
-                local_file_with_response_content + "-response_object_via_hrequests"
-            )
+    textual_mimetype, page_source, is_wellformed_xml = (
+        utils_mimetypes_magic.get_textual_mimetype(
+            local_file=local_file_with_response_content,
+            log_prefix=log_prefix_local,
+            context={"url": story_object.url},
+        )
+    )
+
+    if textual_mimetype:
+        content_type_to_use = textual_mimetype
+        story_object.is_wellformed_xml = is_wellformed_xml
+
+    else:  # textual_mimetype is None
+        # must be binary, so figure out what kind of binary
 
         # get magic type of the file
         mimetype_via_python_magic = utils_mimetypes_magic.get_mimetype_via_python_magic(
@@ -549,19 +606,11 @@ def asdfft2(item_id=None, pos_on_page=None):
             log_prefix=log_prefix_local,
         )
 
-        textual_mimetype = utils_mimetypes_magic.get_textual_mimetype(
-            local_file=local_file_with_response_content,
-            log_prefix=log_prefix_local,
-            context={"url": story_object.url},
-        )
-
-        is_probably_binary = False
-        if not textual_mimetype:
-            is_probably_binary = True
-
         content_types_guessed_from_uri_extension = (
             utils_mimetypes_magic.guess_mimetype_from_uri_extension(
-                url=story_object.url, log_prefix=log_prefix_local
+                url=story_object.url,
+                log_prefix=log_prefix_local,
+                context={"url": story_object.url},
             )
         )
 
@@ -578,16 +627,6 @@ def asdfft2(item_id=None, pos_on_page=None):
                     log_prefix_local
                     + f"{mimetype_via_exiftool=}, type(mimetype_via_exiftool)={type(mimetype_via_exiftool)} ~Tim~"
                 )
-
-        content_type_to_use = None
-        parsed_url = urlparse(story_object.url)
-        # # force content types based on URL
-        # if parsed_url.netloc.endswith("github.com") and "/blob/" in parsed_url.path:
-        #     content_type_to_use = "text/html"
-        #     logger.info(
-        #         log_prefix_local
-        #         + f"forcing {content_type_to_use=} for url {story_object.url}"
-        #     )
 
         srct = set(
             x
@@ -608,7 +647,7 @@ def asdfft2(item_id=None, pos_on_page=None):
         if not srct:
             logger.info(
                 log_prefix_local
-                + f"failed to get any srct for {story_object.url=} ~Tim~"
+                + f"failed to get any srct for url={story_object.url} ~Tim~"
             )
             srct = None
         elif len(srct) == 1:
@@ -616,21 +655,16 @@ def asdfft2(item_id=None, pos_on_page=None):
         elif len(srct) > 1:
             logger.info(
                 log_prefix_local
-                + f"multiple srct values: {srct=}, {story_object.url=} ~Tim~"
+                + f"multiple srct values: {srct} for url={story_object.url} ~Tim~"
             )
             srct = srct.pop()
 
         all_values = set()
-        if srct:
-            all_values.add(srct)
         all_values.update(content_types_guessed_from_uri_extension)
         all_values.update(possible_magic_types)
         if textual_mimetype:
             all_values.add(textual_mimetype)
-        if content_type_to_use:
-            all_values.add(content_type_to_use)
 
-        consensus_content_type_to_use = None
         trusted_values = set(
             [
                 mimetype_via_python_magic,
@@ -639,95 +673,79 @@ def asdfft2(item_id=None, pos_on_page=None):
             ]
         )
 
-        # if we have a textual mimetype, we use that
-        # if it's binary, we use our trusted sources
+        if srct:
+            url_slug = f"for url {story_object.url}"
 
-        # debugging
-        if textual_mimetype == "application/json" and parsed_url.netloc == "github.com":
-            logger.info(
-                log_prefix_local
-                + f"got 'application/json' from {story_object.url} ~Tim~"
-            )
+            all_values.add(srct)
+            content_type_to_use = None
 
-        if textual_mimetype:
-            consensus_content_type_to_use = textual_mimetype
-        else:
-            if srct:
-                url_slug = f"for url {story_object.url}"
+            # 1. If all_values has length 1 and this value matches srct, use that:
+            if len(all_values) == 1 and srct in all_values:
+                content_type_to_use = srct
+                logger.info(
+                    log_prefix_local
+                    + f"{srct=} equals {all_values=} ; {content_type_to_use=} {url_slug}"
+                )
 
-                # 1. If all_values has length 1 and this value matches srct, use that:
-                if len(all_values) == 1 and srct in all_values:
-                    consensus_content_type_to_use = srct
-                    logger.info(
-                        log_prefix_local
-                        + f"{srct=} equals {all_values=} ; {consensus_content_type_to_use=} {url_slug}"
-                    )
-
-                # 2. If srct is a generic binary mimetype and mimetype_via_python_magic, mimetype_via_file_command, mimetype_via_exiftool all agree, use that:
-                elif srct in generic_binary_mimetypes:
-                    if len(trusted_values) == 1:
-                        consensus_content_type_to_use = trusted_values.pop()
-                        logger.info(
-                            log_prefix_local
-                            + f"generic {srct=}, but {trusted_values=} ; {consensus_content_type_to_use=} {url_slug} ~Tim~"
-                        )
-
-                # 3. If srct, mimetype_via_python_magic, mimetype_via_file_command, mimetype_via_exiftool all agree, use that:
-                elif len(trusted_values) == 1 and srct in trusted_values:
-                    consensus_content_type_to_use = srct
-                    logger.info(
-                        log_prefix_local
-                        + f"{srct=} equals {trusted_values=} ; {consensus_content_type_to_use=} {url_slug} ~Tim~"
-                    )
-
-                # 4. If srct matches any value in trusted_values, use that:
-                elif srct in trusted_values:
-                    consensus_content_type_to_use = srct
-                    logger.info(
-                        log_prefix_local
-                        + f"{srct=} matches any of {trusted_values=} ; {consensus_content_type_to_use=} {url_slug} ~Tim~"
-                    )
-
-                # 5. If srct matches any value in all_values, use that:
-                elif srct in all_values:
-                    consensus_content_type_to_use = srct
-                    logger.info(
-                        log_prefix_local
-                        + f"{srct=} matches any of {all_values=} ; {consensus_content_type_to_use=} {url_slug} ~Tim~"
-                    )
-
-                # 6. Just use srct
-                else:
-                    consensus_content_type_to_use = srct
-                    logger.info(
-                        log_prefix_local
-                        + f"{srct=} instead of {all_values=} ; {consensus_content_type_to_use=} {url_slug} ~Tim~"
-                    )
-
-            else:  # srct is None
-                # 7. If mimetype_via_python_magic, mimetype_via_file_command, mimetype_via_exiftool all agree, use that:
+            # 2. If srct is a generic binary mimetype and mimetype_via_python_magic, mimetype_via_file_command, mimetype_via_exiftool all agree, use that:
+            elif srct in generic_binary_mimetypes:
                 if len(trusted_values) == 1:
-                    consensus_content_type_to_use = trusted_values.pop()
+                    content_type_to_use = trusted_values.pop()
                     logger.info(
                         log_prefix_local
-                        + f"srct=None, but {trusted_values=} ; {consensus_content_type_to_use=} {url_slug} ~Tim~"
+                        + f"generic {srct=}, but {trusted_values=} ; {content_type_to_use=} {url_slug} ~Tim~"
                     )
 
-                # 8. Fall back on generic 'application/octet-stream'
-                else:
-                    consensus_content_type_to_use = "application/octet-stream"
-                    logger.info(
-                        log_prefix_local
-                        + f"srct=None, and {all_values=} disagree ; {consensus_content_type_to_use=} {url_slug} ~Tim~"
-                    )
+            # 3. If srct, mimetype_via_python_magic, mimetype_via_file_command, mimetype_via_exiftool all agree, use that:
+            elif len(trusted_values) == 1 and srct in trusted_values:
+                content_type_to_use = srct
+                logger.info(
+                    log_prefix_local
+                    + f"{srct=} equals {trusted_values=} ; {content_type_to_use=} {url_slug} ~Tim~"
+                )
 
-        if textual_mimetype and consensus_content_type_to_use != textual_mimetype:
-            logger.info(
-                log_prefix_local
-                + f"{consensus_content_type_to_use=} doesn't match {textual_mimetype=} {url_slug} ~Tim~"
-            )
+            # 4. If srct matches any value in trusted_values, use that:
+            elif srct in trusted_values:
+                content_type_to_use = srct
+                logger.info(
+                    log_prefix_local
+                    + f"{srct=} matches any of {trusted_values=} ; {content_type_to_use=} {url_slug} ~Tim~"
+                )
 
-        # discard very common mimetypes as not interesting
+            # 5. If srct matches any value in all_values, use that:
+            elif srct in all_values:
+                content_type_to_use = srct
+                logger.info(
+                    log_prefix_local
+                    + f"{srct=} matches any of {all_values=} ; {content_type_to_use=} {url_slug} ~Tim~"
+                )
+
+            # 6. Just use srct
+            else:
+                content_type_to_use = srct
+                logger.info(
+                    log_prefix_local
+                    + f"{srct=} instead of {all_values=} ; {content_type_to_use=} {url_slug} ~Tim~"
+                )
+
+        else:  # srct is None
+            # 7. If mimetype_via_python_magic, mimetype_via_file_command, mimetype_via_exiftool all agree, use that:
+            if len(trusted_values) == 1:
+                content_type_to_use = trusted_values.pop()
+                logger.info(
+                    log_prefix_local
+                    + f"srct=None, but {trusted_values=} ; {content_type_to_use=} {url_slug} ~Tim~"
+                )
+
+            # 8. Fall back on generic 'application/octet-stream'
+            else:
+                content_type_to_use = "application/octet-stream"
+                logger.info(
+                    log_prefix_local
+                    + f"srct=None, and {all_values=} disagree ; {content_type_to_use=} {url_slug} ~Tim~"
+                )
+
+        # dismiss some very common mimetypes as not interesting
         uninteresting_mimetypes = [
             "application/pdf",
             "application/xhtml+xml",
@@ -742,326 +760,234 @@ def asdfft2(item_id=None, pos_on_page=None):
         if not copy_of_all_values:
             is_interesting = False
 
-        if (
-            textual_mimetype == "application/xhtml+xml"
-            and parsed_url.netloc.endswith("arxiv.org")
-            and len(copy_of_all_values) == 1
-            and "text/xml" in copy_of_all_values
-        ):
-            is_interesting = False
-
         if is_interesting:
             copy_of_all_values = list(copy_of_all_values)
             copy_of_all_values.sort()
 
             logger.info(
                 log_prefix_local
-                + f"interesting mimetypes from all_values={copy_of_all_values}, {textual_mimetype=} for url {story_object.url}"
+                + f"interesting mimetypes from all_values={copy_of_all_values} for url {story_object.url}"
             )
 
-        return
+    # invariant now: content_type_to_use != None
 
-        # 2024-02-01T15:51:12Z [new]     INFO     id 39216919: asdfft2(): possible cts: ['application/xhtml+xml', 'text/xml', 'application/xhtml+xml', 'application/xhtml+xml'] for url https://michael.orlitzky.com/articles/greybeards_tomb%3A_the_lost_treasure_of_language_design.xhtml
-        # 2024-02-01T17:17:12Z [new]     INFO     id 39218376: asdfft2(): possible cts: ['text/plain', 'application/json', 'text/x-c++src', 'text/x-c++src'] for url https://github.com/solvespace/solvespace/blob/7d379e7f3b045ae579537abd392d5b368a4117e5/src/render/gl3shader.cpp
-        # 2024-02-01T21:53:32Z [new]     INFO     id 39221641: asdfft2(): possible cts: ['text/html', 'application/octet-stream', None, None] for url https://www.oddlyspecificobjects.com/projects/openbook/
-        # 2024-02-01T22:39:08Z [new]     INFO     id 39221985: asdfft2(): possible cts: ['text/html', 'text/xml', 'text/html', None, None] for url https://arxiv.org/abs/2401.18079
-        # 2024-02-02T02:31:28Z [new]     INFO     id 39218318: asdfft2(): possible cts: ['text/plain', 'application/json', 'application/json', 'application/json', 'text/markdown', 'text/markdown'] for url https://github.com/manifold-systems/manifold/blob/master/manifold-deps-parent/manifold-sql/readme.md
-        # 2024-02-02T05:32:03Z [new]     INFO     id 39224326: asdfft2(): possible cts: ['text/plain', 'application/json', 'application/json', 'application/json', None, None] for url https://github.com/rosmur/notebooks/blob/main/fibonacci%20sequence%20code%20from%20multiple%20llms.ipynb
-        # server_reported_content_type='application/xhtml+xml', magic_type='text/xml', content_type_guessed_from_uri_extension=[] for url https://www.devever.net/~hl/traintoilet
-        # server_reported_content_type='text/html', magic_type='text/xml', content_type_guessed_from_uri_extension=[] for url https://akrl.sdf.org/#orgc15a10d
-        # server_reported_content_type='text/plain', magic_type='application/json', content_type_guessed_from_uri_extension=['text/markdown'] for url https://github.com/icing/blog/blob/main/curl-h3-performance.md
-        # server_reported_content_type='text/plain', magic_type='application/json', content_type_guessed_from_uri_extension=['text/markdown'] for url https://github.com/wkjagt/apple2_pendulum_clock/blob/main/README.md
-        # 2024-02-02T06:48:12Z [new]     INFO     id 39225730: asdfft2(): possible cts: ['text/html', 'text/xml', 'text/xml', 'text/html', None, None] for url https://arxiv.org/abs/2202.01344
-        # 2024-02-02T18:11:51Z [active]  INFO     id 39229755: asdfft2(): possible cts: ['text/html', 'text/xml', 'text/xml', 'text/html', None, None] for url https://arxiv.org/abs/2401.17505
-        # 2024-02-02T08:43:12Z [top]     INFO     id 39217000: asdfft2(): possible cts: ['text/plain', 'application/json', 'application/json', 'application/json', 'text/markdown', 'text/markdown'] for url https://github.com/highlight/highlight/blob/3cc29388f99716833055d1aaa4a53d938d9e786e/README.md
-        # 2024-02-08T10:29:07Z [new]     INFO     id 39300146: asdfft2(): srct: text/html, guesses: [], mts: ['text/x-script.python', 'text/x-script.python', 'text/html'] for url https://emmett.sh/
-        # 2024-02-09T06:41:35Z [new]     INFO     id 39312074: asdfft2(): srct: text/html, guesses: [], mts: ['application/octet-stream', 'application/octet-stream', 'text/html'] for url https://blog.val.town/blog/first-four-val-town-runtimes/
+    # try make soup from page_source
+    if page_source and content_type_to_use in ["text/html", "application/xhtml+xml"]:
+        if content_type_to_use.endswith("xml") and story_object.is_wellformed_xml:
+            parser_to_use = "lxml-xml"
+        else:
+            parser_to_use = "lxml"
 
-        # - take note of how this url shortener reports "*/*" as content type
-        # 2024-02-07T18:50:51Z [new]     INFO     id 39292439: asdfft2(): srct: */*, guesses: [None, None], mts: ['text/html', 'text/html', 'text/html'] for url https://rdcu.be/dxWv4
+        try:
+            soup = BeautifulSoup(page_source, parser_to_use)
+        except Exception as exc:
+            generic_exception_handler(
+                exc=exc,
+                include_tb=True,
+                log_detail=f"unexpected problem making soup from {story_object.url}",
+                log_prefix=log_prefix_local,
+                postscript="~Tim~",
+            )
 
-        # application/octet-stream being actually text/html
-        # 2024-02-07T19:34:54Z [new]     INFO     id 39293121: asdfft2(): srct: text/html, guesses: [None, None], mts: ['application/octet-stream', 'application/octet-stream', 'text/html'] for url https://blog.val.town/blog/deprecating-the-run-api/
+        if not soup:
+            return story_object
 
-        # - text/xml from arxiv.org in this format is actually xhtml
-        # 2024-02-07T19:37:01Z [new]     INFO     id 39292705: asdfft2(): srct: text/html, guesses: [None, None], mts: ['text/xml', 'text/xml', 'text/html'] for url https://arxiv.org/abs/2402.03286
+        # check for og:image
+        og_image_url_result = soup.find("meta", {"property": "og:image"})
+        if og_image_url_result:
+            if og_image_url_result.has_attr("content"):
 
-        # TODO: extract a frame as a screenshot, OR, even better, extract 12 frames and arrange them in a 4x3 grid: 2024-02-13T15:15:56Z [new]     INFO     id 39358138: asdfft1(): unexpected linked url content-type video/mp4 for url https://www.goody2.ai/video/goody2-169.mp4
+                meta_og_image_content = og_image_url_result["content"]
 
-        cur_content_type = srct
+                if meta_og_image_content.startswith("data:"):
+                    # Example:
+                    # <meta property="og:image" content="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAeUAAACeEAIAAADTU...">
 
-        # priorities: get ahold of page source for html pages so I can check for og:images and compute reading times
-        # (1) that means converting the following to text/html if applicable
-        # - application/json
-        # - application/octet-stream
-        # - application/xhtml+xml
-        # - binary/octet-stream
-        # - text/plain
-        # - text/xhtml
-        # - text/xml
-
-        # (2) that means converting the following to application/pdf if applicable
-        # - None
-        # - application/octet-stream
-        # - binary/octet-stream
-        # - inode/x-empty
-
-        while True:
-
-            # content types:
-            # application/octet-stream can be text/html, image/*, application/pdf
-            # text/html can be image/*
-            # text/plain can be text/html
-            # text/xml can be application/xhtml+xml
-            # application/binary can be text/html
-
-            # magic types:
-            # text/x-c++ can be text/html
-            # application/octet-stream can be text/html
-
-            # file extensions
-            # aspx might be detected as application/x-wine-extension-ini but actually be text/html
-
-            if cur_content_type == "application/x-unknown-content-type":
-                pass
-
-            if cur_content_type in [
-                "application/data",
-                "application/octet",
-                "application/octet-stream",
-            ]:
-                # see if it's really pdf or some other format
-                pass
-
-                # application/octet-stream can be text/html
-                # application/octet-stream can be image/jpeg
-                # application/octet-stream can be image/png
-
-            if cur_content_type in [
-                "application/binary",
-                "binary/octet",
-            ]:
-                # see if it's really pdf or some other format
-                pass
-
-            if cur_content_type in [
-                "text/markdown",
-                "text/md",
-                "text/x-markdown",
-                "text/x-md",
-                "text/x-web-markdown",
-            ]:
-                # convert to text/plain and compute reading time
-                pass
-
-            if cur_content_type == "text/csv":
-                pass
-
-            if cur_content_type == "text/plain":
-                # determine if it's actually text/html
-                pass
-
-                # text/plain can be text/markdown
-
-                # convert to text/plain and compute reading time
-                pass
-
-            if cur_content_type == "text/css":
-                # determine if it's actually text/html
-                pass
-
-            if cur_content_type == "application/json":
-                # determine if it's actually text/html
-                pass
-
-                # application/json can be text/markdown
-
-            if cur_content_type in [
-                "application/xhtml",
-                "application/xhtml+xml",
-                "application/xml",
-                "text/xml",
-            ]:
-                # determine whether it's actually text/html or indeed xhtml or xml
-                pass
-
-                # text/xml can be application/xhtml+xml
-
-                # if it's xhtml, parse it in the text/html block
-                cur_content_type == "text/html"
-                parser_to_use = "lxml-xml"
-
-            if cur_content_type == "text/xml":
-                # handle xml
-                pass
-
-            if cur_content_type in [
-                "application/php",
-                "application/x-httpd-php",
-                "application/x-php",
-                "text/php",
-                "text/x-php",
-            ]:
-                pass
-
-            if cur_content_type == "text/html":
-                page_source_via_get = None
-                with open(
-                    local_file_with_response_content,
-                    mode="r",
-                    encoding="utf-8",
-                ) as f:
-                    page_source_via_get = f.read()
-
-                # get render() of response object
-                page_source_via_render = None
-                if "get_response_object_via_hrequests" in response_objects:
-                    page_source_via_render = (
-                        utils_http.get_rendered_page_source_via_response_object(
-                            response_objects["get_response_object_via_hrequests"],
-                            log_prefix=log_prefix_local,
-                        )
+                    first_128 = meta_og_image_content[:128]
+                    logger.info(
+                        log_prefix_local
+                        + f"found og:image inline data: '{first_128}...'"
                     )
 
-                page_source_to_use = choose_best_page_source(
-                    page_source_via_get,
-                    page_source_via_render,
-                    url=story_object.url,
-                    log_prefix=log_prefix_local,
+                    match = re.match(
+                        r"^data: *([a-z]+/[a-z\-\+]+) *; *", meta_og_image_content
+                    )
+                    if match:
+                        story_object.og_image_inline_data_srct = match.group(1)
+                        len_match = len(match.group())
+
+                        meta_og_image_content = meta_og_image_content[len_match:]
+
+                        if meta_og_image_content.startswith("base64"):
+                            match = re.match(r"^base64 *[;,] *")
+                            if match:
+                                len_match = len(match.group())
+                                meta_og_image_content = meta_og_image_content[
+                                    len_match:
+                                ]
+
+                                # using base64, convert meta_og_image_content to binary data and save to a temp file
+                                local_file_with_og_image_inline_data_decoded = (
+                                    config.settings["TEMP_DIR"]
+                                    + f"og-image-via-inline-data-{story_object.id}"
+                                )
+                                binary_data = base64.b64decode(meta_og_image_content)
+
+                                with open(
+                                    local_file_with_og_image_inline_data_decoded,
+                                    "wb",
+                                ) as file:
+                                    file.write(binary_data)
+
+                                story_object.og_image_is_inline_data = True
+                                story_object.has_thumb = True  # provisionally
+
+                                logger.info(
+                                    log_prefix_local
+                                    + f"saved og:image base64 inline data to {local_file_with_og_image_inline_data_decoded} url={story_object.url} ~Tim~"
+                                )
+
+                                story_object.og_image_inline_data_decoded_local_path = (
+                                    local_file_with_og_image_inline_data_decoded
+                                )
+
+                else:
+                    # Example:
+                    # <meta property="og:image" content="https://www.esa.int/var/esa/storage/images/esa_multimedia/images/2024/03/webb_hubble_confirm_universe_s_expansion_rate/25971194-1-eng-GB/Webb_Hubble_confirm_Universe_s_expansion_rate_pillars.jpg">
+                    story_object.og_image_url = og_image_url_result["content"]
+                    logger.info(
+                        log_prefix_local
+                        + f"found og:image url {story_object.og_image_url}"
+                    )
+                    story_object.has_thumb = True  # provisionally
+        else:
+            story_object.has_thumb = False
+            # TODO: in the absence of an og:image, I could always fall back on a generic screenshot of the linked article's website
+
+        # get reading time via goose
+        try:
+            reading_time = utils_text.get_reading_time(
+                page_source=page_source, log_prefix=log_prefix_id
+            )
+            if reading_time:
+                story_object.reading_time = reading_time
+        except Exception as exc:
+            generic_exception_handler(
+                exc=exc,
+                include_tb=True,
+                log_detail="unexpected problem getting reading time",
+                log_prefix=log_prefix_local,
+                postscript="~Tim~",
+            )
+
+        # if domain matches social media sites, check for those details
+        try:
+            social_media.check_for_social_media_details(
+                # driver=driver,
+                story_object=story_object,
+                page_source_soup=soup,
+            )
+        except Exception as exc:
+            generic_exception_handler(
+                exc=exc,
+                include_tb=True,
+                log_detail="unexpected problem getting social media details",
+                log_prefix=log_prefix_local,
+                postscript="~Tim~",
+                raise_after=True,
+            )
+
+    elif content_type_to_use == "application/pdf":
+        # use the first page of the PDF as a thumbnail, with dog ear etc.
+        story_object.og_image_url = story_object.url
+
+        # apply "[pdf]" label after title if it's not there but is probably applicable
+        if "pdf" not in story_object.title[-12:].lower():
+            story_object.story_content_type_slug = (
+                ' <span class="story-content-type">[pdf]</span>'
+            )
+            logger.info(log_prefix_local + "added [pdf] label after title")
+
+    elif content_type_to_use.startswith("image/"):
+        # use the image at the uri as the thumbnail
+        story_object.og_image_url = story_object.url
+
+    elif content_type_to_use.startswith("video/"):
+        pass
+        # TODO: extract a frame as a screenshot, OR, even better, extract 12 frames and arrange them in a 4x3 grid: 2024-02-13T15:15:56Z [new]     INFO     id 39358138: asdfft1(): unexpected linked url content-type video/mp4 for url https://www.goody2.ai/video/goody2-169.mp4
+
+    if story_object.og_image_url or story_object.og_image_is_inline_data:
+
+        if story_object.og_image_is_inline_data:
+            # TODO: implement this
+            story_object.has_thumb = False  # since this is a stub
+
+            # if story_object.has_thumb:
+            #     if pos_on_page < 5:
+            #         img_loading_attr = "eager"
+            #     else:
+            #         img_loading_attr = "lazy"
+
+            #     thumbs.populate_image_slug_in_story_object(
+            #         story_object, img_loading=img_loading_attr
+            #     )
+            #     if story_object.has_thumb:
+            #         story_object.image_slug = thumbs.create_img_slug_html(
+            #             story_object, img_loading=img_loading_attr
+            #         )
+            #         if not story_object.image_slug:
+            #             story_object.has_thumb = False
+
+        elif story_object.og_image_url and thumbs.image_url_is_disqualified(
+            url=story_object.og_image_url, log_prefix=log_prefix_local
+        ):
+            story_object.has_thumb = False
+
+        # TODO: the logic around this area can be improved
+        if story_object.og_image_url and story_object.has_thumb:
+            d_og_image_res = thnr_scrapers.download_og_image1(story_object)
+            if story_object.og_image_url and d_og_image_res:
+                story_object.has_thumb = True  # provisionally
+            elif not d_og_image_res:
+                logger.info(log_prefix_local + f"failed to download_og_image()")
+                story_object.has_thumb = False
+
+            else:
+                logger.error(
+                    log_prefix_local + f"unexpected result from download_og_image()"
                 )
+                story_object.has_thumb = False
 
-                # proceed only if we have page_source_to_use
-                if page_source_to_use:
-                    # get url domain
-                    pass
+            if story_object.has_thumb:
+                if pos_on_page < 5:
+                    img_loading_attr = "eager"
+                else:
+                    img_loading_attr = "lazy"
 
-                    # make soup
-                    if not parser_to_use:
-                        parser_to_use = "lxml"
-                    try:
-                        soup = BeautifulSoup(page_source_to_use, parser_to_use)
-                    except Exception as exc:
-                        exc_name = exc.__class__.__name__
-                        exc_msg = str(exc)
-                        exc_slug = f"{exc_name}: {exc_msg}"
-                        logger.info(
-                            log_prefix_local
-                            + f"problem making soup from {story_object.url}:"
-                            + exc_slug
-                            + " ~Tim~"
-                        )
-
-                    # if we can't make soup, we don't go on to the block below
-                    if soup:
-                        pass
-
-                        # look for og:image in page source and update story_object with the thumbnail details
-                        pass
-
-                        # get reading time via goose
-                        pass
-
-                        # if domain matches social media sites, check for those details
-                        pass
-
-                # assign story_object.linked_url_confirmed_content_type
-                pass
-
-                break
-
-            if cur_content_type.startswith("application/vnd"):
-                # parse the rest of the content type to determine what action to take
-                pass
-
-                if (
-                    cur_content_type
-                    == "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                ):
-                    pass
-
-                elif cur_content_type == "application/vnd.android.package-archive":
-                    pass
-
-                # assign story_object.linked_url_confirmed_content_type
-                pass
-
-                break
-
-            if cur_content_type == "application/postscript":
-                # possibly ghostscript/rasterize this to another format such as PDF or png
-                # note that it could be multipage
-                pass
-
-            if cur_content_type == "application/pdf":
-                # the content might not be a PDF, so we have to check it after downloading
-                pass
-
-                # extract first page of PDF and use as og:image
-                pass
-
-                # apply "[pdf]" label after title if it's not there but is probably applicable
-                pass
-
-                # get reading time via goose
-                pass
-
-            if cur_content_type == "application/ogg":
-                pass
-
-                # possibly remux for handling as something more specific such as: audio/ogg, video/ogg, audio/flac
-
-            if cur_content_type.startswith("video/"):
-                pass
-
-            if cur_content_type == "image/svg+xml":
-                # possibly need to edit this to simple svg format
-                pass
-
-            if cur_content_type.startswith("image/"):
-                # TODO: add avif and jpeg xl support in thumbs.py; might need to rebuild ImageMagick and/or install other packages
-
-                # handle animated images specially? (e.g., .apng, .gif, .webp)
-
-                # save response.content as image and update story_object with the thumbnail details
-                pass
-
-                break
-
-            if cur_content_type.startswith("audio/"):
-                pass
-
-            if cur_content_type in [
-                "application/atom",
-                "application/atom+xml",
-                "application/rss",
-                "application/rss+xml",
-            ]:
-                pass
-
-                break
-
-            if cur_content_type in [
-                "application/gzip",
-                "application/x-bzip2",
-                "application/x-gzip",
-                "application/zip",
-            ]:
-                pass
-
-                break
-
-            logger.error(log_prefix_local + f"fell through all if blocks")
-
-            if not story_object.linked_url_confirmed_content_type:
-                # we'll log the unexpected content type, but we'll still create the story card with the details we have
-                logger.info(
-                    log_prefix_local
-                    + f"unexpected linked url content-type '{cur_content_type}'"
+                thumbs.populate_image_slug_in_story_object(
+                    story_object, img_loading=img_loading_attr
                 )
-                break
+                if story_object.has_thumb:
+                    story_object.image_slug = thumbs.create_img_slug_html(
+                        story_object, img_loading=img_loading_attr
+                    )
+                    if not story_object.image_slug:
+                        story_object.has_thumb = False
 
-            break  # while True
+    if story_object.has_thumb and story_object.image_slug:
+        logger.info(log_prefix_local + "story card will have a thumbnail")
 
+    if story_object.has_thumb and not story_object.image_slug:
+        logger.error(
+            log_prefix_local
+            + "has_thumb is True, but there's no image_slug, so updating as_thumb to False ~Tim~"
+        )
+        story_object.has_thumb = False
+
+    if not story_object.has_thumb:
+        logger.info(log_prefix_local + "story card will not have a thumbnail")
+
+    # return story_object
     return story_object
 
 
@@ -1104,7 +1030,7 @@ def choose_best_page_source(
 def create_badges_slug(story_id, story_type, rosters):
     if story_type not in badge_codes:
         raise Exception(
-            f"cannot create badge for unrecognized story_type {story_type} for story_id {story_id}"
+            f"cannot create badge for unrecognized story_type {story_type} for story_id={story_id}"
         )
     own_badge = badge_codes[story_type]["letter"]
 
@@ -1137,7 +1063,7 @@ def create_badges_slug(story_id, story_type, rosters):
 
 
 def freshen_up(story_object=None, page_package=None):
-    log_prefix_local = f"id {story_object.id}: "
+    log_prefix_local = f"id={story_object.id}: "
 
     # by freshen up, we mean: update title, score, comment count
 
@@ -1148,14 +1074,14 @@ def freshen_up(story_object=None, page_package=None):
     except Exception as exc:
         logger.info(
             log_prefix_local
-            + f"freshen_up: query to hacker-news.firebaseio.com failed for story id {story_object.id} ; so re-using old story details"
+            + f"freshen_up: query to hacker-news.firebaseio.com failed for story id={story_object.id} ; so re-using old story details"
         )
         raise Exception("failed to freshen story")
 
     if not updated_story_data_as_dict:
         logger.info(
             log_prefix_local
-            + f"freshen_up: query to hacker-news.firebaseio.com failed for story id {story_object.id} ; so re-using old story details"
+            + f"freshen_up: query to hacker-news.firebaseio.com failed for story id={story_object.id} ; so re-using old story details"
         )
         raise Exception("failed to freshen story")
 
@@ -1182,7 +1108,7 @@ def freshen_up(story_object=None, page_package=None):
             ):
                 story_object.story_content_type_slug = ""
                 logger.info(
-                    f"id {story_object.id}: removed [pdf] label after title ~Tim~"
+                    f"id={story_object.id}: removed [pdf] label after title ~Tim~"
                 )
 
     else:
@@ -1274,9 +1200,10 @@ def get_story_page_url(story_type, page_num, light_mode=True, from_other_mode=Fa
 
 
 def item_factory(story_as_dict):
-    item_type = story_as_dict["type"]
+    if "type" not in story_as_dict:
+        story_as_dict["type"] = "story"
 
-    if item_type == "story":
+    if story_as_dict["type"] == "story":
         # check for incomplete metadata and assign default values
         if "by" not in story_as_dict:
             story_as_dict["by"] = "(no author)"
@@ -1306,10 +1233,11 @@ def item_factory(story_as_dict):
             story_as_dict["time"],
             story_as_dict["title"],
             story_as_dict["text"],
+            story_as_dict["type"],
             story_as_dict["url"],
         )
 
-    elif item_type == "job":
+    elif story_as_dict["type"] == "job":
         # check for incomplete metadata and assign default values
         if "by" not in story_as_dict:
             story_as_dict["by"] = "(no author)"
@@ -1318,7 +1246,7 @@ def item_factory(story_as_dict):
         if "id" not in story_as_dict:
             story_as_dict["id"] = -1
         if "kids" not in story_as_dict:
-            story_as_dict["kids"] = list()
+            story_as_dict["kids"] = []
         if "score" not in story_as_dict:
             story_as_dict["score"] = 0
         if "time" not in story_as_dict:
@@ -1329,6 +1257,7 @@ def item_factory(story_as_dict):
             story_as_dict["text"] = ""
         if "url" not in story_as_dict:
             story_as_dict["url"] = ""
+
         return Story(
             story_as_dict["by"],
             story_as_dict["descendants"],
@@ -1338,14 +1267,15 @@ def item_factory(story_as_dict):
             story_as_dict["time"],
             story_as_dict["title"],
             story_as_dict["text"],
+            story_as_dict["type"],
             story_as_dict["url"],
         )
 
-    else:  # item_type == 'comment':
+    else:
         return None
 
 
-def page_package_processor(page_package: PageOfStories):
+def page_package_processor(page_package: PageOfStories, context: dict = None):
 
     ppp_unique_id = utils_hash.get_sha1_of_current_time(
         salt=utils_random.random_real(0, 1)
@@ -1353,9 +1283,12 @@ def page_package_processor(page_package: PageOfStories):
 
     log_prefix_local = f"ppp={ppp_unique_id} page={page_package.page_number}: "
 
+    sup_slug = f"sup={context['supervisor_id']} "
+
     logger.info(
-        log_prefix_local
-        + f"len(story_ids)={len(page_package.story_ids)}, story_ids={page_package.story_ids}"
+        sup_slug
+        + log_prefix_local
+        + f"len(story_ids)={len(page_package.story_ids)} story_ids={page_package.story_ids}"
     )
 
     page_processor_start_ts = utils_time.get_time_now_in_epoch_seconds_float()
@@ -1381,7 +1314,7 @@ def page_package_processor(page_package: PageOfStories):
     num_stories_on_page = None
 
     for rank, cur_id in enumerate(page_package.story_ids):
-        log_prefix_id = f"id {cur_id}: "
+        log_prefix_id = f"id={cur_id}: "
         log_prefix_rank_cur_id_loop = log_prefix_id + f"ppp={ppp_unique_id}: "
 
         # logger.info(id_log_prefix + f"page:rank={page_package.page_number}:{rank}")
@@ -1475,7 +1408,7 @@ def page_package_processor(page_package: PageOfStories):
 
         if not story_object:
             try:
-                story_object = asdfft1(item_id=cur_id, pos_on_page=rank)
+                story_object = asdfft2(item_id=cur_id, pos_on_page=rank)
 
             except UnsupportedStoryType as exc:
                 exc_short_name = exc.__class__.__name__
@@ -1505,6 +1438,9 @@ def page_package_processor(page_package: PageOfStories):
             logger.info(log_prefix_rank_cur_id_loop + "couldn't get story details")
             logger.info(log_prefix_rank_cur_id_loop + "discarding this story")
             continue  # to next cur_id
+
+        # if not story_object.has_thumb:
+        #     logger.info(log_prefix_local + "story card will not have a thumbnail")
 
         # update badge
         story_object.badges_slug = create_badges_slug(
@@ -1703,7 +1639,7 @@ def page_package_processor(page_package: PageOfStories):
                 f.close()
 
             utils_aws.upload_page_of_stories(
-                page_filename=filename_lm, log_prefix=log_prefix_local
+                page_filename=filename_lm, log_prefix=sup_slug + log_prefix_local
             )
             break
         except Exception as exc:
@@ -1781,7 +1717,7 @@ def page_package_processor(page_package: PageOfStories):
             f.write(stories_html_page_template_dm)
 
         utils_aws.upload_page_of_stories(
-            page_filename=filename_dm, log_prefix=log_prefix_local
+            page_filename=filename_dm, log_prefix=sup_slug + log_prefix_local
         )
     except Exception as exc:
         exc_name = exc.__class__.__name__
@@ -1799,9 +1735,10 @@ def page_package_processor(page_package: PageOfStories):
     )
 
     logger.info(
-        log_prefix_local
-        + f"shipped {num_stories_on_page} stories in {h:02d}:{m:02d}:{s:02d}"
+        sup_slug
+        + f"ppp={ppp_unique_id} page={page_package.page_number}: shipped {num_stories_on_page} stories in {h:02d}:{m:02d}:{s:02d}"
     )
+
     return page_package.page_number
 
 
@@ -1844,7 +1781,7 @@ def populate_story_card_html_in_story_object(story_object):
 
     story_card_html += "</div>"
 
-    if story_object.has_outbound_link:
+    if story_object.has_outbound_url:
         story_card_html += (
             '<div class="domain-part">' + story_object.hostname_dict["slug"] + "</div>"
         )
@@ -1913,7 +1850,7 @@ def populate_story_card_html_in_story_object(story_object):
 def query_firebaseio_for_story_data(item_id=None):
     query = f"/v0/item/{item_id}.json"
     return utils_http.firebaseio_endpoint_query(
-        query=query, log_prefix=f"id {item_id}: "
+        query=query, log_prefix=f"id={item_id}: "
     )
 
 
@@ -1953,7 +1890,7 @@ def save_story_object_to_disk(story_object=None, log_prefix=""):
 
 def supervisor(cur_story_type):
     unique_id = utils_hash.get_sha1_of_current_time(salt=utils_random.random_real(0, 1))
-    log_prefix = f"supervisor={unique_id}: "
+    log_prefix = f"sup={unique_id}: "
 
     supervisor_start_ts = utils_time.get_time_now_in_epoch_seconds_float()
 
@@ -2028,7 +1965,10 @@ def supervisor(cur_story_type):
 
     if config.debug_flags["DEBUG_FLAG_FORCE_SINGLE_THREAD_EXECUTION"]:
         for each_page in page_packages:
-            res = page_package_processor(each_page)
+            res = page_package_processor(
+                page_package=each_page,
+                context={"supervisor_id": unique_id},
+            )
             if res:
                 pages_in_progress.remove(res)
     else:
@@ -2039,7 +1979,11 @@ def supervisor(cur_story_type):
         ) as executor:
             for each_page_package in page_packages:
                 page_processing_job_futures.append(
-                    executor.submit(page_package_processor, each_page_package)
+                    executor.submit(
+                        page_package_processor,
+                        page_package=each_page_package,
+                        context={"supervisor_id": unique_id},
+                    )
                 )
 
         concurrent.futures.wait(page_processing_job_futures)

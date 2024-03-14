@@ -6,6 +6,8 @@ import traceback
 from urllib.parse import unquote, urlparse
 
 import goose3
+import lxml
+import lxml.etree
 from dateutil.tz import tzutc
 from goose3 import Goose
 from goose3.crawler import Crawler
@@ -267,7 +269,7 @@ def get_domains_from_url(url: str, log_prefix=""):
     if url.startswith("www."):
         hostname_minus_www = hostname_full[4:]
     else:
-        match = re.match(r"w{2,3}\d", hostname_full)
+        match = re.match(r"w{2,3}\d\.", hostname_full)
         if match:
             hostname_minus_www = hostname_full.replace(match.group(), "", 1)
         else:
@@ -356,7 +358,13 @@ def get_reading_time_via_goose(page_source=None, log_prefix=""):
             return None
         reading_time = None
         g = Goose()
-        article = g.extract(raw_html=page_source)
+
+        try:
+            article = g.extract(raw_html=page_source)
+        except lxml.etree.ParserError as exc:
+            logger.error(log_prefix + f"lxml.etree.ParserError: {exc}")
+            return None
+
         if article:
             reading_time = (
                 utils_text.word_count(article.cleaned_text)
@@ -503,7 +511,7 @@ def parse_content_type_from_raw_header(
 
     if context:
         if "url" in context:
-            url_slug = f"for url=({context['url']}) "
+            url_slug = f"for url={context['url']} "
         else:
             url_slug = ""
 
@@ -531,7 +539,8 @@ def parse_content_type_from_raw_header(
             + f"unexpected type={str(type(content_type_header))} for content_type_header={str(content_type_header)} {response_object_creator_slug}{url_slug}~Tim~"
         )
 
-    ct_set = {x.strip() for x in ct_set if x.strip()}
+    ct_set = {x.strip() for x in ct_set}
+    ct_set = {x for x in ct_set if x}
 
     for each in ct_set.copy():
         if "/" in each:

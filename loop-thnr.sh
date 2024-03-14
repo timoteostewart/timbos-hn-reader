@@ -42,7 +42,7 @@ MAX_AGE_OF_OG_IMAGE_FILES_IN_SLASH_TMP_IN_MINUTES=60  # 1 hour
 MAX_AGE_OF_TEMP_DIRS_IN_SLASH_TMP_IN_MINUTES=60  # 1 hour
 LOOPS_BEFORE_RESTART=25
 script_invocation_id=$(get-sha1-of-current-time-plus-random)
-LOG_PREFIX_LOCAL="loop-thnr.sh id ${script_invocation_id}: "
+LOG_PREFIX_LOCAL="loop-thnr.sh id=${script_invocation_id}: "
 combined_log_identifier="combined"
 SETTINGS_FILE="${project_base_dir}settings.yaml"
 
@@ -78,19 +78,12 @@ log_dump_via_email() {
     # email_mock "${error_msg} - dump id ${dump_id}" "see incoming log files for details"
     printf "${error_msg} - dump id ${dump_id}\n"
 
-    declare -a log_files_patterns=(
-        '/srv/timbos-hn-reader/logs/thnr-combined-*.log'
-        '/srv/timbos-hn-reader/logs/thnr-loop-*.log'
-        '/srv/timbos-hn-reader/logs/thnr-main-py-*.log'
-        '/srv/timbos-hn-reader/logs/thnr-thnr-*.log'
-        '/srv/timbos-hn-reader/logs/thnr-vpn-*.log'
-    )
+    local combined_log_file="${all_logs_dir}${server_name}-${combined_log_identifier}-${cur_year_and_doy}.log"
 
-    cur_log_file=$(get-last-filename '/srv/timbos-hn-reader/logs/thnr-combined-*.log')
     ext_error_msg="${error_msg} - ${cur_log_file}"
-    log_tail=$(tail -n 50 ${cur_log_file})
-    /srv/timbos-hn-reader/send-email.sh "dump id ${dump_id} - 'tail -n 250 of ${cur_log_file}' " "${log_tail}"
-    # email_mock "dump id ${dump_id} - 'tail -n 50 of ${cur_log_file}' " "${log_tail}"
+    log_tail=$(tail -n 250 ${combined_log_file})
+    /srv/timbos-hn-reader/send-email.sh "dump_id=${dump_id} - 'tail -n 250 of ${combined_log_file}' " "${log_tail}"
+    # email_mock "dump id ${dump_id} - 'tail -n 50 of ${combined_log_file}' " "${log_tail}"
 }
 
 cleanup_tmp_dir() {
@@ -184,27 +177,55 @@ pip_packages=(
     # "urllib3"
 )
 
-# check for internet connectivity
-websites_to_ping=(
-    "1.1.1.1"
-    "8.8.8.8"
-    "icanhazip.com"
-    "www.amazon.com"
-    "www.facebook.com"
-    "www.google.com"
-)
-
 LOOP_NUMBER=1
 
 while true
 do
     CUR_LOOP_START_TS=$(get-time-in-unix-seconds)
 
+    # # check for intranet connectivity
+    # ping_successes=0
+    # ping_failures=0
+    # min_pings=1
+    # if curl --interface eth0 --silent 192.168.1.1 >/dev/null 2>&1 ; then
+    #     (( ping_successes += 1 ))
+    # else
+    #     (( ping_failures += 1 ))
+    # fi
+    # if curl --interface eth1 --silent 192.168.2.254 >/dev/null 2>&1 ; then
+    #     (( ping_successes += 1 ))
+    # else
+    #     (( ping_failures += 1 ))
+    # fi
+
+    # if (( ping_successes == 0 )); then
+    #     write-log-message loop error "${LOG_PREFIX_LOCAL} Intranet connectivity check: ${ping_successes}/2 pings succeeded. No intranet connectivity. Exiting."
+    #     printf "${LOG_PREFIX_LOCAL} Intranet connectivity check: No intranet connectivity. Exiting.\n"
+    #     exit 1
+    # fi
+    # if (( ping_successes >= min_pings )); then
+    #     write-log-message loop info "${LOG_PREFIX_LOCAL} Intranet connectivity check: ${ping_successes}/2 pings succeeded. Continuing."
+    # fi
+
+    # connect to VPN
+    if ! "${project_base_dir}connect-to-vpn.sh"; then
+        exit 1
+    fi
+
+    # check for Internet connectivity
+    websites_to_ping=(
+        "1.1.1.1"
+        "icanhazip.com"
+        "www.amazon.com"
+        "www.facebook.com"
+        "www.google.com"
+    )
+
     ping_successes=0
     ping_failures=0
-    min_pings=3
+    min_pings=2
     for cur_website in "${websites_to_ping[@]}"; do
-        if ping -c 1 ${cur_website} >/dev/null 2>&1; then
+        if curl --interface nordlynx ${cur_website} >/dev/null 2>&1; then
             (( ping_successes += 1 ))
         else
             (( ping_failures += 1 ))
@@ -212,21 +233,17 @@ do
     done
 
     if (( ping_successes == 0 )); then
-            write-log-message loop error "${LOG_PREFIX_LOCAL} Internet connectivity check: All pings failed. No Internet connectivity. Exiting."
-            printf "${LOG_PREFIX_LOCAL} Internet connectivity check: No Internet connectivity. Exiting.\n"
-            exit 2
-    else
-        if (( ping_successes >= min_pings )); then
-            write-log-message loop info "${LOG_PREFIX_LOCAL} Internet connectivity check: ${min_pings} or more pings succeeded. Continuing."
-        else
-            write-log-message loop error "${LOG_PREFIX_LOCAL} Internet connectivity check: ${ping_failures} pings failed, ${ping_successes} pings succeeded. Unstable Internet connectivity. Exiting."
-            printf "${LOG_PREFIX_LOCAL} Internet connectivity check: Unstable Internet connectivity. Exiting.\n"
-            exit 2
-        fi
-    fi
-
-    if ! "${project_base_dir}connect-to-vpn.sh"; then
+        write-log-message loop error "${LOG_PREFIX_LOCAL} Internet connectivity check: ${ping_successes}/${#websites_to_ping[@]} pings succeeded. No intranet connectivity. Exiting."
+        printf "${LOG_PREFIX_LOCAL} Internet connectivity check: No Internet connectivity. Exiting.\n"
         exit 1
+    fi
+    if (( ping_successes >= min_pings )); then
+        write-log-message loop info "${LOG_PREFIX_LOCAL} Internet connectivity check: ${ping_successes}/${#websites_to_ping[@]} pings succeeded. Continuing."
+    else
+        write-log-message loop error "${LOG_PREFIX_LOCAL} Internet connectivity check: ${ping_successes}/${#websites_to_ping[@]} pings succeeded. Unstable Internet connectivity. Exiting\n."
+        printf "${LOG_PREFIX_LOCAL} Internet connectivity check: Unstable Internet connectivity. Exiting.\n"
+        exit 1
+
     fi
 
     cleanup_tmp_dir

@@ -23,7 +23,7 @@ logger.setLevel(logging.INFO)
 def download_og_image2(
     story_id, hostname_dict, og_image_dict, first_time=True, url_queue=None
 ):
-    log_prefix_id = f"id {story_id}: "
+    log_prefix_id = f"id={story_id}: "
     log_prefix_local = log_prefix_id + f"d_og_i2: "
 
     if first_time:
@@ -207,7 +207,7 @@ def download_og_image2(
 def download_og_image1(
     story_object, alt_url=None, use_url_queue=False, url_queue=None
 ) -> bool:
-    log_prefix_id = f"id {story_object.id}: "
+    log_prefix_id = f"id={story_object.id}: "
     log_prefix_local = log_prefix_id + f"d_og_i1: "
 
     if not use_url_queue:

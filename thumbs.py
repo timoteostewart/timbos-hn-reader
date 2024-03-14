@@ -168,7 +168,7 @@ def image_url_is_disqualified(url: str, mimetype_via_magic=None, log_prefix="") 
 
 
 def can_populate_a_shortcode(story_object, img_loading):
-    log_prefix = f"id {story_object.id}: "
+    log_prefix = f"id={story_object.id}: "
 
     # logger.info(log_prefix+"checking for a shortcode...")
     # check if thumb is already available as prepared image
@@ -310,7 +310,7 @@ def draw_dogear(pdf_page_img, log_prefix=""):
 
 
 def fix_multipage_pdf(story_object):
-    log_prefix_local = f"id {story_object.id}: fix_multipage_pdf: "
+    log_prefix_local = f"id={story_object.id}: fix_multipage_pdf: "
     file_url_slug = (
         f"file={story_object.downloaded_orig_thumb_full_path}, url={story_object.url}"
     )
@@ -498,7 +498,7 @@ def get_image_to_use(
     no_pad=False,
     shortcode="image",
 ):
-    log_prefix = f"id {story_object.id}: "
+    log_prefix = f"id={story_object.id}: "
 
     if downloaded_img.alpha_channel:
         downloaded_img.background = config.settings["THUMBS"][
@@ -644,7 +644,7 @@ def handle_exception(exc: Exception = None, log_prefix="", context=None):
 def populate_image_slug_in_story_object(
     story_object, img_loading="lazy", force_im6=False
 ) -> None:
-    log_prefix_id = f"id {story_object.id}: "
+    log_prefix_id = f"id={story_object.id}: "
     log_prefix = log_prefix_id + "populate_image_slug: "
     force_aspect = None
     no_trim = False
@@ -904,7 +904,7 @@ def populate_image_slug_in_story_object(
 
 
 def rasterize_pdf_using_ghostscript(story_object):
-    log_prefix = f"id {story_object.id}: "
+    log_prefix = f"id={story_object.id}: "
     pdf_filename_full_path = story_object.downloaded_orig_thumb_full_path
     cur_unix_time = int(time.time())
     pdf2png_filename = f"pdf2png-{story_object.id}-{cur_unix_time}.png"
@@ -955,7 +955,7 @@ def rasterize_pdf_using_ghostscript(story_object):
 
 
 def save_thumb_where_it_should_go(webp_image, story_object, size):
-    log_prefix = f"id {story_object.id}: save_thumb_where_it_should_go: "
+    log_prefix = f"id={story_object.id}: save_thumb_where_it_should_go: "
     thumb_filename = get_webp_filename(story_object, size)
     webp_image.save(filename=os.path.join(config.settings["TEMP_DIR"], thumb_filename))
     try:

@@ -417,12 +417,23 @@ def get_response_object_via_hrequests(
         temp=True,
         verify=False,
     ) as session:
-        session.headers.update({"User-Agent": config.settings["SCRAPING"]["UA_STR"]})
+        user_agent = (
+            config.settings["SCRAPING"]["UA_STR"]
+            if "SCRAPING" in config.settings
+            else "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+        )
+        session.headers.update({"User-Agent": user_agent})
+
         try:
+            timeout = (
+                config.settings["SCRAPING"]["REQUESTS_GET_TIMEOUT_S"]
+                if "SCRAPING" in config.settings
+                else 30
+            )
             response = session.get(
                 allow_redirects=True,
                 headers={"Accept": "text/html,*/*"},
-                timeout=config.settings["SCRAPING"]["REQUESTS_GET_TIMEOUT_S"],
+                timeout=timeout,
                 url=url,
             )
             if response and response.status_code == 200:
@@ -454,13 +465,23 @@ def get_response_object_via_requests(
     log_prefix_local = log_prefix + "gro_via_r:  "
 
     with requests.Session() as session:
-        session.headers.update({"User-Agent": config.settings["SCRAPING"]["UA_STR"]})
+        user_agent = (
+            config.settings["SCRAPING"]["UA_STR"]
+            if "SCRAPING" in config.settings
+            else "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+        )
+        session.headers.update({"User-Agent": user_agent})
         try:
+            timeout = (
+                config.settings["SCRAPING"]["REQUESTS_GET_TIMEOUT_S"]
+                if "SCRAPING" in config.settings
+                else 30
+            )
             with session.get(
                 allow_redirects=True,
                 headers={"Accept": "text/html,*/*"},
                 stream=False,
-                timeout=config.settings["SCRAPING"]["REQUESTS_GET_TIMEOUT_S"],
+                timeout=timeout,
                 url=url,
                 verify=False,
             ) as response:
@@ -550,6 +571,15 @@ def handle_exception(exc: Exception = None, log_prefix="", context=None):
         url_slug = ""
 
     tb_str = traceback.format_exc()
+
+    if fq_exc_name == "requests.exceptions.SSLError":
+        logger.info(
+            log_prefix_local
+            + f"fq_exc_name==requests.exceptions.SSLError succeeded, {exc_module=}, {exc_msg=} ~Tim~"
+        )
+
+    if exc_name == "SSLError":
+        logger.info(log_prefix_local + f"exc_name==SSLError succeeded, {exc_module=}, {exc_msg=} ~Tim~")
 
     # for hrequests.exceptions only, check for stacked exceptions
     expected_stacked_exceptions = None

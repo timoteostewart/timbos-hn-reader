@@ -3,17 +3,17 @@
 # usage: see locals below
 add-deb-repo() {
     # Check for missing parameters
-    [[ -z "$1" ]] && die "add-deb-repo() requires a key_url to be specified."
-    [[ -z "$2" ]] && die "add-deb-repo() requires a repo_url to be specified."
-    [[ -z "$3" ]] && die "add-deb-repo() requires a distro to be specified."
-    [[ -z "$4" ]] && die "add-deb-repo() requires a component to be specified."
-    [[ -z "$5" ]] && die "add-deb-repo() requires a label to be specified."
+    [[ -z "${1}" ]] && die "add-deb-repo() requires a key_url to be specified."
+    [[ -z "${2}" ]] && die "add-deb-repo() requires a repo_url to be specified."
+    [[ -z "${3}" ]] && die "add-deb-repo() requires a distro to be specified."
+    [[ -z "${4}" ]] && die "add-deb-repo() requires a component to be specified."
+    [[ -z "${5}" ]] && die "add-deb-repo() requires a label to be specified."
 
-    local key_url="$1"
-    local repo_url="$2"
-    local distro="$3"
-    local component="$4"
-    local label="$5"
+    local key_url="${1}"
+    local repo_url="${2}"
+    local distro="${3}"
+    local component="${4}"
+    local label="${5}"
 
     local keyring="/usr/share/keyrings/${label}-keyring.gpg"
     local sources="/etc/apt/sources.list.d/${label}.list"

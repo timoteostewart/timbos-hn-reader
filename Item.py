@@ -26,14 +26,14 @@ class Item:
     parts: List[int]  # for polls; not implemented
 
     def __init__(
-        self, id: str, type: str, text: str, by: str, time_arg: str, kids: List[str]
+        self, id: str, type: str, text: str, by: str, time: str, kids: List[str]
     ) -> None:
         self.id: int = id
         self.type: str = type
         self.text: str = text
         self.by: str = by
 
-        self.time = int(time_arg)
+        self.time = int(time)
         self.publication_time_ISO_8601: str = datetime.datetime.utcfromtimestamp(
             self.time
         ).strftime(

@@ -34,6 +34,9 @@ ARTICLE_SYMBOL = "📄"
 def check_for_social_media_details(
     driver=None, story_object=None, page_source_soup=None
 ):
+
+    # TODO: add more sites based on # https://hackernews-insight.vercel.app/domain-analysis
+
     #
     # arstechnica.com
     #
@@ -238,6 +241,20 @@ def check_for_social_media_details(
             ]
 
     #
+    # wsj.com
+    #
+    elif story_object.hostname_dict["minus_www"] == "wsj.com":
+        story_object.social_media["account_name_slug"] = ""
+
+        # if story_object.social_media["account_name_slug"]:
+        #     story_object.hostname_dict["slug"] = (
+        #         f'<a class="domains-for-search{story_object.hostname_dict["for_display_addl_class"]}" href="https://news.ycombinator.com/from?site={story_object.social_media["hn_search_query"]}">({story_object.hostname_dict["for_display"]})</a>'
+        #     )
+        #     story_object.hostname_dict["slug"] += story_object.social_media[
+        #         "account_name_slug"
+        #     ]
+
+    #
     # wikipedia.org
     #
     elif story_object.hostname_dict["minus_www"].endswith("wikipedia.org"):
@@ -298,10 +315,10 @@ def get_arstechnica_account_slug(
                             break
 
     if not author_display_name:
-        logger.info(f"id {story_object.id}: failed to find arstechnica author name")
+        logger.info(f"id={story_object.id}: failed to find arstechnica author name")
         return ""
 
-    logger.info(f"id {story_object.id}: arstechnica author is {author_display_name}")
+    logger.info(f"id={story_object.id}: arstechnica author is {author_display_name}")
 
     if author_link:
         author_slug = f'<a href="{author_link}">{author_display_name}</a>'
@@ -344,10 +361,10 @@ def get_bloomberg_account_slug(
                 break
 
     if not author_display_name:
-        logger.info(f"id {story_object.id}: failed to find bloomberg author name")
+        logger.info(f"id={story_object.id}: failed to find bloomberg author name")
         return ""
 
-    logger.info(f"id {story_object.id}: bloomberg author is {author_display_name}")
+    logger.info(f"id={story_object.id}: bloomberg author is {author_display_name}")
 
     if author_link:
         author_slug = f'<a href="{author_link}">{author_display_name}</a>'
@@ -418,7 +435,7 @@ def get_github_gist_account_slug(
                 author_link = f'https://gist.github.com/{each_a["href"]}'
 
     if not author_handle:
-        logger.info(f"id {story_object.id}: failed to find github gist author name")
+        logger.info(f"id={story_object.id}: failed to find github gist author name")
         return ""
 
     nowrap_class = check_if_nowrap_needed(author_handle)
@@ -459,7 +476,7 @@ def create_github_languages_slug(story_object):
 
 
 def get_github_repo_languages(driver=None, repo_url=None, story_id=None):
-    log_prefix = f"id {story_id}: " if story_id else "n/a"
+    log_prefix = f"id={story_id}: " if story_id else "n/a"
 
     page_source = utils_http.get_page_source(
         # driver=driver,
@@ -527,10 +544,10 @@ def get_theguardian_account_slug(
                 break
 
     if not author_display_name:
-        logger.info(f"id {story_object.id}: failed to find theguardian author name")
+        logger.info(f"id={story_object.id}: failed to find theguardian author name")
         return ""
 
-    logger.info(f"id {story_object.id}: theguardian author is {author_display_name}")
+    logger.info(f"id={story_object.id}: theguardian author is {author_display_name}")
 
     if author_link:
         author_slug = f'<a href="{author_link}">{author_display_name}</a>'
@@ -616,18 +633,17 @@ def get_nytimes_article_slug(
         if each_a.has_attr("href"):
             if "nytimes.com/by/" in each_a["href"] and each_a.text:
                 if not "More about" in each_a.text:
-                    if each_a.text not in authors_seen:
-                        authors_seen.add(each_a.text)
+                    each_a_text = each_a.text.strip()
+                    if each_a_text not in authors_seen:
+                        authors_seen.add(each_a_text)
                         author_accumulator.append(
-                            (each_a.text.replace(" ", "&nbsp;"), each_a["href"])
+                            (each_a_text.replace(" ", "&nbsp;"), each_a["href"])
                         )
     if not author_accumulator:
-        logger.info(
-            f"id {story_object.id}: failed to determine nytimes article authors"
-        )
+        logger.info(f"id={story_object.id}: failed to determine nytimes article author")
         return ""
 
-    logger.info(f"id {story_object.id}: {author_accumulator=}")
+    logger.info(f"id={story_object.id}: {author_accumulator=}")
 
     author_accumulator = list(SortedSet(author_accumulator))
 
@@ -723,7 +739,7 @@ def get_techcrunch_account_slug(
                 break
 
     if not author_display_name:
-        logger.info(f"id {story_object.id}: failed to find techcrunch author name")
+        logger.info(f"id={story_object.id}: failed to find techcrunch author name")
         return ""
 
     a_els = page_source_soup.select("a")
@@ -786,6 +802,44 @@ def get_twitter_account_slug(twitter_url: str, story_object=None):
     return account_name_slug
 
 
+def get_wsj_account_slug(story_object=None, page_source_soup=None):
+    author_display_name = None
+
+    # <a href="https://www.wsj.com/news/author/rory-jones" aria-label="Author page for Rory Jones" class="css-tuctgt-AuthorLink e10pnb9y0">Rory Jones</a>
+
+    el = page_source_soup.select_one('a[aria-label^="Author page for"]')
+    if el:
+        author_display_name = el.get_text()
+        author_url = el.get("href") if "href" in el.attrs else ""
+    else:
+        logger.info(f"id={story_object.id}: failed to find wsj author name")
+        return ""
+
+    author_href_slug = (
+        f'<a href="{author_url}">{author_display_name}</a>'
+        if author_url
+        else author_display_name
+    )
+
+    nowrap_class = check_if_nowrap_needed(author_display_name)
+
+    account_name_slug = (
+        "<br/>"
+        f'<span class="social-media-account-name{nowrap_class}">'
+        f'<span class="social-media-account-emoji">{SILHOUETTE_SYMBOL}</span>'
+        f"{author_href_slug}"
+        "</span>"
+    )
+
+    if story_object:
+        story_object.social_media["account_name_url"] = author_url
+        story_object.social_media["account_name_display"] = author_display_name
+        story_object.social_media["nowrap_class"] = nowrap_class
+        story_object.social_media["account_name_slug"] = account_name_slug
+
+    return account_name_slug
+
+
 def get_wikipedia_article_slug(
     wikipedia_url=None, story_object=None, page_source_soup=None
 ):
@@ -793,10 +847,10 @@ def get_wikipedia_article_slug(
 
     article_title_el = page_source_soup.select("span.mw-page-title-main")
     if article_title_el:
-        logger.info(f"id {story_object.id}: found wikipedia article title")
+        logger.info(f"id={story_object.id}: found wikipedia article title")
         article_title = article_title_el[0].text
     else:
-        logger.info(f"id {story_object.id}: failed to find wikipedia article title")
+        logger.info(f"id={story_object.id}: failed to find wikipedia article title")
         return ""
 
     nowrap_class = check_if_nowrap_needed(article_title)
@@ -841,7 +895,7 @@ def get_youtube_channel_slug(youtube_url: str, story_object=None):
         except Exception as exc:
             if story_object:
                 logger.warning(
-                    f"id {story_object.id}: failed to get video details for YouTube URL {youtube_url}: {exc}"
+                    f"id={story_object.id}: failed to get video details for YouTube URL {youtube_url}: {exc}"
                 )
             else:
                 logger.warning(
@@ -874,7 +928,7 @@ def get_youtube_channel_slug(youtube_url: str, story_object=None):
         except Exception as exc:
             if story_object:
                 logger.warning(
-                    f"id {story_object.id}: failed to get channel details for YouTube URL {youtube_url}: {exc}"
+                    f"id={story_object.id}: failed to get channel details for YouTube URL {youtube_url}: {exc}"
                 )
             else:
                 logger.warning(
@@ -904,7 +958,7 @@ def get_youtube_channel_slug(youtube_url: str, story_object=None):
         except Exception as exc:
             if story_object:
                 logger.info(
-                    f"id {story_object.id}: failed to get playlist details for YouTube URL {youtube_url}: {exc}"
+                    f"id={story_object.id}: failed to get playlist details for YouTube URL {youtube_url}: {exc}"
                 )
             else:
                 logger.info(
@@ -914,7 +968,7 @@ def get_youtube_channel_slug(youtube_url: str, story_object=None):
     else:
         if story_object:
             logger.info(
-                f"id {story_object.id}: failed to understand format or structure of YouTube URL: {youtube_url}"
+                f"id={story_object.id}: failed to understand format or structure of YouTube URL: {youtube_url}"
             )
         else:
             logger.info(
