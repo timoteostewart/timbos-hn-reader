@@ -8,7 +8,7 @@ set -o pipefail  # don't hide errors within pipes
 # set -o verbose   # verbose mode; same as set -v
 
 source /srv/timbos-hn-reader/functions.sh
-source /srv/timbos-hn-reader/thnr_common_functions.sh
+source /srv/timbos-hn-reader/thnr-common-functions.sh
 
 project_base_dir=/srv/timbos-hn-reader/
 all_logs_dir="${project_base_dir}logs/"

@@ -20,6 +20,7 @@ import magic
 from bs4 import BeautifulSoup
 from intervaltree import Interval, IntervalTree
 
+from Attribute import AttributeWithKey, AttributeWithoutKey
 from MarkupTag import MarkupTag
 from Trie import Trie
 
@@ -1118,6 +1119,7 @@ def guess_mimetype_from_uri_extension(url, log_prefix="", debug=False, context=N
         ("com", "application/x-msdos-program"),
         ("info", "application/x-info"),
         ("org", "application/vnd.lotus-organizer"),
+        ("pl", "text/x-perl"),
         ("sh", "text/x-sh"),
         ("xyz", "chemical/x-xyz"),
         ("zip", "application/x-zip"),
@@ -1227,7 +1229,11 @@ def collect_empty_attributes(s: str):
     if current_substr:
         substrings.append(current_substr)
 
-    return [x.strip() for x in substrings if x.strip() != ""]
+    substrings = [x.strip() for x in substrings]
+    substrings = [x for x in substrings if x]
+
+    # TODO: return [AttributeWithoutKey(attribute_literal=x) for x in substrings]
+    return substrings
 
 
 white_space_chars = set(
@@ -1292,7 +1298,7 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
     text_encodings = check_for_valid_text_encodings(local_file, log_prefix)
 
     if not text_encodings:
-        logger.info(log_prefix_local + f"robably binary file {file_url_slug}")
+        logger.info(log_prefix_local + f"probably binary file {file_url_slug}")
         return none_tuple
 
     encoding_to_use = None
@@ -1454,27 +1460,42 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
 
             # collect attributes with single-quoted values
             matches = re.finditer(
-                f" ?({xml_attribute_name_re})='(.*?)'",
+                f" ?({xml_attribute_name_re}) *= *('.*?')",
                 attrib_material,
             )
             for match in matches:
-                the_tag.attribs[match.group(1).lower()] = match.group(2)
+                the_tag.attribs[match.group(1).lower()] = match.group(2)[1:-1]
+                new_attrib = AttributeWithKey(
+                    attribute_literal=match.group(),
+                    key_literal=match.group(1),
+                    value_literal=match.group(2),
+                )
 
             # collect attributes with double-quoted values
             matches = re.finditer(
-                f' ?({xml_attribute_name_re})="(.*?)"',
+                f' ?({xml_attribute_name_re}) *= *(".*?")',
                 attrib_material,
             )
             for match in matches:
-                the_tag.attribs[match.group(1).lower()] = match.group(2)
+                the_tag.attribs[match.group(1).lower()] = match.group(2)[1:-1]
+                new_attrib = AttributeWithKey(
+                    attribute_literal=match.group(),
+                    key_literal=match.group(1),
+                    value_literal=match.group(2),
+                )
 
             # collect attributes with unquoted values
             matches = re.finditer(
-                f" ?({xml_attribute_name_re})=({xml_attribute_unquoted_value_re})",
+                f" ?({xml_attribute_name_re}) *= *({xml_attribute_unquoted_value_re})",
                 attrib_material,
             )
             for match in matches:
                 the_tag.attribs[match.group(1).lower()] = match.group(2)
+                new_attrib = AttributeWithKey(
+                    attribute_literal=match.group(),
+                    key_literal=match.group(1),
+                    value_literal=match.group(2),
+                )
 
             # collect empty attributes (no value; or implicitly the empty string)
             copy_of_attrib_material = attrib_material
@@ -1761,12 +1782,11 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
         if has_common_html5_html_tag_attributes:
             clues_toward["text/html5"] += 1
 
-        for each in [
-            "lang",
-            "xml:lang",
-        ]:
-            if each in html_elem.attribs:
-                clues_toward["application/xhtml+xml"] += 1
+        # if "lang" in html_elem.attribs:
+        #     clues_toward["text/html"] += 1  # and html5
+
+        if "xml:lang" in html_elem.attribs:
+            clues_toward["application/xhtml+xml"] += 1
 
     if not "html" in document:
         clues_toward["application/xhtml+xml"] = -float("inf")
@@ -1781,6 +1801,7 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
 
     if "head" in document and "title" in document:
         clues_toward["text/html"] += 1  # and html5
+        clues_toward["application/xhtml+xml"] += 1
 
     if (
         "html" in document
@@ -1853,9 +1874,15 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
                         for each in re.split(
                             "[;, ]+", each_meta_tag.attribs["content"]
                         ):
+                            if not each:
+                                continue
                             try:
                                 k, v = each.split("=")
                             except (IndexError, ValueError):
+
+                                if each in ["minimal-ui"]:
+                                    continue
+
                                 logger.info(
                                     log_prefix_local
                                     + f"unexpected meta viewport content value '{each}'"
@@ -2056,6 +2083,9 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
             clues_toward[_] = -float("inf")
 
     res = "text/plain"
+
+    if clues_toward["image/svg+xml"] <= 1:
+        clues_toward["image/svg+xml"] = 0
 
     if clues_toward:
         list_sorted = sorted(clues_toward.items(), key=lambda x: x[1], reverse=True)

@@ -8,7 +8,7 @@ set -o pipefail  # don't hide errors within pipes
 # set -o verbose   # verbose mode; same as set -v
 
 source /srv/timbos-hn-reader/functions.sh
-source /srv/timbos-hn-reader/thnr_common_functions.sh
+source /srv/timbos-hn-reader/thnr-common-functions.sh
 
 if ! am-root; then
     die "Please run as root."
@@ -24,7 +24,7 @@ all_logs_dir="${project_base_dir}logs/"
 CACHED_STORIES_DIR="${project_base_dir}cached_stories/"
 combined_log_identifier="combined"
 LOGFILE_ARCHIVE_DEST_DIR=/mnt/synology/logs/thnr2.home.arpa
-LOG_PREFIX_LOCAL="midnight_maint.sh:"
+LOG_PREFIX_LOCAL="midnight-maint.sh:"
 
 # retention settings
 DAYS_TO_KEEP_CACHED_STORIES=3

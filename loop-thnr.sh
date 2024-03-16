@@ -8,7 +8,7 @@ set -o pipefail  # don't hide errors within pipes
 # set -o verbose   # verbose mode; same as set -v
 
 source /srv/timbos-hn-reader/functions.sh
-source /srv/timbos-hn-reader/thnr_common_functions.sh
+source /srv/timbos-hn-reader/thnr-common-functions.sh
 
 if ! am-root; then
     die "Please run as root."
@@ -233,7 +233,7 @@ do
     done
 
     if (( ping_successes == 0 )); then
-        write-log-message loop error "${LOG_PREFIX_LOCAL} Internet connectivity check: ${ping_successes}/${#websites_to_ping[@]} pings succeeded. No intranet connectivity. Exiting."
+        write-log-message loop error "${LOG_PREFIX_LOCAL} Internet connectivity check: ${ping_successes}/${#websites_to_ping[@]} pings succeeded. No Internet connectivity. Exiting."
         printf "${LOG_PREFIX_LOCAL} Internet connectivity check: No Internet connectivity. Exiting.\n"
         exit 1
     fi
