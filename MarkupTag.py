@@ -32,7 +32,7 @@ class MarkupTag:
         if self.attribs:
             print()
             for k, v in self.attribs.items():
-                print(f'\t\t\t{k}="{v}"')
+                print(f'\t\t\t{k}="{v.value}"')
         else:
             print(" None")
 

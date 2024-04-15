@@ -1,6 +1,4 @@
 import builtins
-import datetime
-import html
 import json
 import logging
 import mimetypes
@@ -8,19 +6,16 @@ import os
 import re
 import subprocess
 import sys
-import time
 import traceback
 from collections import Counter, defaultdict
-from enum import Enum, auto
-from typing import Dict, List
+from typing import List
 from urllib.parse import unquote, urlparse
 
-import exiftool
 import magic
 from bs4 import BeautifulSoup
-from intervaltree import Interval, IntervalTree
+from intervaltree import IntervalTree
 
-from Attribute import AttributeWithKey, AttributeWithoutKey
+from Attribute import AttributeWithKey
 from MarkupTag import MarkupTag
 from Trie import Trie
 
@@ -581,7 +576,7 @@ def check_for_valid_text_encodings(local_file: str, log_prefix="") -> List[str]:
             else:
                 continue
 
-        except subprocess.CalledProcessError as exc:
+        except subprocess.CalledProcessError:
             # non-zero return code
             continue
 
@@ -624,7 +619,7 @@ def is_wellformed_xml_func(local_file: str, log_prefix="") -> bool:
         if result.returncode == 0:
             return True
 
-    except subprocess.CalledProcessError as exc:
+    except subprocess.CalledProcessError:
         pass
 
     except Exception as exc:
@@ -866,49 +861,49 @@ def is_a_binary_mimetype(mimetype: str) -> bool:
         return True
 
 
-def get_mimetype(
-    local_file: str, srct: str = None, url: str = None, story_object=None, log_prefix=""
-) -> str:
+# def get_mimetype(
+#     local_file: str, srct: str = None, url: str = None, story_object=None, log_prefix=""
+# ) -> str:
 
-    log_prefix_local = log_prefix + "get_mimetype: "
+#     log_prefix_local = log_prefix + "get_mimetype: "
 
-    if srct:
-        srcts = re.split("[;,]", srct)
-        srct = srcts[0].strip().lower()
+#     if srct:
+#         srcts = re.split("[;,]", srct)
+#         srct = srcts[0].strip().lower()
 
-    # use trusted tools to check if file is probably binary
-    trusted_sources = Counter(
-        [
-            get_mimetype_via_python_magic(local_file=local_file, log_prefix=log_prefix),
-            get_mimetype_via_file_command(local_file=local_file, log_prefix=log_prefix),
-            get_mimetype_via_exiftool2(local_file=local_file, log_prefix=log_prefix),
-        ]
-    )
+#     # use trusted tools to check if file is probably binary
+#     trusted_sources = Counter(
+#         [
+#             get_mimetype_via_python_magic(local_file=local_file, log_prefix=log_prefix),
+#             get_mimetype_via_file_command(local_file=local_file, log_prefix=log_prefix),
+#             get_mimetype_via_exiftool2(local_file=local_file, log_prefix=log_prefix),
+#         ]
+#     )
 
-    consensus_ct = None
-    if len(trusted_sources) == 1 and srct == trusted_sources.most_common(1)[0][0]:
-        # all 3 trusted sources agree with srct
-        consensus_ct = srct
-    elif len(trusted_sources) == 1:
-        # all 3 trusted sources agree; srct differs or is absent
-        consensus_ct = trusted_sources.most_common(1)[0][0]
-    elif len(trusted_sources) == 2 and srct == trusted_sources.most_common(1)[0][0]:
-        # 2 trusted sources agree with srct
-        consensus_ct = srct
-    elif len(trusted_sources) == 2:
-        # 2 trusted sources agree; srct differs or is absent
-        consensus_ct = trusted_sources.most_common(1)[0][0]
-    elif len(trusted_sources) >= 2 and srct in trusted_sources:
-        # 1 or 2 trusted sources agree with srct
-        consensus_ct = srct
-    else:
-        # no consensus
-        pass
-    # TODO: could fall back to guessing mimetype from URL
+#     consensus_ct = None
+#     if len(trusted_sources) == 1 and srct == trusted_sources.most_common(1)[0][0]:
+#         # all 3 trusted sources agree with srct
+#         consensus_ct = srct
+#     elif len(trusted_sources) == 1:
+#         # all 3 trusted sources agree; srct differs or is absent
+#         consensus_ct = trusted_sources.most_common(1)[0][0]
+#     elif len(trusted_sources) == 2 and srct == trusted_sources.most_common(1)[0][0]:
+#         # 2 trusted sources agree with srct
+#         consensus_ct = srct
+#     elif len(trusted_sources) == 2:
+#         # 2 trusted sources agree; srct differs or is absent
+#         consensus_ct = trusted_sources.most_common(1)[0][0]
+#     elif len(trusted_sources) >= 2 and srct in trusted_sources:
+#         # 1 or 2 trusted sources agree with srct
+#         consensus_ct = srct
+#     else:
+#         # no consensus
+#         pass
+#     # TODO: could fall back to guessing mimetype from URL
 
-    # if file is probably binary, invoke get_textual_mimetype just in case
+#     # if file is probably binary, invoke get_textual_mimetype just in case
 
-    # if file is probably not binary, invoke get_textual_mimetype
+#     # if file is probably not binary, invoke get_textual_mimetype
 
 
 # def get_mimetype_via_exiftool(local_file: str, log_prefix="") -> str:
@@ -1232,7 +1227,6 @@ def collect_empty_attributes(s: str):
     substrings = [x.strip() for x in substrings]
     substrings = [x for x in substrings if x]
 
-    # TODO: return [AttributeWithoutKey(attribute_literal=x) for x in substrings]
     return substrings
 
 
@@ -1460,29 +1454,31 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
 
             # collect attributes with single-quoted values
             matches = re.finditer(
-                f" ?({xml_attribute_name_re}) *= *('.*?')",
+                f" ?({xml_attribute_name_re}) *= *('.+?')",
                 attrib_material,
             )
             for match in matches:
-                the_tag.attribs[match.group(1).lower()] = match.group(2)[1:-1]
+                # the_tag.attribs[match.group(1).lower()] = match.group(2)[1:-1]
                 new_attrib = AttributeWithKey(
-                    attribute_literal=match.group(),
+                    attribute_literal=match.group().strip(" "),
                     key_literal=match.group(1),
                     value_literal=match.group(2),
                 )
+                the_tag.attribs[new_attrib.key] = new_attrib
 
             # collect attributes with double-quoted values
             matches = re.finditer(
-                f' ?({xml_attribute_name_re}) *= *(".*?")',
+                f' ?({xml_attribute_name_re}) *= *(".+?")',
                 attrib_material,
             )
             for match in matches:
-                the_tag.attribs[match.group(1).lower()] = match.group(2)[1:-1]
+                # the_tag.attribs[match.group(1).lower()] = match.group(2)[1:-1]
                 new_attrib = AttributeWithKey(
-                    attribute_literal=match.group(),
+                    attribute_literal=match.group().strip(" "),
                     key_literal=match.group(1),
                     value_literal=match.group(2),
                 )
+                the_tag.attribs[new_attrib.key] = new_attrib
 
             # collect attributes with unquoted values
             matches = re.finditer(
@@ -1490,35 +1486,20 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
                 attrib_material,
             )
             for match in matches:
-                the_tag.attribs[match.group(1).lower()] = match.group(2)
+                # the_tag.attribs[match.group(1).lower()] = match.group(2)
                 new_attrib = AttributeWithKey(
-                    attribute_literal=match.group(),
+                    attribute_literal=match.group().strip(" "),
                     key_literal=match.group(1),
                     value_literal=match.group(2),
                 )
+                the_tag.attribs[new_attrib.key] = new_attrib
 
             # collect empty attributes (no value; or implicitly the empty string)
             copy_of_attrib_material = attrib_material
-
-            for k, v in the_tag.attribs.items():
-                target_replacement_strs = [
-                    f'{k}="{v}"',
-                    f"{k}='{v}'",
-                ]
-
-                for each_tag_to_delete in target_replacement_strs:
-                    while each_tag_to_delete in copy_of_attrib_material:
-                        copy_of_attrib_material = copy_of_attrib_material.replace(
-                            each_tag_to_delete, " "
-                        )
-
-                # for values without spaces, we can also try to remove unquoted attribute values
-                if not " " in v:
-                    target_replacement_str = f"{k}={v}"
-                    while target_replacement_str in copy_of_attrib_material:
-                        copy_of_attrib_material = copy_of_attrib_material.replace(
-                            target_replacement_str, " "
-                        )
+            for each_attr in the_tag.attribs.values():
+                copy_of_attrib_material = copy_of_attrib_material.replace(
+                    each_attr.attribute_literal, " "
+                )
 
             the_tag.empty_attribs.extend(
                 collect_empty_attributes(copy_of_attrib_material)
@@ -1564,21 +1545,21 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
 
             # collect non-empty attributes with single-quoted values
             matches = re.finditer(
-                f" ?({xml_attribute_name_re})='([^']*?)'",
+                f" ?({xml_attribute_name_re}) *= *'([^']+?)'",
                 attrib_material,
             )
             matches_kv_attribs.extend(matches)
 
             # collect non-empty attributes with double-quoted values
             matches = re.finditer(
-                f' ?({xml_attribute_name_re})="([^"]*?)"',
+                f' ?({xml_attribute_name_re}) *= *"([^"]+?)"',
                 attrib_material,
             )
             matches_kv_attribs.extend(matches)
 
             # collect non-empty attributes with unquoted values
             matches = re.finditer(
-                f" ?({xml_attribute_name_re})=({xml_attribute_unquoted_value_re})",
+                f" ?({xml_attribute_name_re}) *= *({xml_attribute_unquoted_value_re})",
                 attrib_material,
             )
             matches_kv_attribs.extend(matches)
@@ -1586,34 +1567,21 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
             for match in matches_kv_attribs:
                 if tree[match.start()]:
                     continue
-                the_tag.attribs[match.group(1).lower()] = match.group(2)
+                # the_tag.attribs[match.group(1).lower()] = match.group(2)
                 tree[match.start() : match.end()] = True
 
-            # collect empty attributes (no value; or implicitly the empty string)
+                new_attrib = AttributeWithKey(
+                    attribute_literal=match.group().strip(" "),
+                    key_literal=match.group(1),
+                    value_literal=match.group(2),
+                )
+                the_tag.attribs[new_attrib.key] = new_attrib
+
             copy_of_attrib_material = attrib_material
-            for k, v in the_tag.attribs.items():
-                target_replacement_strs = [
-                    f'{k}="{v}"',
-                    f"{k}='{v}'",
-                ]
-
-                # now that we've captured the tag's attributes' original representation,
-                # we can html.unescape() the values
-                the_tag.attribs[k] = html.unescape(v)
-
-                for each_tag_to_delete in target_replacement_strs:
-                    while each_tag_to_delete in copy_of_attrib_material:
-                        copy_of_attrib_material = copy_of_attrib_material.replace(
-                            each_tag_to_delete, " "
-                        )
-
-                # for values without spaces, we can also try to remove unquoted attribute values
-                if not " " in v:
-                    target_replacement_str = f"{k}={v}"
-                    while target_replacement_str in copy_of_attrib_material:
-                        copy_of_attrib_material = copy_of_attrib_material.replace(
-                            target_replacement_str, " "
-                        )
+            for each_attr in the_tag.attribs.values():
+                copy_of_attrib_material = copy_of_attrib_material.replace(
+                    each_attr.attribute_literal, " "
+                )
 
             the_tag.empty_attribs.extend(
                 collect_empty_attributes(copy_of_attrib_material)
@@ -1657,10 +1625,9 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
     has_system_identifier = False
     if "!doctype" in document:
         for empty_attrib in document["!doctype"][0].empty_attribs:
-
             # check for formal public identifier (FPI)
             if empty_attrib.startswith("-//"):
-                has_formal_public_identifier = True
+                has_formal_public_identifier = True  # noqa: F841
                 match = re.search(r"-//(.*?)//DTD (.*?)//", empty_attrib)
                 if match:
                     document_data["FPI"] = empty_attrib
@@ -1687,7 +1654,7 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
                 or empty_attrib.startswith("/DTD")
                 or empty_attrib.endswith(".dtd")
             ):
-                has_system_identifier = True
+                has_system_identifier = True  # noqa: F841
                 document_data["SI"] = empty_attrib
                 # http://www.w3.org/1999/html
                 # http://www.w3.org/1999/xhtml
@@ -1761,7 +1728,7 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
         for each in tags_to_delete:
             _ = document.pop(each, None)
 
-    if not "!doctype" in document:
+    if "!doctype" not in document:
         clues_toward["application/xhtml+xml"] = -float("inf")
 
     # check for various clues for html, html5, xhtml
@@ -1788,7 +1755,7 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
         if "xml:lang" in html_elem.attribs:
             clues_toward["application/xhtml+xml"] += 1
 
-    if not "html" in document:
+    if "html" not in document:
         clues_toward["application/xhtml+xml"] = -float("inf")
         clues_toward["text/html5"] = -float("inf")
 
@@ -1825,20 +1792,19 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
     if "meta" in document:
         # check for clues in meta tags
         for each_meta_tag in document["meta"]:
-
             # <meta charset="utf-8">
             if (
                 "charset" in each_meta_tag.attribs
-                and each_meta_tag.attribs["charset"].lower() == "utf-8"
+                and each_meta_tag.attribs["charset"].value.lower() == "utf-8"
             ):
                 found_meta_charset = True
 
             # <meta http-equiv="content-type" content="text/html; charset=UTF-8">
             if "http-equiv" in each_meta_tag.attribs:
-                if each_meta_tag.attribs["http-equiv"].lower() == "content-type":
+                if each_meta_tag.attribs["http-equiv"].value.lower() == "content-type":
                     if "content" in each_meta_tag.attribs:
                         for each_val in re.split(
-                            "[;,]", each_meta_tag.attribs["content"]
+                            "[;,]", each_meta_tag.attribs["content"].value
                         ):
                             if "/" in each_val and each_val not in [
                                 "application/xhtml+xml",
@@ -1868,18 +1834,17 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
             # <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0 user-scalable=no, width=device-width">
 
             if "name" in each_meta_tag.attribs:
-                if each_meta_tag.attribs["name"].lower() == "viewport":
+                if each_meta_tag.attribs["name"].value.lower() == "viewport":
                     if "content" in each_meta_tag.attribs:
                         found_meta_viewport = True
                         for each in re.split(
-                            "[;, ]+", each_meta_tag.attribs["content"]
+                            "[;, ]+", each_meta_tag.attribs["content"].value.lower()
                         ):
                             if not each:
                                 continue
                             try:
                                 k, v = each.split("=")
                             except (IndexError, ValueError):
-
                                 if each in ["minimal-ui"]:
                                     continue
 
@@ -1905,7 +1870,7 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
     # pattern = r"<([A-Za-z0-9\-]+)(.*?)/?>"
     # matches = re.finditer(pattern, content, re.DOTALL)
     pattern1 = r"<([^\ />]+?)/?>"  # for tags with no attributes
-    pattern2 = r"<([^\ />]+?) (.*?)/?>"  # for tags with attributes
+    pattern2 = r"<([^\ />]+?) +(.*?)/?>"  # for tags with attributes
     matches = []
     matches.extend(re.finditer(pattern1, content, re.DOTALL))
     matches.extend(re.finditer(pattern2, content, re.DOTALL))
@@ -1913,8 +1878,6 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
         if match.group().startswith("<!--"):
             continue
         elif match.group().endswith("-->"):
-            continue
-        elif match.group().endswith("/>"):
             continue
         else:
             tag_counts[match.group(1).lower()] += 1
@@ -2144,7 +2107,6 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
 
 
 if __name__ == "__main__":
-
     logger.setLevel(logging.DEBUG)
     console_handler = logging.StreamHandler()
     console_handler.setLevel(logging.DEBUG)

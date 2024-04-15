@@ -1,7 +1,7 @@
 anyio==4.1.0  # not latest
 hrequests[all]==0.7.1  # after install or update, run: playwright install && playwright install-deps  # not latest
 httpcore==1.0.2  # latest
-httpx[http2]==0.25.2  # not latest
+httpx[http2,socks]==0.25.2  # not latest
 #
 async-generator
 attrs

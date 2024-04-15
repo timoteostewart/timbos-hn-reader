@@ -14,6 +14,14 @@ class Attribute:
     def value(self) -> str:
         return self._value_as_str
 
+    def dump(self):
+        print(f"{self.attribute_literal=}")
+        print(f"{self.value=}")
+        print(f"{self.value_literal=}")
+        if self.has_key:
+            print(f"{self.key=}")
+            print(f"{self.key_literal=}")
+
 
 class AttributeWithKey(Attribute):
     def __init__(
@@ -26,7 +34,7 @@ class AttributeWithKey(Attribute):
         else:
             self._value_as_str = value_literal
 
-        self.key_literal=key_literal
+        self.key_literal = key_literal
         self._key_as_str = key_literal.lower()
         self.value_literal = value_literal
 

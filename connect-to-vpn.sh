@@ -19,7 +19,7 @@ utility_account_username=tim
 log_prefix_local="connect-to-vpn.sh:"
 
 # more settings
-seconds_delay_between_login_attempts=8
+seconds_delay_between_login_attempts=16
 
 am-logged-into-vpn-client() {
     vpn_account_status=$(nordvpn account)
@@ -79,14 +79,26 @@ done
 # check whether we're logged into the vpn account.
 # if we're not, reboot if we're sudo, exit with error otherwise
 if ! am-logged-into-vpn-client; then
-    write-log-message vpn info "${log_prefix_local} shutting down now."
-    shutdown -r now
+    write-log-message vpn info "${log_prefix_local} still not logged in. sleeping 5 minutes, and then restarting host."
+    sleep 300 && shutdown -r now && sleep 60
 fi
 
 #
 # invariant now: we are logged into the vpn account.
 # (we are not necessarily connected to the vpn though.)
 #
+
+nordvpn set autoconnect enabled
+nordvpn set cybersec disabled
+nordvpn set dns 192.168.1.59
+nordvpn set firewall disabled
+nordvpn set killswitch disabled
+nordvpn set killswitch disabled
+nordvpn set lan-discovery enabled
+nordvpn set obfuscate disabled
+nordvpn set routing enabled
+nordvpn set technology nordlynx
+nordvpn whitelist add port 22
 
 if vpn-is-connected; then
     exit 0
@@ -99,6 +111,7 @@ for i in 1 2 3 4 5 6 7 8; do
     if vpn-is-connected; then
         exit 0
     fi
+    write-log-message vpn info "${log_prefix_local} sleeping for ${cur_delay} seconds"
     sleep "${cur_delay}"
     (( cur_delay *= 2 ))
 done
@@ -109,7 +122,9 @@ done
 
 # try restarting the vpn service
 cur_delay=${seconds_delay_between_login_attempts}
+write-log-message vpn info "${log_prefix_local} restarting nordvpn service"
 systemctl restart nordvpn
+write-log-message vpn info "${log_prefix_local} sleeping for ${cur_delay} seconds"
 sleep "${cur_delay}"
 
 # try a few more times to connect
@@ -118,10 +133,11 @@ for i in 1 2 3 4 5 6 7 8; do
     if vpn-is-connected; then
         exit 0
     fi
+    write-log-message vpn info "${log_prefix_local} sleeping for ${cur_delay} seconds"
     sleep "${cur_delay}"
     (( cur_delay *= 2 ))
 done
 
-# we've tried just about everything. let's wait 10 minutes and reboot.
-sleep 600
-shutdown -r now
+# we've tried just about everything. let's wait 5 minutes and reboot.
+write-log-message vpn info "${log_prefix_local} sleeping 5 minutes, and then restarting host."
+sleep 300 && shutdown -r now && sleep 60

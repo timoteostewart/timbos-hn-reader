@@ -154,15 +154,15 @@ story_types=(
     "new"
 )
 
-apt_packages=(
-    # "chromium-browser-l10n"
-    # "chromium-browser"
-    # "chromium-chromedriver"
-    # "chromium-codecs-ffmpeg-extra"
-    # "google-chrome-beta"
-    # "google-chrome-stable"
-    "nordvpn"
-)
+# apt_packages=(
+#     # "chromium-browser-l10n"
+#     # "chromium-browser"
+#     # "chromium-chromedriver"
+#     # "chromium-codecs-ffmpeg-extra"
+#     # "google-chrome-beta"
+#     # "google-chrome-stable"
+#     "nordvpn"
+# )
 
 pip_packages=(
     "pip"
@@ -183,33 +183,11 @@ while true
 do
     CUR_LOOP_START_TS=$(get-time-in-unix-seconds)
 
-    # # check for intranet connectivity
-    # ping_successes=0
-    # ping_failures=0
-    # min_pings=1
-    # if curl --interface eth0 --silent 192.168.1.1 >/dev/null 2>&1 ; then
-    #     (( ping_successes += 1 ))
-    # else
-    #     (( ping_failures += 1 ))
-    # fi
-    # if curl --interface eth1 --silent 192.168.2.254 >/dev/null 2>&1 ; then
-    #     (( ping_successes += 1 ))
-    # else
-    #     (( ping_failures += 1 ))
-    # fi
-
-    # if (( ping_successes == 0 )); then
-    #     write-log-message loop error "${LOG_PREFIX_LOCAL} Intranet connectivity check: ${ping_successes}/2 pings succeeded. No intranet connectivity. Exiting."
-    #     printf "${LOG_PREFIX_LOCAL} Intranet connectivity check: No intranet connectivity. Exiting.\n"
-    #     exit 1
-    # fi
-    # if (( ping_successes >= min_pings )); then
-    #     write-log-message loop info "${LOG_PREFIX_LOCAL} Intranet connectivity check: ${ping_successes}/2 pings succeeded. Continuing."
-    # fi
-
     # connect to VPN
     if ! "${project_base_dir}connect-to-vpn.sh"; then
-        exit 1
+        write-log-message loop error "${LOG_PREFIX_LOCAL} Could not connect to VPN. Will restart host in 10 minutes."
+        printf "${LOG_PREFIX_LOCAL} Could not connect to VPN. Will restart host in 10 minutes.\n"
+        sleep 600 && shutdown -r now && sleep 60
     fi
 
     # check for Internet connectivity
@@ -225,7 +203,7 @@ do
     ping_failures=0
     min_pings=2
     for cur_website in "${websites_to_ping[@]}"; do
-        if curl --interface nordlynx ${cur_website} >/dev/null 2>&1; then
+        if curl --head --interface eth0 ${cur_website} >/dev/null 2>&1; then
             (( ping_successes += 1 ))
         else
             (( ping_failures += 1 ))
@@ -233,17 +211,16 @@ do
     done
 
     if (( ping_successes == 0 )); then
-        write-log-message loop error "${LOG_PREFIX_LOCAL} Internet connectivity check: ${ping_successes}/${#websites_to_ping[@]} pings succeeded. No Internet connectivity. Exiting."
-        printf "${LOG_PREFIX_LOCAL} Internet connectivity check: No Internet connectivity. Exiting.\n"
-        exit 1
+        write-log-message loop error "${LOG_PREFIX_LOCAL} Internet connectivity check: ${ping_successes}/${#websites_to_ping[@]} pings succeeded. No Internet connectivity. No Internet connectivity. Will restart in 10 minutes."
+        printf "${LOG_PREFIX_LOCAL} Internet connectivity check: ${ping_successes}/${#websites_to_ping[@]} pings succeeded. No Internet connectivity. No Internet connectivity. Will restart host in 10 minutes.\n"
+        sleep 600 && shutdown -r now && sleep 60
     fi
     if (( ping_successes >= min_pings )); then
         write-log-message loop info "${LOG_PREFIX_LOCAL} Internet connectivity check: ${ping_successes}/${#websites_to_ping[@]} pings succeeded. Continuing."
     else
-        write-log-message loop error "${LOG_PREFIX_LOCAL} Internet connectivity check: ${ping_successes}/${#websites_to_ping[@]} pings succeeded. Unstable Internet connectivity. Exiting\n."
-        printf "${LOG_PREFIX_LOCAL} Internet connectivity check: Unstable Internet connectivity. Exiting.\n"
-        exit 1
-
+        write-log-message loop error "${LOG_PREFIX_LOCAL} Internet connectivity check: ${ping_successes}/${#websites_to_ping[@]} pings succeeded. Unstable Internet connectivity. Will restart host in 10 minutes."
+        printf "${LOG_PREFIX_LOCAL} Internet connectivity check: ${ping_successes}/${#websites_to_ping[@]} pings succeeded. Unstable Internet connectivity. Will restart in 10 minutes.\n"
+        sleep 600 && shutdown -r now && sleep 60
     fi
 
     cleanup_tmp_dir

@@ -1,11 +1,25 @@
 import re
 import statistics
 from dataclasses import dataclass
-from typing import Dict, List
 
 import numpy as np
 
 log_path = "/mnt/synology/logs/thnr2.home.arpa/"
+
+start_date = (2023, 1)  # year, day of year
+end_date = (2023, 365)  # year, day of year
+
+year_day_pairs = []
+
+cur_year = start_date[0]
+cur_day = start_date[1]
+
+while (cur_year < end_date[0]) or (cur_year == end_date[0] and cur_day <= end_date[1]):
+    year_day_pairs.append((cur_year, cur_day))
+    cur_day += 1
+    if cur_day > 366:
+        cur_day = 1
+        cur_year += 1
 
 
 @dataclass
@@ -50,200 +64,195 @@ def create_incrementer(starting_number):
 uid_generator = create_incrementer(1)
 cur_session_id = None
 
-for year in ["2024"]:
+for each_year_day_pair in year_day_pairs:
+    year, day = each_year_day_pair
 
-    for day in range(1, 366):
+    log_file = f"thnr-thnr-{year}-{day:0>3}.log"
 
-        log_file = f"thnr-thnr-{year}-{day:0>3}.log"
+    print(f"{log_file=}")
 
-        print(f"{log_file=}")
+    # first check if the file exists
+    try:
+        with open(log_path + log_file, mode="r", encoding="utf-8") as file:
+            pass
+    except FileNotFoundError:
+        continue
 
-        # first check if the file exists
-        try:
-            with open(log_path + log_file, mode="r", encoding="utf-8") as file:
-                pass
-        except FileNotFoundError:
+    with open(log_path + log_file, mode="r", encoding="utf-8") as file:
+        lines = file.readlines()
+
+    for line in lines:
+
+        # print(line.strip())
+
+        # check for an id in line
+        pattern = r"id (\d{8})"
+        match = re.search(pattern, line)
+        if match:
+            id = match.group(1)
+        else:
             continue
 
-        with open(log_path + log_file, mode="r", encoding="utf-8") as file:
-            lines = file.readlines()
+        try:
+            event_time = (
+                int(line[11:13]) * 3600 + int(line[14:16]) * 60 + int(line[17:19])
+            )
+        except Exception as exc:
+            print(f"{exc}: {line}")
+            continue
 
-        for line in lines:
+        # 2023, 2024
+        if "no cached story found" in line:
+            uid = next(uid_generator)
+            events[uid] = StoryProcessingEvent(
+                id=id, start_time=event_time, uncached_story=True
+            )
+            id_to_uid[id] = uid
+            if cur_session_id:
+                sessions[cur_session_id].num_stories += 1
 
-            # print(line.strip())
+        # 2023, 2024
+        elif "cached story found" in line:
+            uid = next(uid_generator)
+            events[uid] = StoryProcessingEvent(
+                id=id, start_time=event_time, cached_story=True
+            )
+            id_to_uid[id] = uid
+            if cur_session_id:
+                sessions[cur_session_id].num_stories += 1
 
-            # check for an id in line
-            pattern = r"id (\d{8})"
-            match = re.search(pattern, line)
+        # 2023
+        elif "og:image file has magic type" in line:
+            uid = id_to_uid[id]
+            if uid in events:
+                events[uid].has_thumbnail = True
+
+        # 2024
+        elif "will have a thumbnail" in line:
+            uid = id_to_uid[id]
+            if uid in events:
+                events[uid].has_thumbnail = True
+
+        # 2023
+        elif "pickling item for the first time" in line:
+            uid = id_to_uid[id]
+            if uid in events:
+                events[uid].end_time = event_time
+                events[uid].processing_duration = (
+                    events[uid].end_time - events[uid].start_time
+                )
+                id_to_uid[id] = None
+
+        # 2024
+        elif "saving item to disk for the first time" in line:
+            uid = id_to_uid[id]
+            if uid in events:
+                events[uid].end_time = event_time
+                events[uid].processing_duration = (
+                    events[uid].end_time - events[uid].start_time
+                )
+                id_to_uid[id] = None
+
+        # 2023, early 2024
+        elif "re-pickling freshened story" in line:
+            uid = id_to_uid[id]
+            if uid in events:
+                events[uid].end_time = event_time
+                events[uid].processing_duration = (
+                    events[uid].end_time - events[uid].start_time
+                )
+                events[uid].freshened_story = True
+                id_to_uid[id] = None
+
+        # 2023
+        elif "re-pickling re-used cached story" in line:
+            uid = id_to_uid[id]
+            if uid in events:
+                events[uid].end_time = event_time
+                events[uid].processing_duration = (
+                    events[uid].end_time - events[uid].start_time
+                )
+                events[uid].reused_story = True
+                id_to_uid[id] = None
+
+        # 2024
+        elif "re-using cached story" in line:
+            uid = id_to_uid[id]
+            if uid in events:
+                events[uid].reused_story = True
+                events[uid].cached_story = True
+
+        # 2024
+        elif "successfully freshened story" in line:
+            uid = id_to_uid[id]
+            if uid in events:
+                events[uid].freshened_story = True
+                events[uid].cached_story = True
+
+        # 2024
+        elif "successfully created story_card_html" in line:
+            uid = id_to_uid[id]
+            if uid in events:
+                events[uid].end_time = event_time
+                events[uid].processing_duration = (
+                    events[uid].end_time - events[uid].start_time
+                )
+                id_to_uid[id] = None
+
+        else:
+            # 2023-01-13 00:16:28 CST [top]     INFO     supervisor(top) with unique id eadb8101687e4588fae5bae270d09145433f4c2a started at 2023-01-13T06:16:28Z
+            match = re.search(
+                r"supervisor\(([^\)]+)\) with unique id ([a-f0-9]{40})", line
+            )
             if match:
-                id = match.group(1)
-            else:
+                story_type = str(match.group(1))
+                session_id = str(match.group(2))
+
+                if "started" in line:
+                    sessions[session_id] = StoryTypeSession(
+                        id=session_id, start_time=event_time, story_type=story_type
+                    )
+                    cur_session_id = session_id
+                elif "completed" in line:
+                    sessions[session_id].end_time = event_time
+                    sessions[session_id].duration = (
+                        sessions[session_id].end_time
+                        - sessions[session_id].start_time
+                        + 86400
+                    ) % 86400
+
+                    sessions[session_id].stories_per_second = (
+                        sessions[session_id].num_stories / sessions[session_id].duration
+                    )
+                    cur_session_id = None
+
                 continue
 
-            try:
-                event_time = (
-                    int(line[11:13]) * 3600 + int(line[14:16]) * 60 + int(line[17:19])
-                )
-            except Exception as exc:
-                print(f"{exc}: {line}")
+            # 2024-03-01T03:57:24Z [new]     INFO     supervisor(new) with id 5f351bbe0781: completed in 00:03:22.451 at 2024-03-01T03:57:24Z
+            match = re.search(r"supervisor\(([^\)]+)\) with id ([a-f0-9]{12})", line)
+            if match:
+                story_type = str(match.group(1))
+                session_id = str(match.group(2))
+
+                if "started" in line:
+                    sessions[session_id] = StoryTypeSession(
+                        id=session_id, start_time=event_time, story_type=story_type
+                    )
+                    cur_session_id = session_id
+                elif "completed" in line:
+                    sessions[session_id].end_time = event_time
+                    sessions[session_id].duration = (
+                        sessions[session_id].end_time
+                        - sessions[session_id].start_time
+                        + 86400
+                    ) % 86400
+
+                    sessions[session_id].stories_per_second = (
+                        sessions[session_id].num_stories / sessions[session_id].duration
+                    )
+                    cur_session_id = None
+
                 continue
-
-            # 2023, 2024
-            if "no cached story found" in line:
-                uid = next(uid_generator)
-                events[uid] = StoryProcessingEvent(
-                    id=id, start_time=event_time, uncached_story=True
-                )
-                id_to_uid[id] = uid
-                if cur_session_id:
-                    sessions[cur_session_id].num_stories += 1
-
-            # 2023, 2024
-            elif "cached story found" in line:
-                uid = next(uid_generator)
-                events[uid] = StoryProcessingEvent(
-                    id=id, start_time=event_time, cached_story=True
-                )
-                id_to_uid[id] = uid
-                if cur_session_id:
-                    sessions[cur_session_id].num_stories += 1
-
-            # 2023
-            elif "og:image file has magic type" in line:
-                uid = id_to_uid[id]
-                if uid in events:
-                    events[uid].has_thumbnail = True
-
-            # 2024
-            elif "will have a thumbnail" in line:
-                uid = id_to_uid[id]
-                if uid in events:
-                    events[uid].has_thumbnail = True
-
-            # 2023
-            elif "pickling item for the first time" in line:
-                uid = id_to_uid[id]
-                if uid in events:
-                    events[uid].end_time = event_time
-                    events[uid].processing_duration = (
-                        events[uid].end_time - events[uid].start_time
-                    )
-                    id_to_uid[id] = None
-
-            # 2024
-            elif "saving item to disk for the first time" in line:
-                uid = id_to_uid[id]
-                if uid in events:
-                    events[uid].end_time = event_time
-                    events[uid].processing_duration = (
-                        events[uid].end_time - events[uid].start_time
-                    )
-                    id_to_uid[id] = None
-
-            # 2023, early 2024
-            elif "re-pickling freshened story" in line:
-                uid = id_to_uid[id]
-                if uid in events:
-                    events[uid].end_time = event_time
-                    events[uid].processing_duration = (
-                        events[uid].end_time - events[uid].start_time
-                    )
-                    events[uid].freshened_story = True
-                    id_to_uid[id] = None
-
-            # 2023
-            elif "re-pickling re-used cached story" in line:
-                uid = id_to_uid[id]
-                if uid in events:
-                    events[uid].end_time = event_time
-                    events[uid].processing_duration = (
-                        events[uid].end_time - events[uid].start_time
-                    )
-                    events[uid].reused_story = True
-                    id_to_uid[id] = None
-
-            # 2024
-            elif "re-using cached story" in line:
-                uid = id_to_uid[id]
-                if uid in events:
-                    events[uid].reused_story = True
-                    events[uid].cached_story = True
-
-            # 2024
-            elif "successfully freshened story" in line:
-                uid = id_to_uid[id]
-                if uid in events:
-                    events[uid].freshened_story = True
-                    events[uid].cached_story = True
-
-            # 2024
-            elif "successfully created story_card_html" in line:
-                uid = id_to_uid[id]
-                if uid in events:
-                    events[uid].end_time = event_time
-                    events[uid].processing_duration = (
-                        events[uid].end_time - events[uid].start_time
-                    )
-                    id_to_uid[id] = None
-
-            else:
-                # 2023-01-13 00:16:28 CST [top]     INFO     supervisor(top) with unique id eadb8101687e4588fae5bae270d09145433f4c2a started at 2023-01-13T06:16:28Z
-                match = re.search(
-                    r"supervisor\(([^\)]+)\) with unique id ([a-f0-9]{40})", line
-                )
-                if match:
-                    story_type = str(match.group(1))
-                    session_id = str(match.group(2))
-
-                    if "started" in line:
-                        sessions[session_id] = StoryTypeSession(
-                            id=session_id, start_time=event_time, story_type=story_type
-                        )
-                        cur_session_id = session_id
-                    elif "completed" in line:
-                        sessions[session_id].end_time = event_time
-                        sessions[session_id].duration = (
-                            sessions[session_id].end_time
-                            - sessions[session_id].start_time
-                            + 86400
-                        ) % 86400
-
-                        sessions[session_id].stories_per_second = (
-                            sessions[session_id].num_stories
-                            / sessions[session_id].duration
-                        )
-                        cur_session_id = None
-
-                    continue
-
-                # 2024-03-01T03:57:24Z [new]     INFO     supervisor(new) with id 5f351bbe0781: completed in 00:03:22.451 at 2024-03-01T03:57:24Z
-                match = re.search(
-                    r"supervisor\(([^\)]+)\) with id ([a-f0-9]{12})", line
-                )
-                if match:
-                    story_type = str(match.group(1))
-                    session_id = str(match.group(2))
-
-                    if "started" in line:
-                        sessions[session_id] = StoryTypeSession(
-                            id=session_id, start_time=event_time, story_type=story_type
-                        )
-                        cur_session_id = session_id
-                    elif "completed" in line:
-                        sessions[session_id].end_time = event_time
-                        sessions[session_id].duration = (
-                            sessions[session_id].end_time
-                            - sessions[session_id].start_time
-                            + 86400
-                        ) % 86400
-
-                        sessions[session_id].stories_per_second = (
-                            sessions[session_id].num_stories
-                            / sessions[session_id].duration
-                        )
-                        cur_session_id = None
-
-                    continue
 
 
 for _ in range(10):

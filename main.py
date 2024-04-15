@@ -1,19 +1,20 @@
 import os
 import time
 
+import secrets_file
+
 os.environ["TZ"] = "UTC"
 time.tzset()
 
-import datetime
-import logging
-import os.path
-import re
-import sys
-import traceback
+import datetime  # noqa: E402
+import logging  # noqa: E402
+import os.path  # noqa: E402
+import sys  # noqa: E402
+import traceback  # noqa: E402
 
-import config
-import hn
-import utils_text
+import config  # noqa: E402
+import hn  # noqa: E402
+import utils_text  # noqa: E402
 
 logger = None
 
@@ -22,6 +23,12 @@ logger = None
 # TODO: endpoint_query_via_requests(): problem querying url https://api.ipify.org?format=json: SSLError: HTTPSConnectionPool(host='api.ipify.org', port=443): Max retries exceeded with url: /?format=json (Caused by SSLError(SSLEOFError(8, '[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1007)'))) ; will delay 4 seconds and retry (retries left 10)
 # TODO: 2024-01-31T06:13:33Z [active]  INFO     id 39196532: asdfft(): found og:image url //stsci-opo.org/STScI-01HM9KB3F5RCZ5KPA4P9V3B987.png
 # TODO: 2024-01-31T06:13:57Z [active]  INFO     id 39196532: d_og_i(): get(): attempting to heal and retry schemeless og:image URL //stsci-opo.org/STScI-01HM9KB3F5RCZ5KPA4P9V3B987.png as http://webbtelescope.org/stsci-opo.org/STScI-01HM9KB3F5RCZ5KPA4P9V3B987.png
+
+
+# def check_for_proxy():
+#     if not secrets_file.PROXY_URL:
+#         main.logger.error("No working proxy found. Exiting.")
+#         exit(1)
 
 
 def check_for_required_dirs():
@@ -37,15 +44,14 @@ def check_for_required_dirs():
         if not os.path.isdir(each_dir):
             try:
                 os.makedirs(each_dir)
-            except Exception as e:
+            except Exception as exc:
                 main.logger.error(
-                    f"Error: {e}. Missing required dir {each_dir} and was unable to create it. Exiting."
+                    f"Error: {exc}. Missing required dir {each_dir} and was unable to create it. Exiting."
                 )
                 exit(1)
 
 
 def main():
-
     log_prefix = "main: "
 
     story_type = sys.argv[1]
@@ -106,6 +112,8 @@ def main():
         log_prefix
         + f"started thnr with story type {story_type} on host {config.settings['cur_host']} with {workers_slug}"
     )
+
+    # check_for_proxy()
 
     check_for_required_dirs()
     exit_code = None

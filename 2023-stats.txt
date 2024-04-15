@@ -1,0 +1,484 @@
+log_file='thnr-thnr-2023-001.log'
+log_file='thnr-thnr-2023-002.log'
+log_file='thnr-thnr-2023-003.log'
+log_file='thnr-thnr-2023-004.log'
+log_file='thnr-thnr-2023-005.log'
+log_file='thnr-thnr-2023-006.log'
+log_file='thnr-thnr-2023-007.log'
+log_file='thnr-thnr-2023-008.log'
+log_file='thnr-thnr-2023-009.log'
+log_file='thnr-thnr-2023-010.log'
+log_file='thnr-thnr-2023-011.log'
+log_file='thnr-thnr-2023-012.log'
+log_file='thnr-thnr-2023-013.log'
+log_file='thnr-thnr-2023-014.log'
+log_file='thnr-thnr-2023-015.log'
+log_file='thnr-thnr-2023-016.log'
+log_file='thnr-thnr-2023-017.log'
+log_file='thnr-thnr-2023-018.log'
+log_file='thnr-thnr-2023-019.log'
+log_file='thnr-thnr-2023-020.log'
+log_file='thnr-thnr-2023-021.log'
+log_file='thnr-thnr-2023-022.log'
+log_file='thnr-thnr-2023-023.log'
+log_file='thnr-thnr-2023-024.log'
+log_file='thnr-thnr-2023-025.log'
+log_file='thnr-thnr-2023-026.log'
+log_file='thnr-thnr-2023-027.log'
+log_file='thnr-thnr-2023-028.log'
+log_file='thnr-thnr-2023-029.log'
+log_file='thnr-thnr-2023-030.log'
+log_file='thnr-thnr-2023-031.log'
+log_file='thnr-thnr-2023-032.log'
+log_file='thnr-thnr-2023-033.log'
+log_file='thnr-thnr-2023-034.log'
+log_file='thnr-thnr-2023-035.log'
+log_file='thnr-thnr-2023-036.log'
+log_file='thnr-thnr-2023-037.log'
+log_file='thnr-thnr-2023-038.log'
+log_file='thnr-thnr-2023-039.log'
+log_file='thnr-thnr-2023-040.log'
+log_file='thnr-thnr-2023-041.log'
+log_file='thnr-thnr-2023-042.log'
+log_file='thnr-thnr-2023-043.log'
+log_file='thnr-thnr-2023-044.log'
+log_file='thnr-thnr-2023-045.log'
+log_file='thnr-thnr-2023-046.log'
+log_file='thnr-thnr-2023-047.log'
+log_file='thnr-thnr-2023-048.log'
+log_file='thnr-thnr-2023-049.log'
+log_file='thnr-thnr-2023-050.log'
+log_file='thnr-thnr-2023-051.log'
+log_file='thnr-thnr-2023-052.log'
+log_file='thnr-thnr-2023-053.log'
+log_file='thnr-thnr-2023-054.log'
+log_file='thnr-thnr-2023-055.log'
+log_file='thnr-thnr-2023-056.log'
+log_file='thnr-thnr-2023-057.log'
+log_file='thnr-thnr-2023-058.log'
+log_file='thnr-thnr-2023-059.log'
+log_file='thnr-thnr-2023-060.log'
+log_file='thnr-thnr-2023-061.log'
+log_file='thnr-thnr-2023-062.log'
+log_file='thnr-thnr-2023-063.log'
+log_file='thnr-thnr-2023-064.log'
+log_file='thnr-thnr-2023-065.log'
+log_file='thnr-thnr-2023-066.log'
+log_file='thnr-thnr-2023-067.log'
+log_file='thnr-thnr-2023-068.log'
+log_file='thnr-thnr-2023-069.log'
+log_file='thnr-thnr-2023-070.log'
+log_file='thnr-thnr-2023-071.log'
+log_file='thnr-thnr-2023-072.log'
+log_file='thnr-thnr-2023-073.log'
+log_file='thnr-thnr-2023-074.log'
+log_file='thnr-thnr-2023-075.log'
+log_file='thnr-thnr-2023-076.log'
+log_file='thnr-thnr-2023-077.log'
+log_file='thnr-thnr-2023-078.log'
+log_file='thnr-thnr-2023-079.log'
+log_file='thnr-thnr-2023-080.log'
+log_file='thnr-thnr-2023-081.log'
+log_file='thnr-thnr-2023-082.log'
+log_file='thnr-thnr-2023-083.log'
+log_file='thnr-thnr-2023-084.log'
+log_file='thnr-thnr-2023-085.log'
+log_file='thnr-thnr-2023-086.log'
+log_file='thnr-thnr-2023-087.log'
+log_file='thnr-thnr-2023-088.log'
+log_file='thnr-thnr-2023-089.log'
+log_file='thnr-thnr-2023-090.log'
+log_file='thnr-thnr-2023-091.log'
+log_file='thnr-thnr-2023-092.log'
+log_file='thnr-thnr-2023-093.log'
+log_file='thnr-thnr-2023-094.log'
+log_file='thnr-thnr-2023-095.log'
+log_file='thnr-thnr-2023-096.log'
+log_file='thnr-thnr-2023-097.log'
+log_file='thnr-thnr-2023-098.log'
+log_file='thnr-thnr-2023-099.log'
+log_file='thnr-thnr-2023-100.log'
+log_file='thnr-thnr-2023-101.log'
+log_file='thnr-thnr-2023-102.log'
+log_file='thnr-thnr-2023-103.log'
+log_file='thnr-thnr-2023-104.log'
+log_file='thnr-thnr-2023-105.log'
+log_file='thnr-thnr-2023-106.log'
+log_file='thnr-thnr-2023-107.log'
+log_file='thnr-thnr-2023-108.log'
+log_file='thnr-thnr-2023-109.log'
+log_file='thnr-thnr-2023-110.log'
+log_file='thnr-thnr-2023-111.log'
+log_file='thnr-thnr-2023-112.log'
+log_file='thnr-thnr-2023-113.log'
+log_file='thnr-thnr-2023-114.log'
+log_file='thnr-thnr-2023-115.log'
+log_file='thnr-thnr-2023-116.log'
+log_file='thnr-thnr-2023-117.log'
+log_file='thnr-thnr-2023-118.log'
+log_file='thnr-thnr-2023-119.log'
+log_file='thnr-thnr-2023-120.log'
+log_file='thnr-thnr-2023-121.log'
+log_file='thnr-thnr-2023-122.log'
+log_file='thnr-thnr-2023-123.log'
+log_file='thnr-thnr-2023-124.log'
+log_file='thnr-thnr-2023-125.log'
+log_file='thnr-thnr-2023-126.log'
+log_file='thnr-thnr-2023-127.log'
+log_file='thnr-thnr-2023-128.log'
+log_file='thnr-thnr-2023-129.log'
+log_file='thnr-thnr-2023-130.log'
+log_file='thnr-thnr-2023-131.log'
+log_file='thnr-thnr-2023-132.log'
+log_file='thnr-thnr-2023-133.log'
+log_file='thnr-thnr-2023-134.log'
+log_file='thnr-thnr-2023-135.log'
+log_file='thnr-thnr-2023-136.log'
+log_file='thnr-thnr-2023-137.log'
+log_file='thnr-thnr-2023-138.log'
+log_file='thnr-thnr-2023-139.log'
+log_file='thnr-thnr-2023-140.log'
+log_file='thnr-thnr-2023-141.log'
+log_file='thnr-thnr-2023-142.log'
+log_file='thnr-thnr-2023-143.log'
+log_file='thnr-thnr-2023-144.log'
+log_file='thnr-thnr-2023-145.log'
+log_file='thnr-thnr-2023-146.log'
+log_file='thnr-thnr-2023-147.log'
+log_file='thnr-thnr-2023-148.log'
+log_file='thnr-thnr-2023-149.log'
+log_file='thnr-thnr-2023-150.log'
+log_file='thnr-thnr-2023-151.log'
+log_file='thnr-thnr-2023-152.log'
+log_file='thnr-thnr-2023-153.log'
+log_file='thnr-thnr-2023-154.log'
+log_file='thnr-thnr-2023-155.log'
+log_file='thnr-thnr-2023-156.log'
+log_file='thnr-thnr-2023-157.log'
+log_file='thnr-thnr-2023-158.log'
+log_file='thnr-thnr-2023-159.log'
+log_file='thnr-thnr-2023-160.log'
+log_file='thnr-thnr-2023-161.log'
+log_file='thnr-thnr-2023-162.log'
+log_file='thnr-thnr-2023-163.log'
+log_file='thnr-thnr-2023-164.log'
+log_file='thnr-thnr-2023-165.log'
+log_file='thnr-thnr-2023-166.log'
+log_file='thnr-thnr-2023-167.log'
+log_file='thnr-thnr-2023-168.log'
+log_file='thnr-thnr-2023-169.log'
+log_file='thnr-thnr-2023-170.log'
+log_file='thnr-thnr-2023-171.log'
+log_file='thnr-thnr-2023-172.log'
+log_file='thnr-thnr-2023-173.log'
+log_file='thnr-thnr-2023-174.log'
+log_file='thnr-thnr-2023-175.log'
+log_file='thnr-thnr-2023-176.log'
+log_file='thnr-thnr-2023-177.log'
+log_file='thnr-thnr-2023-178.log'
+log_file='thnr-thnr-2023-179.log'
+log_file='thnr-thnr-2023-180.log'
+log_file='thnr-thnr-2023-181.log'
+log_file='thnr-thnr-2023-182.log'
+log_file='thnr-thnr-2023-183.log'
+log_file='thnr-thnr-2023-184.log'
+log_file='thnr-thnr-2023-185.log'
+log_file='thnr-thnr-2023-186.log'
+log_file='thnr-thnr-2023-187.log'
+log_file='thnr-thnr-2023-188.log'
+log_file='thnr-thnr-2023-189.log'
+log_file='thnr-thnr-2023-190.log'
+log_file='thnr-thnr-2023-191.log'
+log_file='thnr-thnr-2023-192.log'
+log_file='thnr-thnr-2023-193.log'
+log_file='thnr-thnr-2023-194.log'
+log_file='thnr-thnr-2023-195.log'
+log_file='thnr-thnr-2023-196.log'
+log_file='thnr-thnr-2023-197.log'
+log_file='thnr-thnr-2023-198.log'
+log_file='thnr-thnr-2023-199.log'
+log_file='thnr-thnr-2023-200.log'
+log_file='thnr-thnr-2023-201.log'
+log_file='thnr-thnr-2023-202.log'
+log_file='thnr-thnr-2023-203.log'
+log_file='thnr-thnr-2023-204.log'
+log_file='thnr-thnr-2023-205.log'
+log_file='thnr-thnr-2023-206.log'
+log_file='thnr-thnr-2023-207.log'
+log_file='thnr-thnr-2023-208.log'
+log_file='thnr-thnr-2023-209.log'
+log_file='thnr-thnr-2023-210.log'
+log_file='thnr-thnr-2023-211.log'
+log_file='thnr-thnr-2023-212.log'
+log_file='thnr-thnr-2023-213.log'
+log_file='thnr-thnr-2023-214.log'
+log_file='thnr-thnr-2023-215.log'
+log_file='thnr-thnr-2023-216.log'
+log_file='thnr-thnr-2023-217.log'
+log_file='thnr-thnr-2023-218.log'
+log_file='thnr-thnr-2023-219.log'
+log_file='thnr-thnr-2023-220.log'
+log_file='thnr-thnr-2023-221.log'
+log_file='thnr-thnr-2023-222.log'
+log_file='thnr-thnr-2023-223.log'
+log_file='thnr-thnr-2023-224.log'
+log_file='thnr-thnr-2023-225.log'
+log_file='thnr-thnr-2023-226.log'
+log_file='thnr-thnr-2023-227.log'
+log_file='thnr-thnr-2023-228.log'
+log_file='thnr-thnr-2023-229.log'
+log_file='thnr-thnr-2023-230.log'
+log_file='thnr-thnr-2023-231.log'
+log_file='thnr-thnr-2023-232.log'
+log_file='thnr-thnr-2023-233.log'
+log_file='thnr-thnr-2023-234.log'
+log_file='thnr-thnr-2023-235.log'
+log_file='thnr-thnr-2023-236.log'
+log_file='thnr-thnr-2023-237.log'
+log_file='thnr-thnr-2023-238.log'
+log_file='thnr-thnr-2023-239.log'
+log_file='thnr-thnr-2023-240.log'
+log_file='thnr-thnr-2023-241.log'
+log_file='thnr-thnr-2023-242.log'
+log_file='thnr-thnr-2023-243.log'
+log_file='thnr-thnr-2023-244.log'
+log_file='thnr-thnr-2023-245.log'
+log_file='thnr-thnr-2023-246.log'
+log_file='thnr-thnr-2023-247.log'
+log_file='thnr-thnr-2023-248.log'
+log_file='thnr-thnr-2023-249.log'
+log_file='thnr-thnr-2023-250.log'
+log_file='thnr-thnr-2023-251.log'
+log_file='thnr-thnr-2023-252.log'
+log_file='thnr-thnr-2023-253.log'
+log_file='thnr-thnr-2023-254.log'
+log_file='thnr-thnr-2023-255.log'
+log_file='thnr-thnr-2023-256.log'
+log_file='thnr-thnr-2023-257.log'
+log_file='thnr-thnr-2023-258.log'
+log_file='thnr-thnr-2023-259.log'
+log_file='thnr-thnr-2023-260.log'
+log_file='thnr-thnr-2023-261.log'
+log_file='thnr-thnr-2023-262.log'
+log_file='thnr-thnr-2023-263.log'
+log_file='thnr-thnr-2023-264.log'
+log_file='thnr-thnr-2023-265.log'
+log_file='thnr-thnr-2023-266.log'
+log_file='thnr-thnr-2023-267.log'
+log_file='thnr-thnr-2023-268.log'
+log_file='thnr-thnr-2023-269.log'
+log_file='thnr-thnr-2023-270.log'
+log_file='thnr-thnr-2023-271.log'
+log_file='thnr-thnr-2023-272.log'
+log_file='thnr-thnr-2023-273.log'
+log_file='thnr-thnr-2023-274.log'
+log_file='thnr-thnr-2023-275.log'
+log_file='thnr-thnr-2023-276.log'
+log_file='thnr-thnr-2023-277.log'
+log_file='thnr-thnr-2023-278.log'
+log_file='thnr-thnr-2023-279.log'
+log_file='thnr-thnr-2023-280.log'
+log_file='thnr-thnr-2023-281.log'
+log_file='thnr-thnr-2023-282.log'
+log_file='thnr-thnr-2023-283.log'
+log_file='thnr-thnr-2023-284.log'
+log_file='thnr-thnr-2023-285.log'
+log_file='thnr-thnr-2023-286.log'
+log_file='thnr-thnr-2023-287.log'
+log_file='thnr-thnr-2023-288.log'
+log_file='thnr-thnr-2023-289.log'
+log_file='thnr-thnr-2023-290.log'
+log_file='thnr-thnr-2023-291.log'
+log_file='thnr-thnr-2023-292.log'
+log_file='thnr-thnr-2023-293.log'
+log_file='thnr-thnr-2023-294.log'
+log_file='thnr-thnr-2023-295.log'
+log_file='thnr-thnr-2023-296.log'
+log_file='thnr-thnr-2023-297.log'
+log_file='thnr-thnr-2023-298.log'
+log_file='thnr-thnr-2023-299.log'
+log_file='thnr-thnr-2023-300.log'
+log_file='thnr-thnr-2023-301.log'
+log_file='thnr-thnr-2023-302.log'
+log_file='thnr-thnr-2023-303.log'
+log_file='thnr-thnr-2023-304.log'
+log_file='thnr-thnr-2023-305.log'
+log_file='thnr-thnr-2023-306.log'
+log_file='thnr-thnr-2023-307.log'
+log_file='thnr-thnr-2023-308.log'
+log_file='thnr-thnr-2023-309.log'
+log_file='thnr-thnr-2023-310.log'
+log_file='thnr-thnr-2023-311.log'
+log_file='thnr-thnr-2023-312.log'
+log_file='thnr-thnr-2023-313.log'
+log_file='thnr-thnr-2023-314.log'
+log_file='thnr-thnr-2023-315.log'
+log_file='thnr-thnr-2023-316.log'
+log_file='thnr-thnr-2023-317.log'
+log_file='thnr-thnr-2023-318.log'
+log_file='thnr-thnr-2023-319.log'
+log_file='thnr-thnr-2023-320.log'
+log_file='thnr-thnr-2023-321.log'
+log_file='thnr-thnr-2023-322.log'
+log_file='thnr-thnr-2023-323.log'
+log_file='thnr-thnr-2023-324.log'
+log_file='thnr-thnr-2023-325.log'
+log_file='thnr-thnr-2023-326.log'
+log_file='thnr-thnr-2023-327.log'
+log_file='thnr-thnr-2023-328.log'
+log_file='thnr-thnr-2023-329.log'
+log_file='thnr-thnr-2023-330.log'
+log_file='thnr-thnr-2023-331.log'
+log_file='thnr-thnr-2023-332.log'
+log_file='thnr-thnr-2023-333.log'
+log_file='thnr-thnr-2023-334.log'
+log_file='thnr-thnr-2023-335.log'
+log_file='thnr-thnr-2023-336.log'
+log_file='thnr-thnr-2023-337.log'
+log_file='thnr-thnr-2023-338.log'
+log_file='thnr-thnr-2023-339.log'
+log_file='thnr-thnr-2023-340.log'
+log_file='thnr-thnr-2023-341.log'
+log_file='thnr-thnr-2023-342.log'
+log_file='thnr-thnr-2023-343.log'
+log_file='thnr-thnr-2023-344.log'
+log_file='thnr-thnr-2023-345.log'
+log_file='thnr-thnr-2023-346.log'
+log_file='thnr-thnr-2023-347.log'
+log_file='thnr-thnr-2023-348.log'
+log_file='thnr-thnr-2023-349.log'
+log_file='thnr-thnr-2023-350.log'
+log_file='thnr-thnr-2023-351.log'
+log_file='thnr-thnr-2023-352.log'
+log_file='thnr-thnr-2023-353.log'
+log_file='thnr-thnr-2023-354.log'
+log_file='thnr-thnr-2023-355.log'
+log_file='thnr-thnr-2023-356.log'
+log_file='thnr-thnr-2023-357.log'
+log_file='thnr-thnr-2023-358.log'
+log_file='thnr-thnr-2023-359.log'
+log_file='thnr-thnr-2023-360.log'
+log_file='thnr-thnr-2023-361.log'
+log_file='thnr-thnr-2023-362.log'
+log_file='thnr-thnr-2023-363.log'
+log_file='thnr-thnr-2023-364.log'
+log_file='thnr-thnr-2023-365.log'
+
+
+
+
+
+
+
+
+
+
+
+Story Type: active
+Events: 376
+Min: 0.0
+Max: 17.416666666666668
+Mean: 10.93771102049073
+Median: 11.666666666666666
+Mode: 12.176470588235293
+First Quartile: 9.857142857142858
+Third Quartile: 12.828125
+    
+
+Story Type: best
+Events: 404
+Min: 0.0
+Max: 16.666666666666668
+Mean: 10.941047058759425
+Median: 11.764705882352942
+Mode: 11.764705882352942
+First Quartile: 10.0
+Third Quartile: 12.5
+    
+
+Story Type: classic
+Events: 362
+Min: 0.0
+Max: 17.727272727272727
+Mean: 11.167796795253746
+Median: 12.352941176470589
+Mode: 12.352941176470589
+First Quartile: 10.0
+Third Quartile: 13.125
+    
+
+Story Type: new
+Events: 403
+Min: 0.0
+Max: 20.0
+Mean: 4.496772324744864
+Median: 3.7313432835820897
+Mode: 0.0
+First Quartile: 2.43908242908814
+Third Quartile: 6.173780487804878
+    
+
+Story Type: top
+Events: 406
+Min: 0.0
+Max: 20.0
+Mean: 10.033973366620101
+Median: 10.416666666666666
+Mode: 14.285714285714286
+First Quartile: 6.172839506172839
+Third Quartile: 13.157894736842104
+    
+
+
+
+
+
+
+
+
+
+
+
+Processing Category: freshened
+Events: 6284731
+Min: 0
+Max: 137
+Mean: 0
+Median: 0
+Mode: 0
+First Quartile: 0.0
+Third Quartile: 1.0
+
+
+Processing Category: reused
+Events: 19599996
+Min: 0
+Max: 15
+Mean: 0
+Median: 0.0
+Mode: 0
+First Quartile: 0.0
+Third Quartile: 0.0
+
+
+Processing Category: uncached_with_thumb
+Events: 214159
+Min: 1
+Max: 3237
+Mean: 13
+Median: 7
+Mode: 5
+First Quartile: 5.0
+Third Quartile: 14.0
+
+
+Processing Category: uncached_without_thumb
+Events: 101001
+Min: 0
+Max: 1204
+Mean: 6
+Median: 3
+Mode: 2
+First Quartile: 2.0
+Third Quartile: 4.0
+

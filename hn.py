@@ -8,7 +8,7 @@ import re
 import time
 import traceback
 import warnings
-from urllib.parse import unquote, urlparse
+from urllib.parse import urlparse
 
 from bs4 import BeautifulSoup, XMLParsedAsHTMLWarning
 
@@ -26,7 +26,7 @@ import utils_text
 import utils_time
 from PageOfStories import PageOfStories
 from Story import Story
-from thnr_exceptions import *
+from thnr_exceptions import UnsupportedStoryType
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -372,12 +372,12 @@ def asdfft1(item_id=None, pos_on_page=None):
                 if story_object.og_image_url and d_og_image_res:
                     story_object.has_thumb = True  # provisionally
                 elif not d_og_image_res:
-                    logger.info(log_prefix_local + f"failed to download_og_image()")
+                    logger.info(log_prefix_local + "failed to download_og_image()")
                     story_object.has_thumb = False
 
                 else:
                     logger.error(
-                        log_prefix_local + f"unexpected result from download_og_image()"
+                        log_prefix_local + "unexpected result from download_og_image()"
                     )
                     story_object.has_thumb = False
 
@@ -464,7 +464,7 @@ def asdfft2(item_id=None, pos_on_page=None):
         generic_exception_handler(
             exc=exc,
             include_tb=True,
-            log_detail=f"unexpected problem querying firebaseio",
+            log_detail="unexpected problem querying firebaseio",
             log_prefix=log_prefix_local,
             raise_after=True,
         )
@@ -620,7 +620,7 @@ def asdfft2(item_id=None, pos_on_page=None):
         if mimetype_via_file_command:
             possible_magic_types.append(mimetype_via_file_command)
         if mimetype_via_exiftool:
-            if type(mimetype_via_exiftool) == str:
+            if isinstance(type(mimetype_via_exiftool), str  ):
                 possible_magic_types.append(mimetype_via_exiftool)
             else:
                 logger.info(
@@ -949,12 +949,12 @@ def asdfft2(item_id=None, pos_on_page=None):
             if story_object.og_image_url and d_og_image_res:
                 story_object.has_thumb = True  # provisionally
             elif not d_og_image_res:
-                logger.info(log_prefix_local + f"failed to download_og_image()")
+                logger.info(log_prefix_local + "failed to download_og_image()")
                 story_object.has_thumb = False
 
             else:
                 logger.error(
-                    log_prefix_local + f"unexpected result from download_og_image()"
+                    log_prefix_local + "unexpected result from download_og_image()"
                 )
                 story_object.has_thumb = False
 
@@ -1076,7 +1076,7 @@ def freshen_up(story_object=None, page_package=None):
             log_prefix_local
             + f"freshen_up: query to hacker-news.firebaseio.com failed for story id={story_object.id} ; so re-using old story details"
         )
-        raise Exception("failed to freshen story")
+        raise Exception("failed to freshen story: "+exc)
 
     if not updated_story_data_as_dict:
         logger.info(
@@ -1114,7 +1114,7 @@ def freshen_up(story_object=None, page_package=None):
     else:
         logger.info(
             log_prefix_local
-            + f"no key for 'title' in updated_story_data_as_dict (story is probably dead)"
+            + "no key for 'title' in updated_story_data_as_dict (story is probably dead)"
         )
 
     # update URL if necessary
@@ -1137,7 +1137,7 @@ def freshen_up(story_object=None, page_package=None):
             )
     else:
         logger.info(
-            log_prefix_local + f"no key for 'score' in updated_story_data_as_dict"
+            log_prefix_local + "no key for 'score' in updated_story_data_as_dict"
         )
 
     # update comment count (i.e., "descendants") if needed
@@ -1159,7 +1159,7 @@ def freshen_up(story_object=None, page_package=None):
         else:
             logger.info(
                 log_prefix_local
-                + f"no key for 'descendants' in non-job-story updated_story_data_as_dict"
+                + "no key for 'descendants' in non-job-story updated_story_data_as_dict"
             )
 
 
@@ -1374,7 +1374,7 @@ def page_package_processor(page_package: PageOfStories, context: dict = None):
 
                 else:
                     logger.info(
-                        log_prefix_rank_cur_id_loop + f"try to freshen cached story"
+                        log_prefix_rank_cur_id_loop + "try to freshen cached story"
                     )
 
                     try:
@@ -1426,7 +1426,7 @@ def page_package_processor(page_package: PageOfStories, context: dict = None):
                 exc_slug = f"{exc_name}: {exc_msg}"
                 logger.error(
                     log_prefix_rank_cur_id_loop
-                    + f"asdfft: unexpected exception: "
+                    +  "asdfft: unexpected exception: "
                     + exc_slug
                 )
                 tb_str = traceback.format_exc()
