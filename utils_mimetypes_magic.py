@@ -1393,7 +1393,7 @@ def get_textual_mimetype(local_file, log_prefix="", debug=False, context=None) -
 
     is_wellformed_xml = is_wellformed_xml_func(local_file)
 
-    # check for uncompressed PDF
+    # check for PDF
     if content.startswith("%PDF-"):
         clues_toward["application/pdf"] += 1
 
