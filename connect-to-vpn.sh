@@ -93,12 +93,12 @@ nordvpn set cybersec disabled
 nordvpn set dns 192.168.1.59
 nordvpn set firewall disabled
 nordvpn set killswitch disabled
-nordvpn set killswitch disabled
-nordvpn set lan-discovery enabled
+nordvpn set lan-discovery disabled
 nordvpn set obfuscate disabled
 nordvpn set routing enabled
 nordvpn set technology nordlynx
 nordvpn whitelist add port 22
+nordvpn whitelist add subnet 192.168.1.1/24
 
 if vpn-is-connected; then
     exit 0
