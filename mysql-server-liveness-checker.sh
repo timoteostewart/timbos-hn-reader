@@ -26,8 +26,12 @@ mysql_hostname="mysql-server.home.arpa"
 mysql_host_ip="192.168.1.233"
 mysql_port="3306"
 
-# check if host mysql-server.home.arpa is reachable using nmap
-nmap_tempfile=$(mktemp)
+# check if host mysql-server.home.arpa is reachable (using nmap)
+nmap_tempfile=$(mktemp --tmpdir=/tmp nmap-output-XXXXXXXXXX.xml)
+
+log_message="${log_prefix_local} nmap: writing to temp file ${nmap_tempfile}"
+write-log-message mysql info "${log_message}"
+
 # echo "${nmap_tempfile}"
 nmap -Pn "${mysql_host_ip}" -oX "${nmap_tempfile}"
 
@@ -51,23 +55,27 @@ fi
 # echo "num_ports_resets: ${num_ports_resets}"
 # echo "mysql_port_state: ${mysql_port_state}"
 
-if (( hosts_up == 1 )); then
-    log_message="${log_prefix_local} nmap: host ${mysql_host_ip} is reachable"
-    echo "${log_message}"
-    write-log-message mysql info "${log_message}"
+case "$hosts_up" in
+    1)
+        log_message="${log_prefix_local} nmap: host ${mysql_host_ip} is reachable, and its port ${mysql_port} is ${mysql_port_state}"
+        echo "${log_message}"
+        write-log-message mysql info "${log_message}"
+        ;;
 
-    log_message="${log_prefix_local} nmap: port ${mysql_port} on host ${mysql_host_ip} is ${mysql_port_state}"
-    echo "${log_message}"
-    write-log-message mysql info "${log_message}"
-fi
+    0)
+        log_message="${log_prefix_local} nmap: host ${mysql_host_ip} is not reachable"
+        echo "${log_message}"
+        write-log-message mysql error "${log_message}"
+        ;;
 
-if (( hosts_up == 0 )); then
-    log_message="${log_prefix_local} nmap: host ${mysql_host_ip} is not reachable"
-    echo "${log_message}"
-    write-log-message mysql error "${log_message}"
-fi
+    *)
+        log_message="${log_prefix_local} nmap: Unexpected value for hosts_up: ${hosts_up}"
+        echo "${log_message}"
+        write-log-message mysql error "${log_message}"
+        ;;
+esac
 
-# check if MySQL server is up using mysqladmin
+# check if MySQL server is up (using mysqladmin)
 # first, retrieve secrets
 
 secrets_file="/srv/timbos-hn-reader/secrets_file.py"

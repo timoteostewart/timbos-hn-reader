@@ -26,7 +26,7 @@ project_base_dir=/srv/timbos-hn-reader/
 all_logs_dir="${project_base_dir}logs/"
 python_bin_dir="${project_base_dir}.venv/bin/"
 server_name=thnr
-TZ=UTC
+export TZ=UTC
 utility_account_username=tim
 
 cd "${project_base_dir}" || { log_dump_via_email "Error: loop-thnr.sh couldn't cd to ${project_base_dir}"; exit 1; }
