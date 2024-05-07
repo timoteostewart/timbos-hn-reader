@@ -4,24 +4,29 @@ import time
 os.environ["TZ"] = "UTC"
 time.tzset()
 
+import atexit  # noqa: E402
 import datetime  # noqa: E402
+import json  # noqa: E402
 import logging  # noqa: E402
 import logging.config  # noqa: E402
+import logging.handlers  # noqa: E402
 import os.path  # noqa: E402
+import queue  # noqa: E402
 import sys  # noqa: E402
 import traceback  # noqa: E402
+import tracemalloc  # noqa: E402
 
 import config  # noqa: E402
 import hn  # noqa: E402
 import utils_text  # noqa: E402
 
+tracemalloc.start()
+
 logger = None
 
-# TODO: 2024-01-30T07:41:55Z [new]     ERROR    id 39187286: asdfft(): has_thumb is True, but there's no image_slug, so updating as_thumb to False ~Tim~
-# TODO: 2024-01-30T07:59:10Z [new]     INFO     id 39187463: d_og_i(): get(): MissingSchema: Invalid URL '../../uploads/farewell_djangosites.jpg': No scheme supplied. Perhaps you meant https://../../uploads/farewell_djangosites.jpg?
-# TODO: endpoint_query_via_requests(): problem querying url https://api.ipify.org?format=json: SSLError: HTTPSConnectionPool(host='api.ipify.org', port=443): Max retries exceeded with url: /?format=json (Caused by SSLError(SSLEOFError(8, '[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1007)'))) ; will delay 4 seconds and retry (retries left 10)
-# TODO: 2024-01-31T06:13:33Z [active]  INFO     id 39196532: asdfft(): found og:image url //stsci-opo.org/STScI-01HM9KB3F5RCZ5KPA4P9V3B987.png
-# TODO: 2024-01-31T06:13:57Z [active]  INFO     id 39196532: d_og_i(): get(): attempting to heal and retry schemeless og:image URL //stsci-opo.org/STScI-01HM9KB3F5RCZ5KPA4P9V3B987.png as http://webbtelescope.org/stsci-opo.org/STScI-01HM9KB3F5RCZ5KPA4P9V3B987.png
+## TODO:
+# - create kafka_logger in main.py
+# - in other files, import main, and then use kafka_logger.info() etc.
 
 
 def check_for_required_dirs():
@@ -45,12 +50,14 @@ def check_for_required_dirs():
 
 
 def main():
-    log_prefix = "main: "
-
     story_type = sys.argv[1]
     config.load_settings(sys.argv[2], sys.argv[3])
 
     ### Logging setup starts
+
+    # Load configuration from a JSON file
+    with open("logging_config.json", mode="r", encoding="utf-8") as file:
+        logging_config = json.load(file)
 
     # configure root logger
     # compute name of today's log
@@ -58,44 +65,81 @@ def main():
     cur_year = utc_now.year
     day_of_year = utc_now.date().timetuple().tm_yday
     cur_year_and_doy = f"{cur_year}-{day_of_year:03}"
-    main_log_filename = f"{config.settings['cur_host']}-thnr-{cur_year_and_doy}.log"
+
+    # Set filenames dynamically
+    logging_config["handlers"]["file_handler_main"]["filename"] = os.path.join(
+        config.settings["THNR_BASE_DIR"],
+        "logs",
+        f"{config.settings['cur_host']}-thnr-{cur_year_and_doy}.log",
+    )
+    logging_config["handlers"]["file_handler_alt"]["filename"] = os.path.join(
+        config.settings["THNR_BASE_DIR"],
+        "logs",
+        f"{config.settings['cur_host']}-combined-{cur_year_and_doy}.log",
+    )
+
+    story_type_padded = f"[{story_type}]     "[:9]
+    logging_config["formatters"]["unified"]["format"] = (
+        f"%(asctime)s.%(msecs)03dZ {story_type_padded} %(levelname)-8s %(message)s"
+    )
+
+    my_queue = queue.Queue()
+    logging_config["handlers"]["queue_handler"]["queue"] = my_queue
+
+    # Apply logging configuration
+    logging.config.dictConfig(logging_config)
+
+    downstream_handlers_objects = []
 
     root_logger = logging.getLogger()
-    root_logger.setLevel(logging.INFO)
+    for handler in root_logger.handlers:
+        if (
+            isinstance(handler, logging.handlers.QueueHandler)
+            and handler.queue is my_queue
+        ):
+            queue_handler = handler
+            break
 
+    if not queue_handler:
+        raise ValueError("queue_handler not found")
+
+    # unified_formatter = logging.Formatter(
+    #     f"%(asctime)s.%(msecs)03dZ {story_type_padded} %(levelname)-8s %(message)s",
+    #     datefmt="%Y-%m-%dT%H:%M:%S",
+    # )
+    main_log_filename = f"{config.settings['cur_host']}-thnr-{cur_year_and_doy}.log"
+    alt_log_filename = f"{config.settings['cur_host']}-combined-{cur_year_and_doy}.log"
     handler_main = logging.FileHandler(
         os.path.join(config.settings["THNR_BASE_DIR"], "logs", main_log_filename),
         mode="a",
         encoding="utf-8",
     )
-    story_type_padded = f"[{story_type}]     "[:9]
-
-    formatter = logging.Formatter(
-        f"%(asctime)s.%(msecs)03dZ {story_type_padded} %(levelname)-8s %(message)s",
-        datefmt="%Y-%m-%dT%H:%M:%S",
-    )
-
-    handler_main.setFormatter(formatter)
-    root_logger.addHandler(handler_main)
-
-    alt_log_filename = f"{config.settings['cur_host']}-combined-{cur_year_and_doy}.log"
     handler_alt = logging.FileHandler(
         os.path.join(config.settings["THNR_BASE_DIR"], "logs", alt_log_filename),
         mode="a",
         encoding="utf-8",
     )
-    story_type_padded = f"[{story_type}]     "[:9]
-    handler_alt.setFormatter(
-        logging.Formatter(
-            f"%(asctime)s.%(msecs)03dZ {story_type_padded} %(levelname)-8s %(message)s",
-            datefmt="%Y-%m-%dT%H:%M:%S",
-        )
-    )
-    root_logger.addHandler(handler_alt)
+    # handler_main.setFormatter(unified_formatter)
+    # handler_alt.setFormatter(unified_formatter)
 
-    logger = root_logger
+    downstream_handlers_objects = [handler_main, handler_alt]
+
+    queue_listener = logging.handlers.QueueListener(
+        queue_handler.queue,
+        *downstream_handlers_objects,
+        respect_handler_level=True,
+    )
+    queue_listener.start()
+    atexit.register(queue_listener.stop)
+    for handler in logging.getLogger().handlers:
+        if hasattr(handler, "stop"):
+            atexit.register(handler.stop)
+
+    logger = logging.getLogger(__name__)
 
     ### Logging setup ends
+
+    log_prefix = "main: "
 
     for k, v in config.debug_flags.items():
         if v:

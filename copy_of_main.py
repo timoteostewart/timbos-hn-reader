@@ -64,12 +64,12 @@ def main():
     cur_year_and_doy = f"{cur_year}-{day_of_year:03}"
 
     # Set filenames dynamically
-    logging_config["handlers"]["fileHandlerMain"]["filename"] = os.path.join(
+    logging_config["handlers"]["file_handler_main"]["filename"] = os.path.join(
         config.settings["THNR_BASE_DIR"],
         "logs",
         f"{config.settings['cur_host']}-thnr-{cur_year_and_doy}.log",
     )
-    logging_config["handlers"]["fileHandlerAlt"]["filename"] = os.path.join(
+    logging_config["handlers"]["file_handler_alt"]["filename"] = os.path.join(
         config.settings["THNR_BASE_DIR"],
         "logs",
         f"{config.settings['cur_host']}-combined-{cur_year_and_doy}.log",

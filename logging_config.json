@@ -3,12 +3,12 @@
     "disable_existing_loggers": false,
     "formatters": {
         "unified": {
-            "format": "%(asctime)s.%(msecs)03dZ %(story_type_padded) %(levelname)-8s %(message)s",
+            "format": "",
             "datefmt": "%Y-%m-%dT%H:%M:%S"
         }
     },
     "handlers": {
-        "fileHandlerMain": {
+        "file_handler_main": {
             "class": "logging.FileHandler",
             "level": "INFO",
             "formatter": "unified",
@@ -16,18 +16,22 @@
             "mode": "a",
             "encoding": "utf-8"
         },
-        "fileHandlerAlt": {
+        "file_handler_alt": {
             "class": "logging.FileHandler",
             "level": "INFO",
             "formatter": "unified",
             "filename": "",
             "mode": "a",
             "encoding": "utf-8"
+        },
+        "queue_handler": {
+            "class": "logging.handlers.QueueHandler",
+            "formatter": "unified"
         }
     },
     "loggers": {
-        "": {
-            "handlers": ["fileHandlerMain", "fileHandlerAlt"],
+        "root": {
+            "handlers": ["queue_handler"],
             "level": "INFO"
         }
     }

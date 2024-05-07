@@ -92,9 +92,9 @@ nordvpn set autoconnect enabled
 nordvpn set cybersec disabled
 nordvpn set dns 192.168.1.59
 nordvpn set firewall disabled
-nordvpn set killswitch disabled
+# nordvpn set killswitch disabled  # requires firewall to be enabled
 nordvpn set lan-discovery disabled
-nordvpn set obfuscate disabled
+# nordvpn set obfuscate disabled  # requires OpenVPN to be enabled
 nordvpn set routing enabled
 nordvpn set technology nordlynx
 nordvpn whitelist add port 22
