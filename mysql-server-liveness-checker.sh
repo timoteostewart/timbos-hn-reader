@@ -56,23 +56,23 @@ fi
 # echo "mysql_port_state: ${mysql_port_state}"
 
 case "$hosts_up" in
-    1)
-        log_message="${log_prefix_local} nmap: host ${mysql_host_ip} is reachable, and its port ${mysql_port} is ${mysql_port_state}"
-        echo "${log_message}"
-        write-log-message mysql info "${log_message}"
-        ;;
+1)
+    log_message="${log_prefix_local} nmap: host ${mysql_host_ip} is reachable, and its port ${mysql_port} is ${mysql_port_state}"
+    echo "${log_message}"
+    write-log-message mysql info "${log_message}"
+    ;;
 
-    0)
-        log_message="${log_prefix_local} nmap: host ${mysql_host_ip} is not reachable"
-        echo "${log_message}"
-        write-log-message mysql error "${log_message}"
-        ;;
+0)
+    log_message="${log_prefix_local} nmap: host ${mysql_host_ip} is not reachable"
+    echo "${log_message}"
+    write-log-message mysql error "${log_message}"
+    ;;
 
-    *)
-        log_message="${log_prefix_local} nmap: Unexpected value for hosts_up: ${hosts_up}"
-        echo "${log_message}"
-        write-log-message mysql error "${log_message}"
-        ;;
+*)
+    log_message="${log_prefix_local} nmap: Unexpected value for hosts_up: ${hosts_up}"
+    echo "${log_message}"
+    write-log-message mysql error "${log_message}"
+    ;;
 esac
 
 # check if MySQL server is up (using mysqladmin)
@@ -92,7 +92,7 @@ while IFS= read -r line; do
     if [[ "$line" =~ MYSQL_LIVENESS_CHECK_PASSWORD[[:space:]]*=[[:space:]]*\"(.*)\" ]]; then
         mysql_pass="${BASH_REMATCH[1]}"
     fi
-done < "${secrets_file}"
+done <"${secrets_file}"
 
 if [[ -z $mysql_user ]]; then
     log_message="${log_prefix_local} mysqladmin: could not retrieve MySQL username from secrets file"
@@ -119,6 +119,8 @@ if echo "${liveness_check_output}" | grep "mysqld is alive"; then
     log_message="${log_prefix_local} mysqladmin: MySQL server at ${mysql_host_ip}:${mysql_port} is up"
     echo "${log_message}"
     write-log-message mysql info "${log_message}"
+    "${project_base_dir}send-dashboard-event-to-kafka.sh" "operation" "update-text-content" "elementId" "mysql-status-value" "value" "up"
+    "${project_base_dir}send-dashboard-event-to-kafka.sh" "operation" "update-text-content" "elementId" "mysql-status-timestamp" "value" "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 fi
 
 # mysqladmin can connect to host, but no MySQL server is detected
@@ -126,6 +128,8 @@ if echo "${liveness_check_output}" | grep "Can't connect to MySQL server on"; th
     log_message="${log_prefix_local} mysqladmin: could not connect to a MySQL server at ${mysql_host_ip}:${mysql_port}"
     echo "${log_message}"
     write-log-message mysql error "${log_message}"
+    "${project_base_dir}send-dashboard-event-to-kafka.sh" "operation" "update-text-content" "elementId" "mysql-status-value" "value" "down"
+    "${project_base_dir}send-dashboard-event-to-kafka.sh" "operation" "update-text-content" "elementId" "mysql-status-timestamp" "value" "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 fi
 
 # # mysqladmin cannot resolve the hostname

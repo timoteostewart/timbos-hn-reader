@@ -3,7 +3,7 @@
 # debugging switches
 # set -o errexit   # abort on nonzero exitstatus; same as set -e
 # set -o nounset   # abort on unbound variable; same as set -u
-set -o pipefail  # don't hide errors within pipes
+set -o pipefail # don't hide errors within pipes
 # set -o xtrace    # show commands being executed; same as set -x
 # set -o verbose   # verbose mode; same as set -v
 
@@ -56,9 +56,13 @@ vpn-is-connected() {
         vpn_uptime=$(echo "${vpn_connection_status}" | grep 'Uptime: ' | cut -d ' ' -f 2-)
 
         write-log-message vpn info "${log_prefix_local} VPN is connected. Hostname: ${vpn_hostname}, IP: ${vpn_ip_address}, Country: ${vpn_country}, City: ${vpn_city}, Technology: ${vpn_technology}, Protocol: ${vpn_protocol}, Transfer: ${vpn_transfer}, Uptime: ${vpn_uptime}"
+        "${project_base_dir}send-dashboard-event-to-kafka.sh" "operation" "update-text-content" "elementId" "vpn-status-value" "value" "connected"
+        "${project_base_dir}send-dashboard-event-to-kafka.sh" "operation" "update-text-content" "elementId" "vpn-status-timestamp" "value" "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
         return 0
     else
         write-log-message vpn info "${log_prefix_local} VPN is not connected."
+        "${project_base_dir}send-dashboard-event-to-kafka.sh" "operation" "update-text-content" "elementId" "vpn-status-value" "value" "not connected"
+        "${project_base_dir}send-dashboard-event-to-kafka.sh" "operation" "update-text-content" "elementId" "vpn-status-timestamp" "value" "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
         return 1
     fi
 }
@@ -73,7 +77,7 @@ for i in 1 2 3 4 5 6 7 8; do
     fi
     write-log-message vpn info "${log_prefix_local} sleeping for ${cur_delay} seconds"
     sleep "${cur_delay}"
-    (( cur_delay *= 2 ))
+    ((cur_delay *= 2))
 done
 
 # check whether we're logged into the vpn account.
@@ -113,7 +117,7 @@ for i in 1 2 3 4 5 6 7 8; do
     fi
     write-log-message vpn info "${log_prefix_local} sleeping for ${cur_delay} seconds"
     sleep "${cur_delay}"
-    (( cur_delay *= 2 ))
+    ((cur_delay *= 2))
 done
 
 #
@@ -135,7 +139,7 @@ for i in 1 2 3 4 5 6 7 8; do
     fi
     write-log-message vpn info "${log_prefix_local} sleeping for ${cur_delay} seconds"
     sleep "${cur_delay}"
-    (( cur_delay *= 2 ))
+    ((cur_delay *= 2))
 done
 
 # we've tried just about everything. let's wait 5 minutes and reboot.
