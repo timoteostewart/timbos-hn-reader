@@ -79,20 +79,25 @@ ensure-dir-or-die() {
 
 # usage: get-iso8601-date
 get-iso8601-date() {
-    TZ=UTC
     printf $(date -u +"%Y-%m-%dT%H:%M:%SZ")
 }
 
 # usage: get-iso8601-date-microseconds
 get-iso8601-date-microseconds() {
-    TZ=UTC
     printf $(date -u +"%Y-%m-%dT%H:%M:%S.%6NZ")
 }
 
 # usage: get-iso8601-date-milliseconds
 get-iso8601-date-milliseconds() {
-    TZ=UTC
     printf $(date -u +"%Y-%m-%dT%H:%M:%S.%3NZ")
+}
+
+get-list-of-network-interfaces() {
+    local interfaces=($(ip link show | grep -v LOOPBACK | awk '/: <BROADCAST,/{print substr($2, 1, length($2)-1)}'))
+    for i in "${!interfaces[@]}"; do
+        interfaces[$i]=$(echo "${interfaces[$i]}" | sed 's/@.*//')
+    done
+    echo ${interfaces[@]}
 }
 
 # usage: get-time-in-unix-seconds
