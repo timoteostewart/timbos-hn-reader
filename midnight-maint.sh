@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
 # debugging switches
-set -o errexit   # abort on nonzero exitstatus; same as set -e
+set -o errexit # abort on nonzero exitstatus; same as set -e
 # set -o nounset   # abort on unbound variable; same as set -u
-set -o pipefail  # don't hide errors within pipes
+set -o pipefail # don't hide errors within pipes
 # set -o xtrace    # show commands being executed; same as set -x
 # set -o verbose   # verbose mode; same as set -v
 
@@ -19,7 +19,7 @@ TZ=UTC
 server_name=thnr
 utility_account_username=tim
 
-project_base_dir=/srv/timbos-hn-reader/
+project_base_dir="/srv/timbos-hn-reader/"
 all_logs_dir="${project_base_dir}logs/"
 CACHED_STORIES_DIR="${project_base_dir}cached_stories/"
 combined_log_identifier="combined"
@@ -55,7 +55,7 @@ while IFS= read -r file; do
     if ! rm "${file}"; then
         write-log-message loop error "${LOG_PREFIX_LOCAL} Failed to delete ${file}"
     else
-        (( num_pickle += 1 ))
+        ((num_pickle += 1))
     fi
 done < <(find "${CACHED_STORIES_DIR}" -maxdepth 1 -name "*.pickle" -type f -mtime "+${DAYS_TO_KEEP_CACHED_STORIES}")
 write-log-message loop info "${LOG_PREFIX_LOCAL} Deleted ${num_pickle} .pickle files"
@@ -65,7 +65,7 @@ while IFS= read -r file; do
     if ! rm "${file}"; then
         write-log-message loop error "${LOG_PREFIX_LOCAL} Failed to delete ${file}"
     else
-        (( num_json += 1 ))
+        ((num_json += 1))
     fi
 done < <(find "${CACHED_STORIES_DIR}" -maxdepth 1 -name "*.json" -type f -mtime "+${DAYS_TO_KEEP_CACHED_STORIES}")
 write-log-message loop info "${LOG_PREFIX_LOCAL} Deleted ${num_json} .json files"
@@ -78,7 +78,7 @@ num_logs=0
 while IFS= read -r file; do
     if rsync -a --no-owner --no-group --remove-source-files "${file}" "${LOGFILE_ARCHIVE_DEST_DIR}"; then
         write-log-message loop info "${LOG_PREFIX_LOCAL} Successfully archived ${file}"
-        (( num_logs += 1 ))
+        ((num_logs += 1))
     else
         write-log-message loop error "${LOG_PREFIX_LOCAL} Failed to archive ${file}"
     fi

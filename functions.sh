@@ -44,6 +44,12 @@ cd-or-die() {
     cd "${1}" || die "Could not cd to ${1}."
 }
 
+convert-time-in-unix-seconds-to-iso8601() {
+    local unix_time="${1}"
+    [[ -z "${unix_time}" ]] && die "convert-time-in-unix-seconds-to-iso8601() requires a Unix time to be specified."
+    date --utc +"%Y-%m-%dT%H:%M:%SZ" --date="@${unix_time}"
+}
+
 # usage: count-network-interfaces
 # returns: the number of network interfaces, excluding the loopback interface
 count-network-interfaces() {
@@ -100,17 +106,17 @@ ensure-file-or-die() {
 
 # usage: get-iso8601-date
 get-iso8601-date() {
-    printf $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    printf $(date --utc +"%Y-%m-%dT%H:%M:%SZ")
 }
 
 # usage: get-iso8601-date-microseconds
 get-iso8601-date-microseconds() {
-    printf $(date -u +"%Y-%m-%dT%H:%M:%S.%6NZ")
+    printf $(date --utc +"%Y-%m-%dT%H:%M:%S.%6NZ")
 }
 
 # usage: get-iso8601-date-milliseconds
 get-iso8601-date-milliseconds() {
-    printf $(date -u +"%Y-%m-%dT%H:%M:%S.%3NZ")
+    printf $(date --utc +"%Y-%m-%dT%H:%M:%S.%3NZ")
 }
 
 get-list-of-network-interfaces() {
@@ -123,7 +129,7 @@ get-list-of-network-interfaces() {
 
 # usage: get-time-in-unix-seconds
 get-time-in-unix-seconds() {
-    printf $(date -u +%s)
+    printf $(date --utc +%s)
 }
 
 # usage: make-beep

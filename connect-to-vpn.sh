@@ -10,7 +10,7 @@ set -o pipefail # don't hide errors within pipes
 source /srv/timbos-hn-reader/functions.sh
 source /srv/timbos-hn-reader/thnr-common-functions.sh
 
-project_base_dir=/srv/timbos-hn-reader/
+project_base_dir="/srv/timbos-hn-reader/"
 all_logs_dir="${project_base_dir}logs/"
 combined_log_identifier="combined"
 server_name=thnr
@@ -56,13 +56,60 @@ vpn-is-connected() {
         vpn_uptime=$(echo "${vpn_connection_status}" | grep 'Uptime: ' | cut -d ' ' -f 2-)
 
         write-log-message vpn info "${log_prefix_local} VPN is connected. Hostname: ${vpn_hostname}, IP: ${vpn_ip_address}, Country: ${vpn_country}, City: ${vpn_city}, Technology: ${vpn_technology}, Protocol: ${vpn_protocol}, Transfer: ${vpn_transfer}, Uptime: ${vpn_uptime}"
-        "${project_base_dir}send-dashboard-event-to-kafka.sh" "operation" "update-text-content" "elementId" "vpn-status-value" "value" "connected"
-        "${project_base_dir}send-dashboard-event-to-kafka.sh" "operation" "update-text-content" "elementId" "vpn-status-timestamp" "value" "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+
+        "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+            "operation" "update-text-content" \
+            "elementId" "vpn-status-value" \
+            "value" "connected"
+
+        "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+            "operation" "update-text-content" \
+            "elementId" "vpn-uptime-seconds" \
+            "value" "${vpn_uptime}"
+
+        "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+            "operation" "update-text-content" \
+            "elementId" "vpn-transfer" \
+            "value" "${vpn_transfer}"
+
+        cur_ts=$(get-time-in-unix-seconds)
+
+        "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+            "operation" "update-text-content" \
+            "elementId" "vpn-last-updated-timestamp" \
+            "value" "${cur_ts}"
+
+        "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+            "operation" "update-text-content" \
+            "elementId" "vpn-last-updated-iso8601" \
+            "value" "$(convert-time-in-unix-seconds-to-iso8601 ${cur_ts})"
+
         return 0
     else
         write-log-message vpn info "${log_prefix_local} VPN is not connected."
-        "${project_base_dir}send-dashboard-event-to-kafka.sh" "operation" "update-text-content" "elementId" "vpn-status-value" "value" "not connected"
-        "${project_base_dir}send-dashboard-event-to-kafka.sh" "operation" "update-text-content" "elementId" "vpn-status-timestamp" "value" "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+
+        "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+            "operation" "update-text-content" \
+            "elementId" "vpn-status-value" \
+            "value" "not connected"
+
+        "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+            "operation" "update-text-content" \
+            "elementId" "vpn-uptime-seconds" \
+            "value" "—"
+
+        cur_ts=$(get-time-in-unix-seconds)
+
+        "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+            "operation" "update-text-content" \
+            "elementId" "vpn-last-updated-timestamp" \
+            "value" "${cur_ts}"
+
+        "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+            "operation" "update-text-content" \
+            "elementId" "vpn-last-updated-iso8601" \
+            "value" "$(convert-time-in-unix-seconds-to-iso8601 ${cur_ts})"
+
         return 1
     fi
 }

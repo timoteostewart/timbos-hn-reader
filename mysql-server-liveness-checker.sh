@@ -11,7 +11,7 @@ source /srv/timbos-hn-reader/functions.sh
 source /srv/timbos-hn-reader/thnr-common-functions.sh
 
 # for write-log-message
-project_base_dir=/srv/timbos-hn-reader/
+project_base_dir="/srv/timbos-hn-reader/"
 all_logs_dir="${project_base_dir}logs/"
 combined_log_identifier="combined"
 server_name=thnr

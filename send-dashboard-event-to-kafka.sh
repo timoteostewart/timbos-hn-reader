@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+# exit immediately if $ONCE_FLAG exists and has a non-empty value
+if [ -n "$ONCE_FLAG" ]; then
+    exit 0
+fi
+
 if [ $(($# % 2)) -ne 0 ]; then
     echo "Please provide an even number of arguments."
     exit 1
@@ -7,6 +12,10 @@ fi
 
 source /srv/timbos-hn-reader/functions.sh
 source /srv/timbos-hn-reader/thnr-common-functions.sh
+
+dashboard_kafka_topic="thnr-dashboard"
+kafka_server_port="9092"
+message_version="0.1.0"
 
 # retrieve secrets
 secrets_file="/srv/timbos-hn-reader/secrets_file.py"
@@ -46,9 +55,6 @@ while [ $# -gt 0 ]; do
     shift 2
 done
 
-dashboard_kafka_topic="dashboard"
-kafka_server_port="9092"
-message_version="0.1.0"
 timestamp_unix="$(get-time-in-unix-seconds)"
 
 message="{\"topic\":\"${dashboard_kafka_topic}\", ${kv_pairs}, \"timestamp_unix\":${timestamp_unix}, \"message_version\":\"${message_version}\", \"username\":\"${kafka_server_username}\"}"
