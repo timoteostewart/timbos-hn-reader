@@ -9,11 +9,8 @@ logs/
 logs/*
 most_recent_nordvpn_messages.txt
 restats
-secret_alert_email.txt
-secret_vpn_token.txt
 secrets_file.py
 user-sync
-
 
 # ========================================
 # source: https://github.com/github/gitignore/blob/main/Global/VisualStudioCode.gitignore

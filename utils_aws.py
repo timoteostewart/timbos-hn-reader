@@ -20,18 +20,18 @@ from thnr_exceptions import *
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-boto3_session = boto3.Session(profile_name=secrets_file.AWS_PROFILE_NAME)
+boto3_session = boto3.Session(profile_name=secrets_file.aws_profile_name)
 s3_config = botocore.config.Config(max_pool_connections=max(25, config.max_workers))
 s3_resource = boto3_session.resource("s3", config=s3_config)
-# my_bucket = s3_resource.Bucket(secrets_file.S3_BUCKET_NAME)
+# my_bucket = s3_resource.Bucket(secrets_file.s3_bucket_name)
 
-bucket_cdn = s3_resource.Bucket(secrets_file.S3_BUCKET_NAME_CDN)
-bucket_html = s3_resource.Bucket(secrets_file.S3_BUCKET_NAME_HTML)
+bucket_cdn = s3_resource.Bucket(secrets_file.s3_bucket_name_cdn)
+bucket_html = s3_resource.Bucket(secrets_file.s3_bucket_name_html)
 
 
 # def does_object_exist(full_s3_key):
 #     try:
-#         object = s3_resource.Object(secrets_file.S3_BUCKET_NAME, full_s3_key)
+#         object = s3_resource.Object(secrets_file.s3_bucket_name, full_s3_key)
 #         l = object.content_length
 #         return l >= 0
 #     except ClientError as e:
@@ -41,7 +41,7 @@ bucket_html = s3_resource.Bucket(secrets_file.S3_BUCKET_NAME_HTML)
 # def does_story_exist(story_filename):
 #     try:
 #         object = s3_resource.Object(
-#             secrets_file.S3_BUCKET_NAME_CDN, f"{config.s3_stories_path}{story_filename}"
+#             secrets_file.s3_bucket_name_cdn, f"{config.s3_stories_path}{story_filename}"
 #         )
 #         l = object.content_length
 #         return l >= 0
@@ -52,7 +52,7 @@ bucket_html = s3_resource.Bucket(secrets_file.S3_BUCKET_NAME_HTML)
 # def does_thumb_exist(thumb_filename):
 #     try:
 #         object = s3_resource.Object(
-#             secrets_file.S3_BUCKET_NAME_CDN, f"{config.s3_thumbs_path}{thumb_filename}"
+#             secrets_file.s3_bucket_name_cdn, f"{config.s3_thumbs_path}{thumb_filename}"
 #         )
 #         l = object.content_length
 #         return l >= 0
@@ -63,7 +63,7 @@ bucket_html = s3_resource.Bucket(secrets_file.S3_BUCKET_NAME_HTML)
 def get_json_from_s3_as_dict(full_s3_key):
     try:
         obj = s3_resource.Object(
-            bucket_name=secrets_file.S3_BUCKET_NAME_CDN, key=full_s3_key
+            bucket_name=secrets_file.s3_bucket_name_cdn, key=full_s3_key
         )
         obj_body = obj.get()["Body"].read().decode("utf-8")
     except ClientError as exc:
@@ -78,7 +78,7 @@ def get_json_from_s3_as_dict(full_s3_key):
 
 # def get_object_from_s3_as_bytes(full_s3_key):
 #     try:
-#         obj = s3_resource.Object(bucket_name=secrets_file.S3_BUCKET_NAME_CDN, key=full_s3_key)
+#         obj = s3_resource.Object(bucket_name=secrets_file.s3_bucket_name_cdn, key=full_s3_key)
 #     except Exception as e:
 #         logger.error(f"failed to retrieve s3 object {full_s3_key}")
 #         raise CouldNotGetObjectFromS3Error(
@@ -203,7 +203,6 @@ def upload_string_to_s3(string: str, full_s3_key, extra_args=None, bucket=bucket
         }
 
     try:
-
         bucket.upload_fileobj(
             Fileobj=buffer,
             Key=full_s3_key,

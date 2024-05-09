@@ -131,7 +131,7 @@ sudo apt-get install -y libmagickwand-dev
 
 ## Installation
 
-1. If you keep the AWS S3 plumbing in THNR, don't forget to update your `~/.aws/credentials` with a role that has appropriate S3 permissions on your AWS account. Set `secrets_file.AWS_PROFILE_NAME` to the name of this role so `boto3` in `aws_utils.py` can find it.
+1. If you keep the AWS S3 plumbing in THNR, don't forget to update your `~/.aws/credentials` with a role that has appropriate S3 permissions on your AWS account. Set `secrets_file.aws_profile_name` to the name of this role so `boto3` in `aws_utils.py` can find it.
 
 2. Clone the repo. Here's what that looks like for me.
 

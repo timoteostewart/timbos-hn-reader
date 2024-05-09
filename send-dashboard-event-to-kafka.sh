@@ -1,6 +1,14 @@
 #!/usr/bin/env bash
 
+# debugging switches
+# set -o errexit   # abort on nonzero exitstatus; same as set -e
+# set -o nounset   # abort on unbound variable; same as set -u
+# set -o pipefail # don't hide errors within pipes
+# set -o xtrace    # show commands being executed; same as set -x
+# set -o verbose   # verbose mode; same as set -v
+
 # exit immediately if $ONCE_FLAG exists and has a non-empty value
+# so we avoid spurious logging during "ONCE" runs of loop-thnr.sh
 if [ -n "$ONCE_FLAG" ]; then
     exit 0
 fi
@@ -13,29 +21,15 @@ fi
 source /srv/timbos-hn-reader/functions.sh
 source /srv/timbos-hn-reader/thnr-common-functions.sh
 
-dashboard_kafka_topic="thnr-dashboard"
-kafka_server_port="9092"
-message_version="0.1.0"
-
 # retrieve secrets
-secrets_file="/srv/timbos-hn-reader/secrets_file.py"
-kafka_server_host_ip=""
-kafka_server_username=""
-
-# Read each line from the secrets file
-while IFS= read -r line; do
-    # Extract the username
-    if [[ "$line" =~ KAFKA_SERVER_HOST_IP[[:space:]]*=[[:space:]]*\"(.*)\" ]]; then
-        kafka_server_host_ip="${BASH_REMATCH[1]}"
-    fi
-    # Extract the password
-    if [[ "$line" =~ KAFKA_SERVER_USERNAME[[:space:]]*=[[:space:]]*\"(.*)\" ]]; then
-        kafka_server_username="${BASH_REMATCH[1]}"
-    fi
-done <"${secrets_file}"
+kafka_dashboard_topic=$(get-secret "kafka_dashboard_topic")
+kafka_message_version=$(get-secret "kafka_message_version")
+kafka_server_host_ip=$(get-secret "kafka_server_host_ip")
+kafka_server_port=$(get-secret "kafka_server_port")
+kafka_server_username=$(get-secret "kafka_server_username")
 
 if [ -z "${kafka_server_host_ip}" ] || [ -z "${kafka_server_username}" ]; then
-    echo "Failed to retrieve Kafka server host IP or username from secrets file."
+    echo "Failed to retrieve Kafka server host IP or username from secrets."
     exit 1
 fi
 
@@ -57,11 +51,11 @@ done
 
 timestamp_unix="$(get-time-in-unix-seconds)"
 
-message="{\"topic\":\"${dashboard_kafka_topic}\", ${kv_pairs}, \"timestamp_unix\":${timestamp_unix}, \"message_version\":\"${message_version}\", \"username\":\"${kafka_server_username}\"}"
+message="{\"topic\":\"${kafka_dashboard_topic}\", ${kv_pairs}, \"timestamp_unix\":${timestamp_unix}, \"kafka_message_version\":\"${kafka_message_version}\", \"username\":\"${kafka_server_username}\"}"
 
 # printf "${message}\n"
 
-echo "${message}" | kafkacat -P -b "${kafka_server_host_ip}:${kafka_server_port}" -t "${dashboard_kafka_topic}"
+echo "${message}" | kafkacat -P -b "${kafka_server_host_ip}:${kafka_server_port}" -t "${kafka_dashboard_topic}"
 
 res=$(echo $?)
 

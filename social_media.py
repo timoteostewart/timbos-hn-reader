@@ -34,7 +34,6 @@ ARTICLE_SYMBOL = "📄"
 def check_for_social_media_details(
     driver=None, story_object=None, page_source_soup=None
 ):
-
     # TODO: add more sites based on # https://hackernews-insight.vercel.app/domain-analysis
 
     #
@@ -880,7 +879,7 @@ def get_youtube_channel_slug(youtube_url: str, story_object=None):
         )
 
         # TODO: convert this to use my existing endpoint_query_via_requests() function
-        api_query_url = f"https://youtube.googleapis.com/youtube/v3/videos?part=snippet&id={video_id}&key={secrets_file.GOOGLE_API_KEY}"
+        api_query_url = f"https://youtube.googleapis.com/youtube/v3/videos?part=snippet&id={video_id}&key={secrets_file.google_api_key}"
         try:
             with requests.get(
                 api_query_url,
@@ -913,7 +912,7 @@ def get_youtube_channel_slug(youtube_url: str, story_object=None):
         )
 
         # TODO: convert this to use my existing endpoint_query_via_requests() function
-        api_query_url = f"https://youtube.googleapis.com/youtube/v3/channels?part=snippet&id={channel_id}&key={secrets_file.GOOGLE_API_KEY}"
+        api_query_url = f"https://youtube.googleapis.com/youtube/v3/channels?part=snippet&id={channel_id}&key={secrets_file.google_api_key}"
         try:
             with requests.get(
                 api_query_url,
@@ -943,7 +942,7 @@ def get_youtube_channel_slug(youtube_url: str, story_object=None):
         )
 
         # TODO: convert this to use my existing endpoint_query_via_requests() function
-        url = f"https://youtube.googleapis.com/youtube/v3/playlists?part=snippet&id={playlist_id}&key={secrets_file.GOOGLE_API_KEY}"
+        url = f"https://youtube.googleapis.com/youtube/v3/playlists?part=snippet&id={playlist_id}&key={secrets_file.google_api_key}"
         try:
             with requests.get(
                 url,

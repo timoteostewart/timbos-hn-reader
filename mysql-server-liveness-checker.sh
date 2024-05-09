@@ -20,17 +20,16 @@ utility_account_username=tim
 
 log_prefix_local="mysql-server-liveness-checker.sh: "
 
-local_host_ip="192.168.1.237"
-
-mysql_hostname="mysql-server.home.arpa"
-mysql_host_ip="192.168.1.233"
-mysql_port="3306"
+thnr_scraper_host_ip=$(get-secret "thnr_scraper_host_ip")
+mysql_hostname=$(get-secret "mysql_hostname")
+mysql_host_ip=$(get-secret "mysql_host_ip")
+mysql_port=$(get-secret "mysql_port")
 
 # check if host mysql-server.home.arpa is reachable (using nmap)
 nmap_tempfile=$(mktemp --tmpdir=/tmp nmap-output-XXXXXXXXXX.xml)
 
 log_message="${log_prefix_local} nmap: writing to temp file ${nmap_tempfile}"
-write-log-message mysql info "${log_message}"
+write-log-message mysql info "${log_message}" false
 
 # echo "${nmap_tempfile}"
 nmap -Pn "${mysql_host_ip}" -oX "${nmap_tempfile}"
@@ -59,50 +58,35 @@ case "$hosts_up" in
 1)
     log_message="${log_prefix_local} nmap: host ${mysql_host_ip} is reachable, and its port ${mysql_port} is ${mysql_port_state}"
     echo "${log_message}"
-    write-log-message mysql info "${log_message}"
+    write-log-message mysql info "${log_message}" false
     ;;
 
 0)
     log_message="${log_prefix_local} nmap: host ${mysql_host_ip} is not reachable"
     echo "${log_message}"
-    write-log-message mysql error "${log_message}"
+    write-log-message mysql error "${log_message}" false
     ;;
 
 *)
     log_message="${log_prefix_local} nmap: Unexpected value for hosts_up: ${hosts_up}"
     echo "${log_message}"
-    write-log-message mysql error "${log_message}"
+    write-log-message mysql error "${log_message}" false
     ;;
 esac
 
 # check if MySQL server is up (using mysqladmin)
-# first, retrieve secrets
+mysql_user=$(get-secret "mysql_liveness_check_username")
+mysql_pass=$(get-secret "mysql_liveness_check_password")
 
-secrets_file="/srv/timbos-hn-reader/secrets_file.py"
-mysql_user=""
-mysql_pass=""
-
-# Read each line from the secrets file
-while IFS= read -r line; do
-    # Extract the username
-    if [[ "$line" =~ MYSQL_LIVENESS_CHECK_USERNAME[[:space:]]*=[[:space:]]*\"(.*)\" ]]; then
-        mysql_user="${BASH_REMATCH[1]}"
-    fi
-    # Extract the password
-    if [[ "$line" =~ MYSQL_LIVENESS_CHECK_PASSWORD[[:space:]]*=[[:space:]]*\"(.*)\" ]]; then
-        mysql_pass="${BASH_REMATCH[1]}"
-    fi
-done <"${secrets_file}"
-
-if [[ -z $mysql_user ]]; then
+if [[ -z "${mysql_user}" ]]; then
     log_message="${log_prefix_local} mysqladmin: could not retrieve MySQL username from secrets file"
     echo "${log_message}"
-    write-log-message mysql error "${log_message}"
+    write-log-message mysql error "${log_message}" false
     exit 1
 fi
 
 liveness_check_output=$(mysqladmin \
-    --bind-address "${local_host_ip}" \
+    --bind-address "${thnr_scraper_host_ip}" \
     --connect-timeout 8 \
     --host "${mysql_host_ip}" \
     --no-beep \
@@ -120,7 +104,7 @@ cur_iso8601=$(get-iso8601-date)
 if echo "${liveness_check_output}" | grep "mysqld is alive"; then
     log_message="${log_prefix_local} mysqladmin: MySQL server at ${mysql_host_ip}:${mysql_port} is up"
     echo "${log_message}"
-    write-log-message mysql info "${log_message}"
+    write-log-message mysql info "${log_message}" false
 
     "${project_base_dir}send-dashboard-event-to-kafka.sh" \
         "operation" "update-text-content" \
@@ -137,7 +121,7 @@ fi
 if echo "${liveness_check_output}" | grep "Can't connect to MySQL server on"; then
     log_message="${log_prefix_local} mysqladmin: could not connect to a MySQL server at ${mysql_host_ip}:${mysql_port}"
     echo "${log_message}"
-    write-log-message mysql error "${log_message}"
+    write-log-message mysql error "${log_message}" false
 
     "${project_base_dir}send-dashboard-event-to-kafka.sh" \
         "operation" "update-text-content" \

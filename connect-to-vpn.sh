@@ -31,8 +31,8 @@ am-logged-into-vpn-client() {
 }
 
 log-in-to-vpn-client() {
-    login_token=$(cat /srv/timbos-hn-reader/secret_vpn_token.txt)
-    nordvpn login --token "${login_token}"
+    nordvpn_secret_token=$(get-secret "nordvpn_secret_token")
+    nordvpn login --token "${nordvpn_secret_token}"
 }
 
 try-to-connect-to-vpn() {
@@ -55,7 +55,7 @@ vpn-is-connected() {
         vpn_transfer=$(echo "${vpn_connection_status}" | grep 'Transfer:' | cut -d ' ' -f 2-)
         vpn_uptime=$(echo "${vpn_connection_status}" | grep 'Uptime: ' | cut -d ' ' -f 2-)
 
-        write-log-message vpn info "${log_prefix_local} VPN is connected. Hostname: ${vpn_hostname}, IP: ${vpn_ip_address}, Country: ${vpn_country}, City: ${vpn_city}, Technology: ${vpn_technology}, Protocol: ${vpn_protocol}, Transfer: ${vpn_transfer}, Uptime: ${vpn_uptime}"
+        write-log-message vpn info "${log_prefix_local} VPN is connected. Hostname: ${vpn_hostname}, IP: ${vpn_ip_address}, Country: ${vpn_country}, City: ${vpn_city}, Technology: ${vpn_technology}, Protocol: ${vpn_protocol}, Transfer: ${vpn_transfer}, Uptime: ${vpn_uptime}" false
 
         "${project_base_dir}send-dashboard-event-to-kafka.sh" \
             "operation" "update-text-content" \
@@ -86,7 +86,7 @@ vpn-is-connected() {
 
         return 0
     else
-        write-log-message vpn info "${log_prefix_local} VPN is not connected."
+        write-log-message vpn info "${log_prefix_local} VPN is not connected." false
 
         "${project_base_dir}send-dashboard-event-to-kafka.sh" \
             "operation" "update-text-content" \
@@ -122,7 +122,7 @@ for i in 1 2 3 4 5 6 7 8; do
     else
         log-in-to-vpn-client
     fi
-    write-log-message vpn info "${log_prefix_local} sleeping for ${cur_delay} seconds"
+    write-log-message vpn info "${log_prefix_local} sleeping for ${cur_delay} seconds" false
     sleep "${cur_delay}"
     ((cur_delay *= 2))
 done
@@ -130,7 +130,7 @@ done
 # check whether we're logged into the vpn account.
 # if we're not, reboot if we're sudo, exit with error otherwise
 if ! am-logged-into-vpn-client; then
-    write-log-message vpn info "${log_prefix_local} still not logged in. sleeping 5 minutes, and then restarting host."
+    write-log-message vpn info "${log_prefix_local} still not logged in. sleeping 5 minutes, and then restarting host." false
     sleep 300 && shutdown -r now && sleep 60
 fi
 
@@ -162,7 +162,7 @@ for i in 1 2 3 4 5 6 7 8; do
     if vpn-is-connected; then
         exit 0
     fi
-    write-log-message vpn info "${log_prefix_local} sleeping for ${cur_delay} seconds"
+    write-log-message vpn info "${log_prefix_local} sleeping for ${cur_delay} seconds" false
     sleep "${cur_delay}"
     ((cur_delay *= 2))
 done
@@ -173,9 +173,9 @@ done
 
 # try restarting the vpn service
 cur_delay=${seconds_delay_between_login_attempts}
-write-log-message vpn info "${log_prefix_local} restarting nordvpn service"
+write-log-message vpn info "${log_prefix_local} restarting nordvpn service" false
 systemctl restart nordvpn
-write-log-message vpn info "${log_prefix_local} sleeping for ${cur_delay} seconds"
+write-log-message vpn info "${log_prefix_local} sleeping for ${cur_delay} seconds" false
 sleep "${cur_delay}"
 
 # try a few more times to connect
@@ -184,11 +184,11 @@ for i in 1 2 3 4 5 6 7 8; do
     if vpn-is-connected; then
         exit 0
     fi
-    write-log-message vpn info "${log_prefix_local} sleeping for ${cur_delay} seconds"
+    write-log-message vpn info "${log_prefix_local} sleeping for ${cur_delay} seconds" false
     sleep "${cur_delay}"
     ((cur_delay *= 2))
 done
 
 # we've tried just about everything. let's wait 5 minutes and reboot.
-write-log-message vpn info "${log_prefix_local} sleeping 5 minutes, and then restarting host."
+write-log-message vpn info "${log_prefix_local} sleeping 5 minutes, and then restarting host." false
 sleep 300 && shutdown -r now && sleep 60
