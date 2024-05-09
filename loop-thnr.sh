@@ -382,6 +382,13 @@ while true; do
         "elementId" "scraper-app-recent-loop-duration-seconds" \
         "value" "${SECONDS_SPENT}"
 
+    recent_loop_duration_pretty=$(prettify-duration-seconds ${SECONDS_SPENT})
+
+    "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+        "operation" "update-text-content" \
+        "elementId" "scraper-app-recent-loop-duration-pretty" \
+        "value" "${recent_loop_duration_pretty}"
+
     write-log-message loop info "${LOG_PREFIX_LOCAL} LOOP_NUMBER=${LOOP_NUMBER}, CUR_LOOP_START_TS=${CUR_LOOP_START_TS}, CUR_LOOP_END_TS=${CUR_LOOP_END_TS}, SECONDS_SPENT=${SECONDS_SPENT}, DURATION=${DURATION}"
 
     if [[ ${ONCE_FLAG} == "once" ]]; then

@@ -213,6 +213,14 @@ prefer() {
     printf "wan_ip=${wan_ip}\n"
 }
 
+function prettify-duration-seconds {
+    local total_seconds=$1
+    local hours=$((total_seconds / 3600))
+    local minutes=$(((total_seconds % 3600) / 60))
+    local seconds=$((total_seconds % 60))
+    echo "$hours hours, $minutes minutes, $seconds seconds"
+}
+
 # usage: program-not-available $PROGRAM_NAME
 # returns 0 if program isn't available, 1 if program is available
 program-not-available() {

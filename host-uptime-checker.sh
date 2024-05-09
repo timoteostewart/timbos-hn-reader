@@ -13,10 +13,18 @@ source /srv/timbos-hn-reader/thnr-common-functions.sh
 project_base_dir="/srv/timbos-hn-reader/"
 
 uptime_seconds=$(cat /proc/uptime | awk '{print $1}')
+uptime_seconds_whole="${uptime_seconds%%.*}"
 
 "${project_base_dir}send-dashboard-event-to-kafka.sh" \
     "operation" "update-text-content" \
     "elementId" "scraper-host-uptime-seconds" \
-    "value" "${uptime_seconds}"
+    "value" "${uptime_seconds_whole}"
+
+uptime_pretty=$(prettify-duration-seconds ${uptime_seconds_whole})
+
+"${project_base_dir}send-dashboard-event-to-kafka.sh" \
+    "operation" "update-text-content" \
+    "elementId" "scraper-host-uptime-pretty" \
+    "value" "${uptime_pretty}"
 
 exit 0
