@@ -20,10 +20,12 @@ utility_account_username=tim
 
 log_prefix_local="mysql-server-liveness-checker.sh: "
 
-thnr_scraper_host_ip=$(get-secret "thnr_scraper_host_ip")
-mysql_hostname=$(get-secret "mysql_hostname")
-mysql_host_ip=$(get-secret "mysql_host_ip")
-mysql_port=$(get-secret "mysql_port")
+mysql_server_host_ip="$(get-secret 'mysql_server_host_ip')"
+mysql_server_hostname="$(get-secret 'mysql_server_hostname')"
+mysql_server_liveness_check_password="$(get-secret 'mysql_server_liveness_check_password')"
+mysql_server_liveness_check_username="$(get-secret 'mysql_server_liveness_check_username')"
+mysql_server_port="$(get-secret 'mysql_server_port')"
+thnr_scraper_host_ip="$(get-secret 'thnr_scraper_host_ip')"
 
 # check if host mysql-server.home.arpa is reachable (using nmap)
 nmap_tempfile=$(mktemp --tmpdir=/tmp nmap-output-XXXXXXXXXX.xml)
@@ -32,7 +34,7 @@ log_message="${log_prefix_local} nmap: writing to temp file ${nmap_tempfile}"
 write-log-message mysql info "${log_message}" false
 
 # echo "${nmap_tempfile}"
-nmap -Pn "${mysql_host_ip}" -oX "${nmap_tempfile}"
+nmap -Pn "${mysql_server_host_ip}" -oX "${nmap_tempfile}"
 
 hosts_down=$(xmlstarlet sel -t -v "/nmaprun/runstats/hosts/@down" "${nmap_tempfile}")
 hosts_up=$(xmlstarlet sel -t -v "/nmaprun/runstats/hosts/@up" "${nmap_tempfile}")
@@ -40,10 +42,10 @@ num_ports_conn_refused=$(xmlstarlet sel -t -m "//extrareasons[@reason='conn-refu
 num_ports_host_unreaches=$(xmlstarlet sel -t -m "//extrareasons[@reason='host-unreaches']" -v "@count" -n "${nmap_tempfile}")
 num_ports_no_responses=$(xmlstarlet sel -t -m "//extrareasons[@reason='no-responses']" -v "@count" -n "${nmap_tempfile}")
 num_ports_resets=$(xmlstarlet sel -t -m "//extrareasons[@reason='resets']" -v "@count" -n "${nmap_tempfile}")
-mysql_port_state=$(xmlstarlet sel -t -v "/nmaprun/host/ports/port[@portid=${mysql_port}]/state/@state" "${nmap_tempfile}")
+mysql_server_port_state=$(xmlstarlet sel -t -v "/nmaprun/host/ports/port[@portid=${mysql_server_port}]/state/@state" "${nmap_tempfile}")
 
-if [[ -z $mysql_port_state ]]; then
-    mysql_port_state="unknown"
+if [[ -z $mysql_server_port_state ]]; then
+    mysql_server_port_state="unknown"
 fi
 
 # echo "hosts_down: ${hosts_down}"
@@ -52,17 +54,17 @@ fi
 # echo "num_ports_host_unreaches: ${num_ports_host_unreaches}"
 # echo "num_ports_no_responses: ${num_ports_no_responses}"
 # echo "num_ports_resets: ${num_ports_resets}"
-# echo "mysql_port_state: ${mysql_port_state}"
+# echo "mysql_server_port_state: ${mysql_server_port_state}"
 
 case "$hosts_up" in
 1)
-    log_message="${log_prefix_local} nmap: host ${mysql_host_ip} is reachable, and its port ${mysql_port} is ${mysql_port_state}"
+    log_message="${log_prefix_local} nmap: host ${mysql_server_host_ip} is reachable, and its port ${mysql_server_port} is ${mysql_server_port_state}"
     echo "${log_message}"
     write-log-message mysql info "${log_message}" false
     ;;
 
 0)
-    log_message="${log_prefix_local} nmap: host ${mysql_host_ip} is not reachable"
+    log_message="${log_prefix_local} nmap: host ${mysql_server_host_ip} is not reachable"
     echo "${log_message}"
     write-log-message mysql error "${log_message}" false
     ;;
@@ -75,10 +77,7 @@ case "$hosts_up" in
 esac
 
 # check if MySQL server is up (using mysqladmin)
-mysql_user=$(get-secret "mysql_liveness_check_username")
-mysql_pass=$(get-secret "mysql_liveness_check_password")
-
-if [[ -z "${mysql_user}" ]]; then
+if [[ -z "${mysql_server_liveness_check_username}" ]]; then
     log_message="${log_prefix_local} mysqladmin: could not retrieve MySQL username from secrets file"
     echo "${log_message}"
     write-log-message mysql error "${log_message}" false
@@ -88,11 +87,11 @@ fi
 liveness_check_output=$(mysqladmin \
     --bind-address "${thnr_scraper_host_ip}" \
     --connect-timeout 8 \
-    --host "${mysql_host_ip}" \
+    --host "${mysql_server_host_ip}" \
     --no-beep \
-    --password="${mysql_pass}" \
-    --port "${mysql_port}" \
-    --user "${mysql_user}" \
+    --password="${mysql_server_liveness_check_password}" \
+    --port "${mysql_server_port}" \
+    --user "${mysql_server_liveness_check_username}" \
     --verbose \
     ping 2>&1)
 
@@ -102,7 +101,7 @@ cur_iso8601=$(get-iso8601-date)
 
 # success
 if echo "${liveness_check_output}" | grep "mysqld is alive"; then
-    log_message="${log_prefix_local} mysqladmin: MySQL server at ${mysql_host_ip}:${mysql_port} is up"
+    log_message="${log_prefix_local} mysqladmin: MySQL server at ${mysql_server_host_ip}:${mysql_server_port} is up"
     echo "${log_message}"
     write-log-message mysql info "${log_message}" false
 
@@ -119,7 +118,7 @@ fi
 
 # mysqladmin can connect to host, but no MySQL server is detected
 if echo "${liveness_check_output}" | grep "Can't connect to MySQL server on"; then
-    log_message="${log_prefix_local} mysqladmin: could not connect to a MySQL server at ${mysql_host_ip}:${mysql_port}"
+    log_message="${log_prefix_local} mysqladmin: could not connect to a MySQL server at ${mysql_server_host_ip}:${mysql_server_port}"
     echo "${log_message}"
     write-log-message mysql error "${log_message}" false
 
@@ -136,7 +135,7 @@ fi
 
 # # mysqladmin cannot resolve the hostname
 # if echo "${liveness_check_output}" | grep "Unknown MySQL server host"; then
-#     log_message="${log_prefix_local} mysqladmin: host ${mysql_host_ip} could not be resolved"
+#     log_message="${log_prefix_local} mysqladmin: host ${mysql_server_host_ip} could not be resolved"
 #     echo "${log_message}"
 #     write-log-message mysql error "${log_message}"
 # fi

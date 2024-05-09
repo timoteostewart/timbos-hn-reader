@@ -14,6 +14,9 @@ if ! am-root; then
     die "Please run as root."
 fi
 
+project_base_dir="/srv/timbos-hn-reader/"
+export ONCE_FLAG="${1:-}"
+
 "${project_base_dir}send-dashboard-event-to-kafka.sh" \
     "operation" "update-text-content" \
     "elementId" "scraper-app-current-activity" \
@@ -27,7 +30,6 @@ trap handle_control_c INT
 export MAGICK_HOME=/usr/local/ImageMagick-7
 export WAND_MAGICK_LIBRARY_SUFFIX="-7.Q16HDRI"
 
-project_base_dir="/srv/timbos-hn-reader/"
 all_logs_dir="${project_base_dir}logs/"
 python_bin_dir="${project_base_dir}.venv/bin/"
 server_name=thnr
@@ -54,7 +56,6 @@ LOG_PREFIX_LOCAL="loop-thnr.sh id=${script_invocation_id}: "
 combined_log_identifier="combined"
 SETTINGS_FILE="${project_base_dir}settings.yaml"
 
-export ONCE_FLAG="${1:-}"
 ONCE_STORY_TYPE="${2:-all}"
 
 handle_control_c() {
@@ -82,7 +83,7 @@ handle_error() {
 log_dump_via_email() {
     dump_id=$(get-sha1-of-current-time-plus-random)
     local error_msg="$1"
-    /srv/timbos-hn-reader/send-email.sh "${error_msg} - dump id ${dump_id}" "see incoming log files for details"
+    send-alert-email "${error_msg} - dump id ${dump_id}" "see incoming log files for details"
     # email_mock "${error_msg} - dump id ${dump_id}" "see incoming log files for details"
     printf "${error_msg} - dump id ${dump_id}\n"
 
@@ -90,7 +91,7 @@ log_dump_via_email() {
 
     ext_error_msg="${error_msg} - ${cur_log_file}"
     log_tail=$(tail -n 250 ${combined_log_file})
-    /srv/timbos-hn-reader/send-email.sh "dump_id=${dump_id} - 'tail -n 250 of ${combined_log_file}' " "${log_tail}"
+    send-alert-email "dump_id=${dump_id} - 'tail -n 250 of ${combined_log_file}' " "${log_tail}"
     # email_mock "dump id ${dump_id} - 'tail -n 50 of ${combined_log_file}' " "${log_tail}"
 }
 
@@ -365,7 +366,7 @@ while true; do
             write-log-message loop info "${LOG_PREFIX_LOCAL} Exited main.py for ${cur_story_type} after ${DURATION}"
         else
             write-log-message loop error "${LOG_PREFIX_LOCAL} Exited main.py for ${cur_story_type} with error code ${MAIN_PY_ERROR_CODE} after ${DURATION}"
-            /srv/timbos-hn-reader/send-email.sh "THNR main.py exited with error ${MAIN_PY_ERROR_CODE} after ${DURATION}" "$(tail -n 50 ${MAIN_PY_LOG_FILE})"
+            send-alert-email "THNR main.py exited with error ${MAIN_PY_ERROR_CODE} after ${DURATION}" "$(tail -n 50 ${MAIN_PY_LOG_FILE})"
         fi
 
         # short pause between story types
@@ -382,12 +383,10 @@ while true; do
         "elementId" "scraper-app-recent-loop-duration-seconds" \
         "value" "${SECONDS_SPENT}"
 
-    recent_loop_duration_pretty=$(prettify-duration-seconds ${SECONDS_SPENT})
-
     "${project_base_dir}send-dashboard-event-to-kafka.sh" \
         "operation" "update-text-content" \
         "elementId" "scraper-app-recent-loop-duration-pretty" \
-        "value" "${recent_loop_duration_pretty}"
+        "value" "$(prettify-duration-seconds ${SECONDS_SPENT})"
 
     write-log-message loop info "${LOG_PREFIX_LOCAL} LOOP_NUMBER=${LOOP_NUMBER}, CUR_LOOP_START_TS=${CUR_LOOP_START_TS}, CUR_LOOP_END_TS=${CUR_LOOP_END_TS}, SECONDS_SPENT=${SECONDS_SPENT}, DURATION=${DURATION}"
 

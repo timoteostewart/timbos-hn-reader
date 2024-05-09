@@ -94,6 +94,43 @@ get-sha1-of-current-time-plus-random() {
     echo -n "${value_to_hash}" | sha1sum | cut -c 1-12
 }
 
+# usage: send-alert-email $subject $body
+# Sends an email using predefined alert email address with the given subject and body.
+# If the subject or body is not provided, the function will log an error and exit.
+send-alert-email() {
+    local alert_email_address="$(get-secret 'alert_email_address')"
+    local subject_field="${1-}"
+    local email_body="${2-}"
+
+    if [[ -z "${subject_field}" || -z "${email_body}" ]]; then
+        die "Error: Subject and body must be provided."
+    fi
+
+    send-email "${alert_email_address}" "${alert_email_address}" "${subject_field}" "${email_body}"
+}
+
+# usage: send-email $to $from $subject $body
+# Sends an email to the specified address with the given subject and body.
+# If any of the parameters (to, from, subject, body) are blank, the function will log an error and exit.
+send-email() {
+    local to_field="${1-}"
+    local from_field="${2-}"
+    local subject_field="${3-}"
+    local email_body="${4-}"
+
+    if [[ -z "${to_field}" || -z "${from_field}" || -z "${subject_field}" || -z "${email_body}" ]]; then
+        die "Error: All parameters (to, from, subject, body) must be provided."
+    fi
+
+    {
+        echo "To: ${to_field}"
+        echo "From: ${from_field}"
+        echo "Subject: ${subject_field}"
+        echo
+        echo "${email_body}"
+    } | sendmail -t
+}
+
 # usage: write-log-message $log_identifier $level $message [$write_to_combined_log_flag]
 # writes a log message to a specific log file and optionally to a combined log file
 # example: write-log-message loop error "${LOG_PREFIX_LOCAL} Failed to delete ${file}"

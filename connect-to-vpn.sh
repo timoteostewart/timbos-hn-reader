@@ -31,7 +31,7 @@ am-logged-into-vpn-client() {
 }
 
 log-in-to-vpn-client() {
-    nordvpn_secret_token=$(get-secret "nordvpn_secret_token")
+    nordvpn_secret_token="$(get-secret 'nordvpn_secret_token')"
     nordvpn login --token "${nordvpn_secret_token}"
 }
 

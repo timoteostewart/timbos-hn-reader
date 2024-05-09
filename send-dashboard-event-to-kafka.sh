@@ -22,11 +22,11 @@ source /srv/timbos-hn-reader/functions.sh
 source /srv/timbos-hn-reader/thnr-common-functions.sh
 
 # retrieve secrets
-kafka_dashboard_topic=$(get-secret "kafka_dashboard_topic")
-kafka_message_version=$(get-secret "kafka_message_version")
-kafka_server_host_ip=$(get-secret "kafka_server_host_ip")
-kafka_server_port=$(get-secret "kafka_server_port")
-kafka_server_username=$(get-secret "kafka_server_username")
+kafka_dashboard_topic="$(get-secret 'kafka_dashboard_topic')"
+kafka_message_version="$(get-secret 'kafka_message_version')"
+kafka_server_host_ip="$(get-secret 'kafka_server_host_ip')"
+kafka_server_port="$(get-secret 'kafka_server_port')"
+kafka_server_username="$(get-secret 'kafka_server_username')"
 
 if [ -z "${kafka_server_host_ip}" ] || [ -z "${kafka_server_username}" ]; then
     echo "Failed to retrieve Kafka server host IP or username from secrets."

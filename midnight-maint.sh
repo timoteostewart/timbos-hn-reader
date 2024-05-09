@@ -34,7 +34,7 @@ CUR_YEAR_AND_DOY=$(get-cur-year-and-doy)
 LOOP_LOG_FILE="${all_logs_dir}${server_name}-loop-${CUR_YEAR_AND_DOY}.log"
 
 exit_with_fail() {
-    /srv/timbos-hn-reader/send-email.sh "midnight_maint.sh exited with error" "$(cat ${LOOP_LOG_FILE})"
+    send-alert-email "midnight_maint.sh exited with error" "$(cat ${LOOP_LOG_FILE})"
 }
 
 trap exit_with_fail ERR
