@@ -64,7 +64,7 @@ vpn-is-connected() {
 
         "${project_base_dir}send-dashboard-event-to-kafka.sh" \
             "operation" "update-text-content" \
-            "elementId" "vpn-uptime-seconds" \
+            "elementId" "vpn-uptime-raw" \
             "value" "${vpn_uptime}"
 
         "${project_base_dir}send-dashboard-event-to-kafka.sh" \
@@ -74,10 +74,10 @@ vpn-is-connected() {
 
         cur_ts=$(get-time-in-unix-seconds)
 
-        "${project_base_dir}send-dashboard-event-to-kafka.sh" \
-            "operation" "update-text-content" \
-            "elementId" "vpn-last-updated-timestamp" \
-            "value" "${cur_ts}"
+        # "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+        #     "operation" "update-text-content" \
+        #     "elementId" "vpn-last-updated-timestamp" \
+        #     "value" "${cur_ts}"
 
         "${project_base_dir}send-dashboard-event-to-kafka.sh" \
             "operation" "update-text-content" \
@@ -95,15 +95,15 @@ vpn-is-connected() {
 
         "${project_base_dir}send-dashboard-event-to-kafka.sh" \
             "operation" "update-text-content" \
-            "elementId" "vpn-uptime-seconds" \
+            "elementId" "vpn-uptime-raw" \
             "value" "—"
 
         cur_ts=$(get-time-in-unix-seconds)
 
-        "${project_base_dir}send-dashboard-event-to-kafka.sh" \
-            "operation" "update-text-content" \
-            "elementId" "vpn-last-updated-timestamp" \
-            "value" "${cur_ts}"
+        # "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+        #     "operation" "update-text-content" \
+        #     "elementId" "vpn-last-updated-timestamp" \
+        #     "value" "${cur_ts}"
 
         "${project_base_dir}send-dashboard-event-to-kafka.sh" \
             "operation" "update-text-content" \
