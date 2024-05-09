@@ -114,13 +114,23 @@ liveness_check_output=$(mysqladmin \
 
 # echo ${liveness_check_output}
 
+cur_iso8601=$(get-iso8601-date)
+
 # success
 if echo "${liveness_check_output}" | grep "mysqld is alive"; then
     log_message="${log_prefix_local} mysqladmin: MySQL server at ${mysql_host_ip}:${mysql_port} is up"
     echo "${log_message}"
     write-log-message mysql info "${log_message}"
-    "${project_base_dir}send-dashboard-event-to-kafka.sh" "operation" "update-text-content" "elementId" "mysql-status-value" "value" "up"
-    "${project_base_dir}send-dashboard-event-to-kafka.sh" "operation" "update-text-content" "elementId" "mysql-status-timestamp" "value" "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+
+    "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+        "operation" "update-text-content" \
+        "elementId" "mysql-status-value" \
+        "value" "up"
+
+    "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+        "operation" "update-text-content" \
+        "elementId" "mysql-status-last-updated-iso8601" \
+        "value" "${cur_iso8601}"
 fi
 
 # mysqladmin can connect to host, but no MySQL server is detected
@@ -128,8 +138,16 @@ if echo "${liveness_check_output}" | grep "Can't connect to MySQL server on"; th
     log_message="${log_prefix_local} mysqladmin: could not connect to a MySQL server at ${mysql_host_ip}:${mysql_port}"
     echo "${log_message}"
     write-log-message mysql error "${log_message}"
-    "${project_base_dir}send-dashboard-event-to-kafka.sh" "operation" "update-text-content" "elementId" "mysql-status-value" "value" "down"
-    "${project_base_dir}send-dashboard-event-to-kafka.sh" "operation" "update-text-content" "elementId" "mysql-status-timestamp" "value" "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+
+    "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+        "operation" "update-text-content" \
+        "elementId" "mysql-status-value" \
+        "value" "down"
+
+    "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+        "operation" "update-text-content" \
+        "elementId" "mysql-status-last-updated-iso8601" \
+        "value" "${cur_iso8601}"
 fi
 
 # # mysqladmin cannot resolve the hostname
