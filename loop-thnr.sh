@@ -192,15 +192,15 @@ session_start_iso8601=$(convert-time-in-unix-seconds-to-iso8601 "${session_start
 
 write-log-message loop info "${LOG_PREFIX_LOCAL} Session started at ${session_start_ts}"
 
-"${project_base_dir}send-dashboard-event-to-kafka.sh" \
-    "operation" "update-text-content" \
-    "elementId" "scraper-app-session-start-timestamp" \
-    "value" "${session_start_ts}"
+# "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+#     "operation" "update-text-content" \
+#     "elementId" "scraper-app-session-start-timestamp" \
+#     "value" "${session_start_ts}"
 
 "${project_base_dir}send-dashboard-event-to-kafka.sh" \
     "operation" "update-text-content" \
     "elementId" "scraper-app-session-start-iso8601" \
-    "value" "${session_start_iso8601}"
+    "value" "$(get-iso8601-date)"
 
 "${project_base_dir}send-dashboard-event-to-kafka.sh" \
     "operation" "update-text-content" \
@@ -406,15 +406,15 @@ while true; do
 
         session_end_ts=$(get-time-in-unix-seconds)
 
-        "${project_base_dir}send-dashboard-event-to-kafka.sh" \
-            "operation" "update-text-content" \
-            "elementId" "scraper-app-session-end-timestamp" \
-            "value" "${session_end_ts}"
+        # "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+        #     "operation" "update-text-content" \
+        #     "elementId" "scraper-app-session-end-timestamp" \
+        #     "value" "${session_end_ts}"
 
         "${project_base_dir}send-dashboard-event-to-kafka.sh" \
             "operation" "update-text-content" \
             "elementId" "scraper-app-session-end-iso8601" \
-            "value" "$(convert-time-in-unix-seconds-to-iso8601 ${session_end_ts})"
+            "value" "$(get-iso8601-date)"
 
         "${project_base_dir}send-dashboard-event-to-kafka.sh" \
             "operation" "update-text-content" \

@@ -44,7 +44,7 @@ num_ports_no_responses=$(xmlstarlet sel -t -m "//extrareasons[@reason='no-respon
 num_ports_resets=$(xmlstarlet sel -t -m "//extrareasons[@reason='resets']" -v "@count" -n "${nmap_tempfile}")
 mysql_server_port_state=$(xmlstarlet sel -t -v "/nmaprun/host/ports/port[@portid=${mysql_server_port}]/state/@state" "${nmap_tempfile}")
 
-if [[ -z $mysql_server_port_state ]]; then
+if [[ -z "${mysql_server_port_state}" ]]; then
     mysql_server_port_state="unknown"
 fi
 
@@ -56,17 +56,71 @@ fi
 # echo "num_ports_resets: ${num_ports_resets}"
 # echo "mysql_server_port_state: ${mysql_server_port_state}"
 
-case "$hosts_up" in
+case "${hosts_up}" in
 1)
     log_message="${log_prefix_local} nmap: host ${mysql_server_host_ip} is reachable, and its port ${mysql_server_port} is ${mysql_server_port_state}"
     echo "${log_message}"
     write-log-message mysql info "${log_message}" false
+
+    "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+        "operation" "update-text-content" \
+        "elementId" "mysql-host-status-value" \
+        "value" "up"
+
+    "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+        "operation" "update-color" \
+        "elementId" "mysql-host-status-value" \
+        "value" "green"
+
+    "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+        "operation" "update-text-content" \
+        "elementId" "mysql-host-mysql-port-status-value" \
+        "value" "${mysql_server_port_state}"
+
+    if [[ "${mysql_server_port_state}" == "open" ]]; then
+        "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+            "operation" "update-color" \
+            "elementId" "mysql-host-mysql-port-status-value" \
+            "value" "green"
+    else
+        "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+            "operation" "update-color" \
+            "elementId" "mysql-host-mysql-port-status-value" \
+            "value" "red"
+    fi
+
+    "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+        "operation" "update-text-content" \
+        "elementId" "mysql-status-last-updated-iso8601" \
+        "value" "$(get-iso8601-date)"
+
     ;;
 
 0)
     log_message="${log_prefix_local} nmap: host ${mysql_server_host_ip} is not reachable"
     echo "${log_message}"
     write-log-message mysql error "${log_message}" false
+
+    "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+        "operation" "update-text-content" \
+        "elementId" "mysql-host-status-value" \
+        "value" "down"
+
+    "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+        "operation" "update-color" \
+        "elementId" "mysql-host-status-value" \
+        "value" "red"
+
+    "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+        "operation" "update-text-content" \
+        "elementId" "mysql-host-mysql-port-status-value" \
+        "value" "—"
+
+    "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+        "operation" "update-text-content" \
+        "elementId" "mysql-status-last-updated-iso8601" \
+        "value" "$(get-iso8601-date)"
+
     ;;
 
 *)
@@ -97,8 +151,6 @@ liveness_check_output=$(mysqladmin \
 
 # echo ${liveness_check_output}
 
-cur_iso8601=$(get-iso8601-date)
-
 # success
 if echo "${liveness_check_output}" | grep "mysqld is alive"; then
     log_message="${log_prefix_local} mysqladmin: MySQL server at ${mysql_server_host_ip}:${mysql_server_port} is up"
@@ -111,9 +163,14 @@ if echo "${liveness_check_output}" | grep "mysqld is alive"; then
         "value" "up"
 
     "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+        "operation" "update-color" \
+        "elementId" "mysql-status-value" \
+        "value" "green"
+
+    "${project_base_dir}send-dashboard-event-to-kafka.sh" \
         "operation" "update-text-content" \
         "elementId" "mysql-status-last-updated-iso8601" \
-        "value" "${cur_iso8601}"
+        "value" "$(get-iso8601-date)"
 fi
 
 # mysqladmin can connect to host, but no MySQL server is detected
@@ -124,13 +181,28 @@ if echo "${liveness_check_output}" | grep "Can't connect to MySQL server on"; th
 
     "${project_base_dir}send-dashboard-event-to-kafka.sh" \
         "operation" "update-text-content" \
+        "elementId" "mysql-host-status-value" \
+        "value" "up"
+
+    "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+        "operation" "update-color" \
+        "elementId" "mysql-host-status-value" \
+        "value" "green"
+
+    "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+        "operation" "update-text-content" \
         "elementId" "mysql-status-value" \
         "value" "down"
 
     "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+        "operation" "update-color" \
+        "elementId" "mysql-status-value" \
+        "value" "red"
+
+    "${project_base_dir}send-dashboard-event-to-kafka.sh" \
         "operation" "update-text-content" \
         "elementId" "mysql-status-last-updated-iso8601" \
-        "value" "${cur_iso8601}"
+        "value" "$(get-iso8601-date)"
 fi
 
 # # mysqladmin cannot resolve the hostname

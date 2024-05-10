@@ -63,6 +63,11 @@ vpn-is-connected() {
             "value" "connected"
 
         "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+            "operation" "update-color" \
+            "elementId" "vpn-status-value" \
+            "value" "green"
+
+        "${project_base_dir}send-dashboard-event-to-kafka.sh" \
             "operation" "update-text-content" \
             "elementId" "vpn-uptime-raw" \
             "value" "${vpn_uptime}"
@@ -72,17 +77,10 @@ vpn-is-connected() {
             "elementId" "vpn-transfer" \
             "value" "${vpn_transfer}"
 
-        cur_ts=$(get-time-in-unix-seconds)
-
-        # "${project_base_dir}send-dashboard-event-to-kafka.sh" \
-        #     "operation" "update-text-content" \
-        #     "elementId" "vpn-last-updated-timestamp" \
-        #     "value" "${cur_ts}"
-
         "${project_base_dir}send-dashboard-event-to-kafka.sh" \
             "operation" "update-text-content" \
             "elementId" "vpn-last-updated-iso8601" \
-            "value" "$(convert-time-in-unix-seconds-to-iso8601 ${cur_ts})"
+            "value" "$(get-iso8601-date)"
 
         return 0
     else
@@ -94,11 +92,14 @@ vpn-is-connected() {
             "value" "not connected"
 
         "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+            "operation" "update-color" \
+            "elementId" "vpn-status-value" \
+            "value" "red"
+
+        "${project_base_dir}send-dashboard-event-to-kafka.sh" \
             "operation" "update-text-content" \
             "elementId" "vpn-uptime-raw" \
             "value" "—"
-
-        cur_ts=$(get-time-in-unix-seconds)
 
         # "${project_base_dir}send-dashboard-event-to-kafka.sh" \
         #     "operation" "update-text-content" \
@@ -108,7 +109,7 @@ vpn-is-connected() {
         "${project_base_dir}send-dashboard-event-to-kafka.sh" \
             "operation" "update-text-content" \
             "elementId" "vpn-last-updated-iso8601" \
-            "value" "$(convert-time-in-unix-seconds-to-iso8601 ${cur_ts})"
+            "value" "$(get-iso8601-date)"
 
         return 1
     fi

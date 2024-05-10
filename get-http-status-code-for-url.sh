@@ -10,19 +10,31 @@
 source /srv/timbos-hn-reader/functions.sh
 source /srv/timbos-hn-reader/thnr-common-functions.sh
 
+get-http-status-code-for-url() {}
+
 target_url="${1-}"
 
 [[ -z "${target_url}" ]] && die "get-http-status-code-for-url.sh requires a URL to be specified."
 
-alert_email_address="$(get-secret 'alert_email_address')"
+http_status_code_curl=$(
+    curl \
+        --max-redirs 0 \
+        --max-time 10 \
+        --output /dev/null \
+        --silent \
+        --write-out "%{http_code}\n" \
+        "${target_url}"
+)
 
-STATUS=$(curl -o /dev/null -s -w "%{http_code}\n" --max-time 10 $URL)
+http_status_code_wget=$(
+    wget \
+        --max-redirect=0 \
+        --server-response \
+        --spider \
+        "${target_url}" 2>&1 |
+        grep "HTTP/" |
+        awk '{print $2}'
+)
 
-# Check if the status code is not 200
-if [ "$STATUS" -ne 200 ]; then
-    # Send email alert
-    echo "The URL $URL did not return a 200 status code. Status was $STATUS." | mail -s "URL Check Alert" $EMAIL
-
-    # Instead of email, you could send a Slack/Teams/PagerDuty/Pushover/etc, etc alert, with something like:
-    curl -X POST https://events.pagerduty.com/...
-fi
+echo "${http_status_code1}"
+echo "${http_status_code2}"

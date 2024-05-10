@@ -27,4 +27,9 @@ uptime_pretty=$(prettify-duration-seconds ${uptime_seconds_whole})
     "elementId" "scraper-host-uptime-pretty" \
     "value" "${uptime_pretty}"
 
+"${project_base_dir}send-dashboard-event-to-kafka.sh" \
+    "operation" "update-text-content" \
+    "elementId" "scraper-host-stats-last-updated-iso8601" \
+    "value" "$(get-iso8601-date)"
+
 exit 0
