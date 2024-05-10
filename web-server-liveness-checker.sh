@@ -141,13 +141,4 @@ while IFS= read -r url; do
 
 done <"${urls_file}"
 
-exit
-
-# Check if the status code is not 200
-if [ "${http_status_code}" -ne 200 ]; then
-    # Send email alert
-    echo "The URL $URL did not return a 200 status code. Status was ${http_status_code}." | mail -s "URL Check Alert" $EMAIL
-
-    # Instead of email, you could send a Slack/Teams/PagerDuty/Pushover/etc, etc alert, with something like:
-    curl -X POST https://events.pagerduty.com/...
-fi
+exit 0
