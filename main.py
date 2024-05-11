@@ -53,7 +53,7 @@ def main():
     story_type = sys.argv[1]
     config.load_settings(sys.argv[2], sys.argv[3])
 
-    ### Logging setup starts
+    ### Logging setup begins
 
     # Load configuration from a JSON file
     with open("logging_config.json", mode="r", encoding="utf-8") as file:
@@ -88,8 +88,6 @@ def main():
 
     # Apply logging configuration
     logging.config.dictConfig(logging_config)
-
-    downstream_handlers_objects = []
 
     root_logger = logging.getLogger()
     for handler in root_logger.handlers:
