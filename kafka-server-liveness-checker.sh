@@ -18,12 +18,12 @@ server_name=thnr
 TZ=UTC
 utility_account_username=tim
 
-log_prefix_local="mysql-server-liveness-checker.sh: "
+log_prefix_local="kafka-server-liveness-checker.sh: "
 
-remote_host_nickname="mysql"
-remote_host_ip="$(get-secret 'mysql_server_host_ip')"
-# mysql_server_hostname="$(get-secret 'mysql_server_hostname')"
-remote_host_port_of_interest="$(get-secret 'mysql_server_port')"
+remote_host_nickname="kafka"
+remote_host_ip="$(get-secret 'kafka_server_host_ip')"
+kafka_server_hostname="$(get-secret 'kafka_server_hostname')"
+remote_host_port_of_interest="$(get-secret 'kafka_server_port')"
 
 nmap_xml="$(create-nmap-xml "${remote_host_ip}")"
 remote_host_is_reachable="$(is-host-reachable "${remote_host_ip}" "${nmap_tempfile}")"
@@ -62,7 +62,7 @@ if [[ "${remote_host_is_reachable}" == "true" ]]; then
         "${project_base_dir}send-dashboard-event-to-kafka.sh" \
             "operation" "update-color" \
             "elementId" "${remote_host_nickname}-host-${remote_host_nickname}-port-status-value" \
-            "value" "red"
+            "value" "green"
     fi
 
 elif [[ "${remote_host_is_reachable}" == "false" ]]; then
@@ -91,47 +91,14 @@ fi
     "elementId" "${remote_host_nickname}-status-last-updated-iso8601" \
     "value" "$(get-iso8601-date)"
 
-# check if MySQL server is up (using mysqladmin)
-mysql_server_liveness_check_password="$(get-secret 'mysql_server_liveness_check_password')"
-mysql_server_liveness_check_username="$(get-secret 'mysql_server_liveness_check_username')"
-thnr_scraper_host_ip="$(get-secret 'thnr_scraper_host_ip')"
+# Check if Kafka is operating normally
+topic_name="thnr-dashboard"
+liveness_check_output="$(kafkacat -b "${remote_host_ip}:${remote_host_port_of_interest}" -L 2>&1)"
 
-if [[ -z "${mysql_server_liveness_check_username}" ]]; then
-    log_message="${log_prefix_local} mysqladmin: could not retrieve MySQL username from secrets file"
-    echo "${log_message}"
-    write-log-message liveness error "${log_message}" false
-    exit 1
-fi
-
-liveness_check_output=$(mysqladmin \
-    --bind-address "${thnr_scraper_host_ip}" \
-    --connect-timeout 8 \
-    --host "${remote_host_ip}" \
-    --no-beep \
-    --password="${mysql_server_liveness_check_password}" \
-    --port "${remote_host_port_of_interest}" \
-    --user "${mysql_server_liveness_check_username}" \
-    --verbose \
-    ping 2>&1)
-
-# echo ${liveness_check_output}
-
-# success
-
-if [[ "${liveness_check_output}" == *"mysqld is alive"* ]]; then
-    log_message="${log_prefix_local} mysqladmin: MySQL server at ${remote_host_ip}:${remote_host_port_of_interest} is up"
+if [[ "${liveness_check_output}" == *"Metadata for all topics"* ]]; then
+    log_message="${log_prefix_local} kcat: Kafka server at ${remote_host_ip}:${remote_host_port_of_interest} is up"
     echo "${log_message}"
     write-log-message liveness info "${log_message}" false
-
-    "${project_base_dir}send-dashboard-event-to-kafka.sh" \
-        "operation" "update-text-content" \
-        "elementId" "${remote_host_nickname}-host-status-value" \
-        "value" "up"
-
-    "${project_base_dir}send-dashboard-event-to-kafka.sh" \
-        "operation" "update-color" \
-        "elementId" "my${remote_host_nickname}sql-host-status-value" \
-        "value" "green"
 
     "${project_base_dir}send-dashboard-event-to-kafka.sh" \
         "operation" "update-text-content" \
@@ -147,23 +114,12 @@ if [[ "${liveness_check_output}" == *"mysqld is alive"* ]]; then
         "operation" "update-text-content" \
         "elementId" "${remote_host_nickname}-status-last-updated-iso8601" \
         "value" "$(get-iso8601-date)"
-fi
 
-# mysqladmin can connect to host, but no MySQL server is detected
-if [[ "${liveness_check_output}" == *"Can't connect to MySQL server on"* ]]; then
-    log_message="${log_prefix_local} mysqladmin: could not connect to a MySQL server at ${remote_host_ip}:${remote_host_port_of_interest}"
+# elif [[ "${liveness_check_output}" == *"Failed to acquire metadata:"* ]] || [[ "${liveness_check_output}" == *"Broker transport failure"* ]]; then
+else
+    log_message="${log_prefix_local} kcat: No Kafka server detected at ${kafka_server_hostname}:${remote_host_port_of_interest}"
     echo "${log_message}"
-    write-log-message liveness error "${log_message}" false
-
-    "${project_base_dir}send-dashboard-event-to-kafka.sh" \
-        "operation" "update-text-content" \
-        "elementId" "${remote_host_nickname}-host-status-value" \
-        "value" "up"
-
-    "${project_base_dir}send-dashboard-event-to-kafka.sh" \
-        "operation" "update-color" \
-        "elementId" "${remote_host_nickname}-host-status-value" \
-        "value" "green"
+    write-log-message liveness info "${log_message}" false
 
     "${project_base_dir}send-dashboard-event-to-kafka.sh" \
         "operation" "update-text-content" \
@@ -180,12 +136,5 @@ if [[ "${liveness_check_output}" == *"Can't connect to MySQL server on"* ]]; the
         "elementId" "${remote_host_nickname}-status-last-updated-iso8601" \
         "value" "$(get-iso8601-date)"
 fi
-
-# # mysqladmin cannot resolve the hostname
-# if echo "${liveness_check_output}" | grep "Unknown MySQL server host"; then
-#     log_message="${log_prefix_local} mysqladmin: host ${remote_host_ip} could not be resolved"
-#     echo "${log_message}"
-#     write-log-message liveness error "${log_message}"
-# fi
 
 exit 0

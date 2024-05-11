@@ -57,10 +57,8 @@ message="{\"topic\":\"${kafka_dashboard_topic}\", ${kv_pairs}, \"timestamp_unix\
 
 echo "${message}" | kafkacat -P -b "${kafka_server_host_ip}:${kafka_server_port}" -t "${kafka_dashboard_topic}"
 
-res=$(echo $?)
+res=$?
 
-if [ "${res}" -eq 0 ]; then
-    printf "Message sent to Kafka successfully: ${message}\n"
-else
+if [[ "${res}" != 0 ]]; then
     printf "Failed to send message to Kafka: ${message}\n"
 fi

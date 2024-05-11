@@ -60,6 +60,26 @@ count-network-interfaces() {
     echo "${#broadcast_interfaces[@]}"
 }
 
+create-nmap-xml() {
+    program-not-available nmap && die "nmap is required but is not available"
+
+    local network_identifier="${1}"
+    local nmap_xml="${2-}"
+
+    [[ -z "${network_identifier}" ]] && die "create-nmap-xml: not enough arguments\nUsage: create-nmap-xml <network_identifier> [nmap_xml]\n\n"
+
+    # if we're not given an nmap XML file, we create one
+    if [[ -z "${nmap_xml}" ]]; then
+        nmap_xml=$(mktemp --tmpdir=/tmp nmap-output-XXXXXXXXXX.xml)
+        nmap_res=$(nmap -Pn "${network_identifier}" -oX "${nmap_xml}")
+    fi
+
+    # confirm the nmap xml file exists
+    [[ ! -f "${nmap_xml}" ]] && die "create-nmap-xml: nmap XML file does not exist\n"
+
+    echo "${nmap_xml}"
+}
+
 # usage: die "$MESSAGE" ["$EXIT_CODE"]
 die() {
     local message="${1:-Unspecified Error}"
@@ -141,9 +161,85 @@ get-list-of-network-interfaces() {
     echo ${interfaces[@]}
 }
 
+get-port-state() {
+    program-not-available nmap && die "nmap is required but is not available"
+
+    local network_identifier="${1}"
+    local port_of_interest="${2}"
+    local nmap_xml="${3-}"
+
+    [[ -z "${network_identifier}" ]] && die "get-port-state: not enough arguments
+    Usage: get-port-state <network_identifier> <port_of_interest> [nmap_xml]
+    "
+    [[ -z "${port_of_interest}" ]] && die "get-port-state: not enough arguments
+    Usage: get-port-state <network_identifier> <port_of_interest> [nmap_xml]
+    "
+
+    # if we're not given an nmap XML file, we create one
+    if [[ -z "${nmap_xml}" ]]; then
+        nmap_xml="$(create-nmap-xml "${network_identifier}")"
+    fi
+
+    # confirm the nmap xml file exists
+    [[ ! -f "${nmap_xml}" ]] && die "is-host-reachable: nmap XML file does not exist\n"
+
+    hosts_up=$(xmlstarlet sel -t -v "/nmaprun/runstats/hosts/@up" "${nmap_xml}")
+    port_state=$(xmlstarlet sel -t -v "/nmaprun/host/ports/port[@portid=${port_of_interest}]/state/@state" "${nmap_xml}")
+
+    case "${hosts_up}" in
+    1)
+        port_state=$(xmlstarlet sel -t -v "/nmaprun/host/ports/port[@portid=${port_of_interest}]/state/@state" "${nmap_xml}")
+        [[ -z "${port_state}" ]] && port_state="no-response"
+        echo "${port_state}"
+        ;;
+    0)
+        echo "host-not-reachable"
+        ;;
+    *)
+        echo "failure-condition"
+        ;;
+    esac
+}
+
 # usage: get-time-in-unix-seconds
 get-time-in-unix-seconds() {
     printf $(date --utc +%s)
+}
+
+is-host-reachable() {
+    program-not-available nmap && die "nmap is required but is not available"
+
+    local network_identifier="${1}"
+    local nmap_xml="${2-}"
+
+    [[ -z "${network_identifier}" ]] && die "is-host-reachable: not enough arguments
+    Usage: is_host_reachable <network_identifier> [nmap_xml]
+    "
+
+    # if we're not given an nmap XML file, we create one
+    if [[ -z "${nmap_xml}" ]]; then
+        nmap_xml="$(create-nmap-xml "${network_identifier}")"
+    fi
+
+    # confirm the nmap xml file exists
+    [[ ! -f "${nmap_xml}" ]] && die "is-host-reachable: nmap XML file does not exist\n"
+
+    # hosts_down=$(xmlstarlet sel -t -v "/nmaprun/runstats/hosts/@down" "${nmap_xml}")
+    hosts_up=$(xmlstarlet sel -t -v "/nmaprun/runstats/hosts/@up" "${nmap_xml}")
+    # num_ports_conn_refused=$(xmlstarlet sel -t -m "//extrareasons[@reason='conn-refused']" -v "@count" -n "${nmap_xml}")
+    # num_ports_host_unreaches=$(xmlstarlet sel -t -m "//extrareasons[@reason='host-unreaches']" -v "@count" -n "${nmap_xml}")
+    # num_ports_no_responses=$(xmlstarlet sel -t -m "//extrareasons[@reason='no-responses']" -v "@count" -n "${nmap_xml}")
+    # num_ports_resets=$(xmlstarlet sel -t -m "//extrareasons[@reason='resets']" -v "@count" -n "${nmap_xml}")
+    # port_of_interest_state=$(xmlstarlet sel -t -v "/nmaprun/host/ports/port[@portid=${port_of_interest}]/state/@state" "${nmap_xml}")
+
+    if [[ "${hosts_up}" == "1" ]]; then
+        echo "true"
+    elif [[ "${hosts_up}" == "0" ]]; then
+        echo "false"
+    else
+        echo "failure-condition"
+    fi
+
 }
 
 # usage: make-beep

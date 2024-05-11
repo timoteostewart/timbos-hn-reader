@@ -200,7 +200,7 @@ write-log-message loop info "${LOG_PREFIX_LOCAL} Session started at ${session_st
 "${project_base_dir}send-dashboard-event-to-kafka.sh" \
     "operation" "update-text-content" \
     "elementId" "scraper-app-session-start-iso8601" \
-    "value" "$(get-iso8601-date)"
+    "value" "${session_start_iso8601}"
 
 "${project_base_dir}send-dashboard-event-to-kafka.sh" \
     "operation" "update-text-content" \
@@ -228,6 +228,13 @@ LOOP_NUMBER=0
     "value" "${LOOPS_BEFORE_RESTART}"
 
 while true; do
+
+    # refresh session-level stats
+    "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+        "operation" "update-text-content" \
+        "elementId" "scraper-app-session-start-iso8601" \
+        "value" "${session_start_iso8601}"
+
     CUR_LOOP_START_TS=$(get-time-in-unix-seconds)
 
     "${project_base_dir}send-dashboard-event-to-kafka.sh" \
@@ -401,6 +408,11 @@ while true; do
         "operation" "update-text-content" \
         "elementId" "scraper-app-loops-completed" \
         "value" "${LOOP_NUMBER}"
+
+    "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+        "operation" "update-text-content" \
+        "elementId" "scraper-app-loops-per-session" \
+        "value" "${LOOPS_BEFORE_RESTART}"
 
     if ((LOOP_NUMBER > LOOPS_BEFORE_RESTART)); then
 
