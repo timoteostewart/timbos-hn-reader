@@ -57,59 +57,70 @@ vpn-is-connected() {
 
         write-log-message vpn info "${log_prefix_local} VPN is connected. Hostname: ${vpn_hostname}, IP: ${vpn_ip_address}, Country: ${vpn_country}, City: ${vpn_city}, Technology: ${vpn_technology}, Protocol: ${vpn_protocol}, Transfer: ${vpn_transfer}, Uptime: ${vpn_uptime}" false
 
-        "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+        cur_timestamp=$(get-time-in-unix-seconds)
+        cur_iso8601=$(convert-time-in-unix-seconds-to-iso8601 "${cur_timestamp}")
+
+        "${project_base_dir}send-dashboard-event-to-kafka2.sh" \
+            "timestamps" "${cur_timestamp}" "${cur_iso8601}" \
             "operation" "update-text-content" \
             "elementId" "vpn-status-value" \
             "value" "connected"
 
-        "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+        "${project_base_dir}send-dashboard-event-to-kafka2.sh" \
             "operation" "update-color" \
             "elementId" "vpn-status-value" \
             "value" "green"
 
-        "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+        "${project_base_dir}send-dashboard-event-to-kafka2.sh" \
+            "timestamps" "${cur_timestamp}" "${cur_iso8601}" \
             "operation" "update-text-content" \
             "elementId" "vpn-uptime-raw" \
             "value" "${vpn_uptime}"
 
-        "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+        "${project_base_dir}send-dashboard-event-to-kafka2.sh" \
+            "timestamps" "${cur_timestamp}" "${cur_iso8601}" \
             "operation" "update-text-content" \
             "elementId" "vpn-transfer" \
             "value" "${vpn_transfer}"
 
-        "${project_base_dir}send-dashboard-event-to-kafka.sh" \
-            "operation" "update-text-content" \
-            "elementId" "vpn-last-updated-iso8601" \
-            "value" "$(get-iso8601-date)"
+        # "${project_base_dir}send-dashboard-event-to-kafka2.sh" \
+        #     "operation" "update-text-content" \
+        #     "elementId" "vpn-last-updated-iso8601" \
+        #     "value" "$(get-iso8601-date)"
 
         return 0
     else
         write-log-message vpn info "${log_prefix_local} VPN is not connected." false
 
-        "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+        cur_timestamp=$(get-time-in-unix-seconds)
+        cur_iso8601=$(convert-time-in-unix-seconds-to-iso8601 "${cur_timestamp}")
+
+        "${project_base_dir}send-dashboard-event-to-kafka2.sh" \
+            "timestamps" "${cur_timestamp}" "${cur_iso8601}" \
             "operation" "update-text-content" \
             "elementId" "vpn-status-value" \
             "value" "not connected"
 
-        "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+        "${project_base_dir}send-dashboard-event-to-kafka2.sh" \
             "operation" "update-color" \
             "elementId" "vpn-status-value" \
             "value" "red"
 
-        "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+        "${project_base_dir}send-dashboard-event-to-kafka2.sh" \
+            "timestamps" "${cur_timestamp}" "${cur_iso8601}" \
             "operation" "update-text-content" \
             "elementId" "vpn-uptime-raw" \
             "value" "—"
 
-        # "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+        # "${project_base_dir}send-dashboard-event-to-kafka2.sh" \
         #     "operation" "update-text-content" \
         #     "elementId" "vpn-last-updated-timestamp" \
         #     "value" "${cur_ts}"
 
-        "${project_base_dir}send-dashboard-event-to-kafka.sh" \
-            "operation" "update-text-content" \
-            "elementId" "vpn-last-updated-iso8601" \
-            "value" "$(get-iso8601-date)"
+        # "${project_base_dir}send-dashboard-event-to-kafka2.sh" \
+        #     "operation" "update-text-content" \
+        #     "elementId" "vpn-last-updated-iso8601" \
+        #     "value" "$(get-iso8601-date)"
 
         return 1
     fi

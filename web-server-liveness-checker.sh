@@ -109,26 +109,29 @@ while IFS= read -r url; do
     # slugify the url
     url_slug=$(echo "${url}" | sed -e 's/[^[:alnum:]]/-/g' | tr -s '-' | tr A-Z a-z)
 
-    # send kafka event
-    "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+    cur_timestamp=$(get-time-in-unix-seconds)
+    cur_iso8601=$(convert-time-in-unix-seconds-to-iso8601 "${cur_timestamp}")
+
+    "${project_base_dir}send-dashboard-event-to-kafka2.sh" \
+        "timestamps" "${cur_timestamp}" "${cur_iso8601}" \
         "operation" "update-text-content" \
         "elementId" "${url_slug}-http-status-code" \
         "value" "${http_status_code}"
 
-    "${project_base_dir}send-dashboard-event-to-kafka.sh" \
-        "operation" "update-text-content" \
-        "elementId" "${url_slug}-http-status-code-last-updated-iso8601" \
-        "value" "$(get-iso8601-date)"
+    # "${project_base_dir}send-dashboard-event-to-kafka2.sh" \
+    #     "operation" "update-text-content" \
+    #     "elementId" "${url_slug}-http-status-code-last-updated-iso8601" \
+    #     "value" "$(get-iso8601-date)"
 
     if [[ "${http_status_code}" == "200" ]]; then
         # green for good
-        "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+        "${project_base_dir}send-dashboard-event-to-kafka2.sh" \
             "operation" "update-color" \
             "elementId" "${url_slug}-http-status-code" \
             "value" "green"
     else
         # red for bad
-        "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+        "${project_base_dir}send-dashboard-event-to-kafka2.sh" \
             "operation" "update-color" \
             "elementId" "${url_slug}-http-status-code" \
             "value" "red"

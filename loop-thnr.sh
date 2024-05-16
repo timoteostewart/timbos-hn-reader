@@ -17,7 +17,8 @@ fi
 project_base_dir="/srv/timbos-hn-reader/"
 export ONCE_FLAG="${1:-}"
 
-"${project_base_dir}send-dashboard-event-to-kafka.sh" \
+"${project_base_dir}send-dashboard-event-to-kafka2.sh" \
+    "timestamps" "$(get-time-in-unix-seconds)" "" \
     "operation" "update-text-content" \
     "elementId" "scraper-app-current-activity" \
     "value" "Entering loop-thnr.sh"
@@ -192,22 +193,25 @@ session_start_iso8601=$(convert-time-in-unix-seconds-to-iso8601 "${session_start
 
 write-log-message loop info "${LOG_PREFIX_LOCAL} Session started at ${session_start_ts}"
 
-# "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+# "${project_base_dir}send-dashboard-event-to-kafka2.sh" \
 #     "operation" "update-text-content" \
 #     "elementId" "scraper-app-session-start-timestamp" \
 #     "value" "${session_start_ts}"
 
-"${project_base_dir}send-dashboard-event-to-kafka.sh" \
+"${project_base_dir}send-dashboard-event-to-kafka2.sh" \
+    "timestamps" "$(get-time-in-unix-seconds)" "" \
     "operation" "update-text-content" \
     "elementId" "scraper-app-session-start-iso8601" \
     "value" "${session_start_iso8601}"
 
-"${project_base_dir}send-dashboard-event-to-kafka.sh" \
+"${project_base_dir}send-dashboard-event-to-kafka2.sh" \
+    "timestamps" "$(get-time-in-unix-seconds)" "" \
     "operation" "update-text-content" \
     "elementId" "scraper-app-session-start-timestamp" \
     "value" ""
 
-"${project_base_dir}send-dashboard-event-to-kafka.sh" \
+"${project_base_dir}send-dashboard-event-to-kafka2.sh" \
+    "timestamps" "$(get-time-in-unix-seconds)" "" \
     "operation" "update-text-content" \
     "elementId" "scraper-app-session-end-iso8601" \
     "value" "—"
@@ -217,12 +221,14 @@ write-log-message loop info "${LOG_PREFIX_LOCAL} Session started at ${session_st
 
 LOOP_NUMBER=0
 
-"${project_base_dir}send-dashboard-event-to-kafka.sh" \
+"${project_base_dir}send-dashboard-event-to-kafka2.sh" \
+    "timestamps" "$(get-time-in-unix-seconds)" "" \
     "operation" "update-text-content" \
     "elementId" "scraper-app-loops-completed" \
     "value" "${LOOP_NUMBER}"
 
-"${project_base_dir}send-dashboard-event-to-kafka.sh" \
+"${project_base_dir}send-dashboard-event-to-kafka2.sh" \
+    "timestamps" "$(get-time-in-unix-seconds)" "" \
     "operation" "update-text-content" \
     "elementId" "scraper-app-loops-per-session" \
     "value" "${LOOPS_BEFORE_RESTART}"
@@ -230,14 +236,16 @@ LOOP_NUMBER=0
 while true; do
 
     # refresh session-level stats
-    "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+    "${project_base_dir}send-dashboard-event-to-kafka2.sh" \
+        "timestamps" "$(get-time-in-unix-seconds)" "" \
         "operation" "update-text-content" \
         "elementId" "scraper-app-session-start-iso8601" \
         "value" "${session_start_iso8601}"
 
     CUR_LOOP_START_TS=$(get-time-in-unix-seconds)
 
-    "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+    "${project_base_dir}send-dashboard-event-to-kafka2.sh" \
+        "timestamps" "$(get-time-in-unix-seconds)" "" \
         "operation" "update-text-content" \
         "elementId" "scraper-app-current-activity" \
         "value" "Connecting to VPN..."
@@ -248,7 +256,8 @@ while true; do
         write-log-message loop error "${LOG_PREFIX_LOCAL} ${msg}"
         printf "${LOG_PREFIX_LOCAL} ${msg}\n"
 
-        "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+        "${project_base_dir}send-dashboard-event-to-kafka2.sh" \
+            "timestamps" "$(get-time-in-unix-seconds)" "" \
             "operation" "update-text-content" \
             "elementId" "scraper-app-current-activity" \
             "value" "${msg}"
@@ -256,7 +265,8 @@ while true; do
         sleep 600 && shutdown -r now && sleep 60
     fi
 
-    "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+    "${project_base_dir}send-dashboard-event-to-kafka2.sh" \
+        "timestamps" "$(get-time-in-unix-seconds)" "" \
         "operation" "update-text-content" \
         "elementId" "scraper-app-current-activity" \
         "value" "Checking for Internet connectivity..."
@@ -297,7 +307,8 @@ while true; do
     cleanup_tmp_dir
     sleep 10
 
-    "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+    "${project_base_dir}send-dashboard-event-to-kafka2.sh" \
+        "timestamps" "$(get-time-in-unix-seconds)" "" \
         "operation" "update-text-content" \
         "elementId" "scraper-app-current-activity" \
         "value" "Updating select APT and pip packages..."
@@ -335,7 +346,8 @@ while true; do
 
         write-log-message loop info "${LOG_PREFIX_LOCAL} Loop number ${LOOP_NUMBER}. Starting main.py for ${cur_story_type} with this invocation: ${MAIN_PY_CMD}"
 
-        "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+        "${project_base_dir}send-dashboard-event-to-kafka2.sh" \
+            "timestamps" "$(get-time-in-unix-seconds)" "" \
             "operation" "update-text-content" \
             "elementId" "scraper-app-current-activity" \
             "value" "Entering main.py for ${cur_story_type}"
@@ -357,7 +369,8 @@ while true; do
 
         write-log-message main-py info "${LOG_PREFIX_LOCAL} left main.py" "false"
 
-        "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+        "${project_base_dir}send-dashboard-event-to-kafka2.sh" \
+            "timestamps" "$(get-time-in-unix-seconds)" "" \
             "operation" "update-text-content" \
             "elementId" "scraper-app-current-activity" \
             "value" "Exiting main.py for ${cur_story_type}"
@@ -385,12 +398,14 @@ while true; do
     SECONDS_SPENT=$((CUR_LOOP_END_TS - CUR_LOOP_START_TS))
     DURATION=$(date -d@${SECONDS_SPENT} -u +"%Hh:%Mm:%Ss")
 
-    "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+    "${project_base_dir}send-dashboard-event-to-kafka2.sh" \
+        "timestamps" "$(get-time-in-unix-seconds)" "" \
         "operation" "update-text-content" \
         "elementId" "scraper-app-recent-loop-duration-seconds" \
         "value" "${SECONDS_SPENT}"
 
-    "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+    "${project_base_dir}send-dashboard-event-to-kafka2.sh" \
+        "timestamps" "$(get-time-in-unix-seconds)" "" \
         "operation" "update-text-content" \
         "elementId" "scraper-app-recent-loop-duration-pretty" \
         "value" "$(prettify-duration-seconds ${SECONDS_SPENT})"
@@ -404,12 +419,14 @@ while true; do
     # then increment loop number and resume loop
     ((LOOP_NUMBER += 1))
 
-    "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+    "${project_base_dir}send-dashboard-event-to-kafka2.sh" \
+        "timestamps" "$(get-time-in-unix-seconds)" "" \
         "operation" "update-text-content" \
         "elementId" "scraper-app-loops-completed" \
         "value" "${LOOP_NUMBER}"
 
-    "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+    "${project_base_dir}send-dashboard-event-to-kafka2.sh" \
+        "timestamps" "$(get-time-in-unix-seconds)" "" \
         "operation" "update-text-content" \
         "elementId" "scraper-app-loops-per-session" \
         "value" "${LOOPS_BEFORE_RESTART}"
@@ -418,28 +435,28 @@ while true; do
 
         session_end_ts=$(get-time-in-unix-seconds)
 
-        # "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+        # "${project_base_dir}send-dashboard-event-to-kafka2.sh" \
         #     "operation" "update-text-content" \
         #     "elementId" "scraper-app-session-end-timestamp" \
         #     "value" "${session_end_ts}"
 
-        "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+        "${project_base_dir}send-dashboard-event-to-kafka2.sh" \
+            "timestamps" "$(get-time-in-unix-seconds)" "" \
             "operation" "update-text-content" \
             "elementId" "scraper-app-session-end-iso8601" \
             "value" "$(get-iso8601-date)"
 
-        "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+        "${project_base_dir}send-dashboard-event-to-kafka2.sh" \
+            "timestamps" "$(get-time-in-unix-seconds)" "" \
             "operation" "update-text-content" \
             "elementId" "scraper-app-current-activity" \
             "value" "Pausing for ${PAUSE_BETWEEN_CYCLES_IN_MINUTES} minutes before restarting host"
-
     else
-
-        "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+        "${project_base_dir}send-dashboard-event-to-kafka2.sh" \
+            "timestamps" "$(get-time-in-unix-seconds)" "" \
             "operation" "update-text-content" \
             "elementId" "scraper-app-current-activity" \
             "value" "Pausing for ${PAUSE_BETWEEN_CYCLES_IN_MINUTES} minutes before next loop"
-
     fi
 
     write-log-message loop info "${LOG_PREFIX_LOCAL} Pausing for ${PAUSE_BETWEEN_CYCLES_IN_MINUTES} minutes"
@@ -451,7 +468,8 @@ while true; do
 
         write-log-message loop info "${LOG_PREFIX_LOCAL} restarting scraper host for stability after ${LOOPS_BEFORE_RESTART} loops"
 
-        "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+        "${project_base_dir}send-dashboard-event-to-kafka2.sh" \
+            "timestamps" "$(get-time-in-unix-seconds)" "" \
             "operation" "update-text-content" \
             "elementId" "scraper-app-current-activity" \
             "value" "Restarting scraper host for stability"
