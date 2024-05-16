@@ -16,11 +16,8 @@ uptime_seconds=$(cat /proc/uptime | awk '{print $1}')
 uptime_seconds_whole="${uptime_seconds%%.*}"
 uptime_pretty=$(prettify-duration-seconds ${uptime_seconds_whole})
 
-cur_timestamp=$(get-time-in-unix-seconds)
-cur_iso8601=$(convert-time-in-unix-seconds-to-iso8601 "${cur_timestamp}")
-
 "${project_base_dir}send-dashboard-event-to-kafka2.sh" \
-    "timestamps" "${cur_timestamp}" "${cur_iso8601}" \
+    "timestamps" "$(get-time-in-unix-seconds)" "" \
     "operation" "update-text-content" \
     "elementId" "scraper-host-uptime-pretty" \
     "value" "${uptime_pretty}"

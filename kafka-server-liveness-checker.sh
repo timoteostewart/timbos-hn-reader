@@ -38,11 +38,8 @@ if [[ "${remote_host_is_reachable}" == "true" ]]; then
     echo "${log_message}"
     write-log-message liveness info "${log_message}" false
 
-    cur_timestamp=$(get-time-in-unix-seconds)
-    cur_iso8601=$(convert-time-in-unix-seconds-to-iso8601 "${cur_timestamp}")
-
     "${project_base_dir}send-dashboard-event-to-kafka2.sh" \
-        "timestamps" "${cur_timestamp}" "${cur_iso8601}" \
+        "timestamps" "$(get-time-in-unix-seconds)" "" \
         "operation" "update-text-content" \
         "elementId" "${remote_host_nickname}-host-status-value" \
         "value" "reachable"
@@ -53,7 +50,7 @@ if [[ "${remote_host_is_reachable}" == "true" ]]; then
         "value" "green"
 
     "${project_base_dir}send-dashboard-event-to-kafka2.sh" \
-        "timestamps" "${cur_timestamp}" "${cur_iso8601}" \
+        "timestamps" "$(get-time-in-unix-seconds)" "" \
         "operation" "update-text-content" \
         "elementId" "${remote_host_nickname}-host-${remote_host_nickname}-port-status-value" \
         "value" "${remote_host_port_of_interest_state}"
@@ -75,11 +72,8 @@ elif [[ "${remote_host_is_reachable}" == "false" ]]; then
     echo "${log_message}"
     write-log-message liveness error "${log_message}" false
 
-    cur_timestamp=$(get-time-in-unix-seconds)
-    cur_iso8601=$(convert-time-in-unix-seconds-to-iso8601 "${cur_timestamp}")
-
     "${project_base_dir}send-dashboard-event-to-kafka2.sh" \
-        "timestamps" "${cur_timestamp}" "${cur_iso8601}" \
+        "timestamps" "$(get-time-in-unix-seconds)" "" \
         "operation" "update-text-content" \
         "elementId" "${remote_host_nickname}-host-status-value" \
         "value" "not reachable"
@@ -90,7 +84,7 @@ elif [[ "${remote_host_is_reachable}" == "false" ]]; then
         "value" "red"
 
     "${project_base_dir}send-dashboard-event-to-kafka2.sh" \
-        "timestamps" "${cur_timestamp}" "${cur_iso8601}" \
+        "timestamps" "$(get-time-in-unix-seconds)" "" \
         "operation" "update-text-content" \
         "elementId" "${remote_host_nickname}-host-${remote_host_nickname}-port-status-value" \
         "value" "—"
@@ -105,11 +99,8 @@ if [[ "${liveness_check_output}" == *"Metadata for all topics"* ]]; then
     echo "${log_message}"
     write-log-message liveness info "${log_message}" false
 
-    cur_timestamp=$(get-time-in-unix-seconds)
-    cur_iso8601=$(convert-time-in-unix-seconds-to-iso8601 "${cur_timestamp}")
-
     "${project_base_dir}send-dashboard-event-to-kafka2.sh" \
-        "timestamps" "${cur_timestamp}" "${cur_iso8601}" \
+        "timestamps" "$(get-time-in-unix-seconds)" "" \
         "operation" "update-text-content" \
         "elementId" "${remote_host_nickname}-server-status-value" \
         "value" "up"
@@ -123,11 +114,8 @@ else
     echo "${log_message}"
     write-log-message liveness info "${log_message}" false
 
-    cur_timestamp=$(get-time-in-unix-seconds)
-    cur_iso8601=$(convert-time-in-unix-seconds-to-iso8601 "${cur_timestamp}")
-
     "${project_base_dir}send-dashboard-event-to-kafka2.sh" \
-        "timestamps" "${cur_timestamp}" "${cur_iso8601}" \
+        "timestamps" "$(get-time-in-unix-seconds)" "" \
         "operation" "update-text-content" \
         "elementId" "${remote_host_nickname}-server-status-value" \
         "value" "down"

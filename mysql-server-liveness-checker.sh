@@ -38,9 +38,6 @@ if [[ "${remote_host_is_reachable}" == "true" ]]; then
     echo "${log_message}"
     write-log-message liveness info "${log_message}" false
 
-    cur_timestamp=$(get-time-in-unix-seconds)
-    cur_iso8601=$(convert-time-in-unix-seconds-to-iso8601 "${cur_timestamp}")
-
     "${project_base_dir}send-dashboard-event-to-kafka2.sh" \
         "timestamps" "$(get-time-in-unix-seconds)" "" \
         "operation" "update-text-content" \
@@ -74,9 +71,6 @@ elif [[ "${remote_host_is_reachable}" == "false" ]]; then
     log_message="${log_prefix_local} nmap: host ${remote_host_ip} is not reachable"
     echo "${log_message}"
     write-log-message liveness error "${log_message}" false
-
-    cur_timestamp=$(get-time-in-unix-seconds)
-    cur_iso8601=$(convert-time-in-unix-seconds-to-iso8601 "${cur_timestamp}")
 
     "${project_base_dir}send-dashboard-event-to-kafka2.sh" \
         "timestamps" "$(get-time-in-unix-seconds)" "" \
@@ -133,9 +127,6 @@ if [[ "${liveness_check_output}" == *"mysqld is alive"* ]]; then
     echo "${log_message}"
     write-log-message liveness info "${log_message}" false
 
-    cur_timestamp=$(get-time-in-unix-seconds)
-    cur_iso8601=$(convert-time-in-unix-seconds-to-iso8601 "${cur_timestamp}")
-
     "${project_base_dir}send-dashboard-event-to-kafka2.sh" \
         "timestamps" "$(get-time-in-unix-seconds)" "" \
         "operation" "update-text-content" \
@@ -170,9 +161,6 @@ if [[ "${liveness_check_output}" == *"Can't connect to MySQL server on"* ]]; the
     log_message="${log_prefix_local} mysqladmin: could not connect to a MySQL server at ${remote_host_ip}:${remote_host_port_of_interest}"
     echo "${log_message}"
     write-log-message liveness error "${log_message}" false
-
-    cur_timestamp=$(get-time-in-unix-seconds)
-    cur_iso8601=$(convert-time-in-unix-seconds-to-iso8601 "${cur_timestamp}")
 
     "${project_base_dir}send-dashboard-event-to-kafka2.sh" \
         "timestamps" "$(get-time-in-unix-seconds)" "" \

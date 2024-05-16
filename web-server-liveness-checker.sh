@@ -109,11 +109,8 @@ while IFS= read -r url; do
     # slugify the url
     url_slug=$(echo "${url}" | sed -e 's/[^[:alnum:]]/-/g' | tr -s '-' | tr A-Z a-z)
 
-    cur_timestamp=$(get-time-in-unix-seconds)
-    cur_iso8601=$(convert-time-in-unix-seconds-to-iso8601 "${cur_timestamp}")
-
     "${project_base_dir}send-dashboard-event-to-kafka2.sh" \
-        "timestamps" "${cur_timestamp}" "${cur_iso8601}" \
+        "timestamps" "$(get-time-in-unix-seconds)" "" \
         "operation" "update-text-content" \
         "elementId" "${url_slug}-http-status-code" \
         "value" "${http_status_code}"
