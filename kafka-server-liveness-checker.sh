@@ -38,28 +38,33 @@ if [[ "${remote_host_is_reachable}" == "true" ]]; then
     echo "${log_message}"
     write-log-message liveness info "${log_message}" false
 
-    "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+    cur_timestamp=$(get-time-in-unix-seconds)
+    cur_iso8601=$(convert-time-in-unix-seconds-to-iso8601 "${cur_timestamp}")
+
+    "${project_base_dir}send-dashboard-event-to-kafka2.sh" \
+        "timestamps" "${cur_timestamp}" "${cur_iso8601}" \
         "operation" "update-text-content" \
         "elementId" "${remote_host_nickname}-host-status-value" \
         "value" "reachable"
 
-    "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+    "${project_base_dir}send-dashboard-event-to-kafka2.sh" \
         "operation" "update-color" \
         "elementId" "${remote_host_nickname}-host-status-value" \
         "value" "green"
 
-    "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+    "${project_base_dir}send-dashboard-event-to-kafka2.sh" \
+        "timestamps" "${cur_timestamp}" "${cur_iso8601}" \
         "operation" "update-text-content" \
         "elementId" "${remote_host_nickname}-host-${remote_host_nickname}-port-status-value" \
         "value" "${remote_host_port_of_interest_state}"
 
     if [[ "${remote_host_port_of_interest_state}" == "open" ]]; then
-        "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+        "${project_base_dir}send-dashboard-event-to-kafka2.sh" \
             "operation" "update-color" \
             "elementId" "${remote_host_nickname}-host-${remote_host_nickname}-port-status-value" \
             "value" "green"
     else
-        "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+        "${project_base_dir}send-dashboard-event-to-kafka2.sh" \
             "operation" "update-color" \
             "elementId" "${remote_host_nickname}-host-${remote_host_nickname}-port-status-value" \
             "value" "green"
@@ -70,26 +75,26 @@ elif [[ "${remote_host_is_reachable}" == "false" ]]; then
     echo "${log_message}"
     write-log-message liveness error "${log_message}" false
 
-    "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+    cur_timestamp=$(get-time-in-unix-seconds)
+    cur_iso8601=$(convert-time-in-unix-seconds-to-iso8601 "${cur_timestamp}")
+
+    "${project_base_dir}send-dashboard-event-to-kafka2.sh" \
+        "timestamps" "${cur_timestamp}" "${cur_iso8601}" \
         "operation" "update-text-content" \
         "elementId" "${remote_host_nickname}-host-status-value" \
         "value" "not reachable"
 
-    "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+    "${project_base_dir}send-dashboard-event-to-kafka2.sh" \
         "operation" "update-color" \
         "elementId" "${remote_host_nickname}-host-status-value" \
         "value" "red"
 
-    "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+    "${project_base_dir}send-dashboard-event-to-kafka2.sh" \
+        "timestamps" "${cur_timestamp}" "${cur_iso8601}" \
         "operation" "update-text-content" \
         "elementId" "${remote_host_nickname}-host-${remote_host_nickname}-port-status-value" \
         "value" "—"
 fi
-
-"${project_base_dir}send-dashboard-event-to-kafka.sh" \
-    "operation" "update-text-content" \
-    "elementId" "${remote_host_nickname}-status-last-updated-iso8601" \
-    "value" "$(get-iso8601-date)"
 
 # Check if Kafka is operating normally
 topic_name="thnr-dashboard"
@@ -100,41 +105,38 @@ if [[ "${liveness_check_output}" == *"Metadata for all topics"* ]]; then
     echo "${log_message}"
     write-log-message liveness info "${log_message}" false
 
-    "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+    cur_timestamp=$(get-time-in-unix-seconds)
+    cur_iso8601=$(convert-time-in-unix-seconds-to-iso8601 "${cur_timestamp}")
+
+    "${project_base_dir}send-dashboard-event-to-kafka2.sh" \
+        "timestamps" "${cur_timestamp}" "${cur_iso8601}" \
         "operation" "update-text-content" \
         "elementId" "${remote_host_nickname}-server-status-value" \
         "value" "up"
 
-    "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+    "${project_base_dir}send-dashboard-event-to-kafka2.sh" \
         "operation" "update-color" \
         "elementId" "${remote_host_nickname}-server-status-value" \
         "value" "green"
-
-    "${project_base_dir}send-dashboard-event-to-kafka.sh" \
-        "operation" "update-text-content" \
-        "elementId" "${remote_host_nickname}-status-last-updated-iso8601" \
-        "value" "$(get-iso8601-date)"
-
-# elif [[ "${liveness_check_output}" == *"Failed to acquire metadata:"* ]] || [[ "${liveness_check_output}" == *"Broker transport failure"* ]]; then
 else
     log_message="${log_prefix_local} kcat: No Kafka server detected at ${kafka_server_hostname}:${remote_host_port_of_interest}"
     echo "${log_message}"
     write-log-message liveness info "${log_message}" false
 
-    "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+    cur_timestamp=$(get-time-in-unix-seconds)
+    cur_iso8601=$(convert-time-in-unix-seconds-to-iso8601 "${cur_timestamp}")
+
+    "${project_base_dir}send-dashboard-event-to-kafka2.sh" \
+        "timestamps" "${cur_timestamp}" "${cur_iso8601}" \
         "operation" "update-text-content" \
         "elementId" "${remote_host_nickname}-server-status-value" \
         "value" "down"
 
-    "${project_base_dir}send-dashboard-event-to-kafka.sh" \
+    "${project_base_dir}send-dashboard-event-to-kafka2.sh" \
         "operation" "update-color" \
         "elementId" "${remote_host_nickname}-server-status-value" \
         "value" "red"
 
-    "${project_base_dir}send-dashboard-event-to-kafka.sh" \
-        "operation" "update-text-content" \
-        "elementId" "${remote_host_nickname}-status-last-updated-iso8601" \
-        "value" "$(get-iso8601-date)"
 fi
 
 exit 0

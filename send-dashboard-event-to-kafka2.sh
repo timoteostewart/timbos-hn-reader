@@ -13,46 +13,54 @@ if [ -n "$ONCE_FLAG" ]; then
     exit 0
 fi
 
-if [ $(($# % 2)) -ne 0 ]; then
-    echo "Please provide an even number of arguments."
-    exit 1
-fi
-
 source /srv/timbos-hn-reader/functions.sh
 source /srv/timbos-hn-reader/thnr-common-functions.sh
 
 # retrieve secrets
 kafka_dashboard_topic="$(get-secret 'kafka_dashboard_topic')"
 # kafka_message_version="$(get-secret 'kafka_message_version')"
-kafka_message_version="0.1.0"
+kafka_message_version="0.1.2"
 kafka_server_host_ip="$(get-secret 'kafka_server_host_ip')"
 kafka_server_port="$(get-secret 'kafka_server_port')"
 kafka_server_username="$(get-secret 'kafka_server_username')"
 
-if [ -z "${kafka_server_host_ip}" ] || [ -z "${kafka_server_username}" ]; then
-    echo "Failed to retrieve Kafka server host IP or username from secrets."
-    exit 1
+if [[ -z "${kafka_server_host_ip}" ]]; then
+    die "Failed to retrieve Kafka server host IP from secrets."
 fi
 
 kv_pairs=""
 
-while [ $# -gt 0 ]; do
-    key="$1"
-    value="$2"
+add_kv_pair() {
+    local pair="\"${1}\": \"${2}\""
 
-    pair="\"$key\":\"$value\""
-    if [ -z "$kv_pairs" ]; then
-        kv_pairs=$pair
+    if [[ -z "${kv_pairs}" ]]; then
+        kv_pairs="${pair}"
     else
-        kv_pairs="$kv_pairs, $pair"
+        kv_pairs="${kv_pairs}, ${pair}"
     fi
+}
 
+# if "timestamps" is first argument, extract next two arguments as unix timestamp and iso8601 timestamp
+if [[ "${1}" == "timestamps" ]]; then
+    add_kv_pair "timestamp_unix" "${2}"
+    add_kv_pair "timestamp_iso8601" "${3}"
+    shift 3
+fi
+
+# ensure we have an even number of remaining arguments
+if [ $(($# % 2)) -ne 0 ]; then
+    die "incorrect number of arguments"
+fi
+
+# extract remaining arguments as key-value pairs
+while [ $# -gt 0 ]; do
+    add_kv_pair "${1}" "${2}"
     shift 2
 done
 
-timestamp_unix="$(get-time-in-unix-seconds)"
+add_kv_pair "kafka_message_version" "${kafka_message_version}"
 
-message="{\"topic\":\"${kafka_dashboard_topic}\", ${kv_pairs}, \"timestamp_unix\":${timestamp_unix}, \"kafka_message_version\":\"${kafka_message_version}\", \"username\":\"${kafka_server_username}\"}"
+message="{${kv_pairs}}"
 
 # printf "${message}\n"
 
@@ -60,6 +68,4 @@ echo "${message}" | kafkacat -P -b "${kafka_server_host_ip}:${kafka_server_port}
 
 res=$?
 
-if [[ "${res}" != 0 ]]; then
-    printf "Failed to send message to Kafka: ${message}\n"
-fi
+[[ "${res}" != 0 ]] && die "Failed to send message to Kafka: ${message}"

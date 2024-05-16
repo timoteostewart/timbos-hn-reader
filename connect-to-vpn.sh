@@ -140,17 +140,17 @@ fi
 # (we are not necessarily connected to the vpn though.)
 #
 
-nordvpn set autoconnect enabled
-nordvpn set cybersec disabled
-nordvpn set dns 192.168.1.59
-nordvpn set firewall disabled
-# nordvpn set killswitch disabled  # requires firewall to be enabled
-nordvpn set lan-discovery disabled
-# nordvpn set obfuscate disabled  # requires OpenVPN to be enabled
-nordvpn set routing enabled
-nordvpn set technology nordlynx
-nordvpn whitelist add port 22
-nordvpn whitelist add subnet 192.168.1.1/24
+nordvpn set autoconnect enabled >/dev/null 2>&1
+nordvpn set cybersec disabled >/dev/null 2>&1
+nordvpn set dns 192.168.1.59 >/dev/null 2>&1
+nordvpn set firewall disabled >/dev/null 2>&1
+# nordvpn set killswitch disabled > /dev/null 2>&1  # requires firewall to be enabled
+nordvpn set lan-discovery disabled >/dev/null 2>&1
+# nordvpn set obfuscate disabled > /dev/null 2>&1  # requires OpenVPN to be enabled
+nordvpn set routing enabled >/dev/null 2>&1
+nordvpn set technology nordlynx >/dev/null 2>&1
+nordvpn whitelist add port 22 >/dev/null 2>&1
+nordvpn whitelist add subnet 192.168.1.1/24 >/dev/null 2>&1
 
 if vpn-is-connected; then
     exit 0
