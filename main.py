@@ -169,6 +169,14 @@ def main():
         exit_code = 1
 
     delay = 60
+
+    for handler in logging.getLogger().handlers:
+        if hasattr(handler, "stop"):
+            handler.stop()
+
+    for handler in downstream_handlers_objects:
+        handler.close()
+
     logger.info(
         log_prefix
         + f"Pausing for {delay} seconds before exiting (to let Node/Playwright tidy up)."

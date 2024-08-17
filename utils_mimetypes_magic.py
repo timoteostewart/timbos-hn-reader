@@ -635,7 +635,7 @@ def is_wellformed_xml_func(local_file: str, log_prefix="") -> bool:
 
 
 def is_utf8(local_file: str, log_prefix="") -> bool:
-    # requires Linux xmlwf command
+    # requires Linux isutf8 command
     log_prefix_local = log_prefix + "is_utf8: "
 
     cmd = f"isutf8 {local_file}"

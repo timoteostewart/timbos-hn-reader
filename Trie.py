@@ -1,11 +1,3 @@
-def is_iterable(obj):
-    try:
-        iter(obj)
-        return True
-    except TypeError:
-        return False
-
-
 class Trie:
     class TrieNode:
         def __init__(self):

@@ -1121,7 +1121,10 @@ async def monkeypatched_computer_0_7_1(self, proxy, browser_name) -> None:
         return
 
 
-faker = hrequests.playwright_mock.Faker
+# noqa: E402
+import hrequests.playwright_mock as hrequests_playright_mock
+
+faker = hrequests_playright_mock.Faker
 faker.computer = monkeypatched_computer_0_7_1
 
 
