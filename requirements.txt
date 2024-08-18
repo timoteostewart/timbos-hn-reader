@@ -1,44 +1,22 @@
 anyio==4.1.0  # not latest
-hrequests[all]==0.7.1  # after install or update, run: playwright install && playwright install-deps  # not latest
-httpcore==1.0.2  # latest
+hrequests[all]==0.7.1  # not latest
 httpx[http2,socks]==0.25.2  # not latest
-#
-async-generator
-attrs
 beautifulsoup4
 boto3
-botocore
-certifi
-charset-normalizer
-cssselect
-exceptiongroup
+gevent
 goose3
-h11
-idna
-jmespath
-langdetect
-lxml
-outcome
-pillow
-# playwright  # after install or update, run: playwright install && playwright install-deps
-pyahocorasick
-pypdf[all]
-pysocks
-python-dateutil
+greenlet
+intervaltree
+newspaper3k
+pypdf
 python-magic
 pytz
-pyyaml
 requests
-s3transfer
-six
-sniffio
-# sortedcontainers
-soupsieve
-trio
-trio-websocket
-typing-extensions
+undetected_chromedriver
 urllib3
-wand
-websockets
-wsproto
-intervaltree
+Wand
+PyYAML
+playwright
+playwright-stealth
+undetected_chromedriver
+
