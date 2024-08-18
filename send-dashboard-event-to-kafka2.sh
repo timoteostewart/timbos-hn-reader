@@ -16,8 +16,6 @@ fi
 source /srv/timbos-hn-reader/functions.sh
 source /srv/timbos-hn-reader/thnr-common-functions.sh
 
-alias kafkacat='kcat'
-
 # retrieve secrets
 kafka_dashboard_topic="$(get-secret 'kafka_dashboard_topic')"
 # kafka_message_version="$(get-secret 'kafka_message_version')"
@@ -66,7 +64,7 @@ message="{${kv_pairs}}"
 
 # printf "${message}\n"
 
-echo "${message}" | kafkacat -P -b "${kafka_server_host_ip}:${kafka_server_port}" -t "${kafka_dashboard_topic}"
+echo "${message}" | kcat -P -b "${kafka_server_host_ip}:${kafka_server_port}" -t "${kafka_dashboard_topic}"
 
 res=$?
 

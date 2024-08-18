@@ -1,5 +1,5 @@
 anyio==4.1.0  # not latest
-hrequests[all]==0.7.1  # not latest
+hrequests[all]==0.8.2  # not latest
 httpx[http2,socks]==0.25.2  # not latest
 beautifulsoup4
 boto3
@@ -19,4 +19,3 @@ PyYAML
 playwright
 playwright-stealth
 undetected_chromedriver
-

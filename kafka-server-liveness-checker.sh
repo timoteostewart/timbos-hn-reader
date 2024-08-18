@@ -92,7 +92,7 @@ fi
 
 # Check if Kafka is operating normally
 topic_name="thnr-dashboard"
-liveness_check_output="$(kafkacat -b "${remote_host_ip}:${remote_host_port_of_interest}" -L 2>&1)"
+liveness_check_output="$(kcat -b "${remote_host_ip}:${remote_host_port_of_interest}" -L 2>&1)"
 
 if [[ "${liveness_check_output}" == *"Metadata for all topics"* ]]; then
     log_message="${log_prefix_local} kcat: Kafka server at ${remote_host_ip}:${remote_host_port_of_interest} is up"
