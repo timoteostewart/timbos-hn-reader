@@ -16,6 +16,8 @@ fi
 source /srv/timbos-hn-reader/functions.sh
 source /srv/timbos-hn-reader/thnr-common-functions.sh
 
+alias kafkacat='kcat'
+
 # retrieve secrets
 kafka_dashboard_topic="$(get-secret 'kafka_dashboard_topic')"
 # kafka_message_version="$(get-secret 'kafka_message_version')"
