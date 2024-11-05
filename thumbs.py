@@ -69,7 +69,7 @@ domains_exempt_from_trim = [
     "opengraph.githubassets.com",
 ]
 
-domains_with_higher_quality_resizing = [
+domains_that_receive_higher_quality_resizing = [
     "opengraph.githubassets.com",
 ]
 
@@ -77,28 +77,56 @@ filename_substrings_making_exempt_from_trim = [
     "flag",
 ]
 
-ignore_images_whose_urls_contain_these_substrings = [
+ignore_og_images_whose_urls_contain_these_substrings = [
     "https://www.redditstatic.com/new-icon.png",
 ]
 
-ignore_images_at_these_exact_urls = [
+ignore_og_images_at_these_exact_urls = [
     "https://pastebin.com/i/facebook.png",
     "https://s0.wp.com/i/blank.jpg",
     "https://archive.org/images/notfound.png",
 ]
 
-ignore_images_from_these_domains = set()
+ignore_og_images_from_these_domains = set()
 
-ignore_images_with_these_content_types = {
+ignore_og_images_with_these_content_types = {
     "image/vnd.microsoft.icon",
     "image/avif",  # TODO: support avif and jpeg XL
     "text/html",
     # "image/svg+xml",
 }
 
-ignore_images_with_these_exact_filenames = {
-    "blank.jpg",
+ignore_og_images_with_these_exact_filenames = {
     "logo-1200-630.jpg",
+    "blank.jpg",
+    "blank.png",
+    "blank_thumbnail.jpg",
+    "blank_thumbnail.png",
+    "coming_soon.jpg",
+    "coming_soon.png",
+    "default.jpg",
+    "default.png",
+    "empty.jpg",
+    "empty.png",
+    "error.jpg",
+    "error.png",
+    "image_not_available.jpg",
+    "image_not_available.png",
+    "missing.jpg",
+    "missing.png",
+    "no_image.jpg",
+    "no_image.png",
+    "no_image_available.jpg",
+    "no_image_available.png",
+    "no_photo.jpg",
+    "no_photo.png",
+    "no_thumbnail.jpg",
+    "no_thumbnail.png",
+    "not_available.jpg",
+    "not_available.png",
+    "notfound.png",
+    "placeholder.jpg",
+    "placeholder.png",
 }
 
 
@@ -106,21 +134,21 @@ def image_url_is_disqualified(url: str, mimetype_via_magic=None, log_prefix="") 
     log_prefix_local = log_prefix + "image_url_is_disqualified: "
 
     # check if we ignore this URL
-    if url in ignore_images_at_these_exact_urls:
+    if url in ignore_og_images_at_these_exact_urls:
         logger.info(log_prefix_local + f"ignore og:image based on exact URL {url}")
         return True
 
     # check if we ignore this domain
-    if ignore_images_from_these_domains:
+    if ignore_og_images_from_these_domains:
         og_image_domain, og_image_domain_minus_www = utils_text.get_domains_from_url(
             url
         )
-        if og_image_domain in ignore_images_from_these_domains:
+        if og_image_domain in ignore_og_images_from_these_domains:
             logger.info(
                 log_prefix_local + f"ignore og:image based on domain {og_image_domain}"
             )
             return True
-        elif og_image_domain_minus_www in ignore_images_from_these_domains:
+        elif og_image_domain_minus_www in ignore_og_images_from_these_domains:
             logger.info(
                 log_prefix_local
                 + f"ignore og:image based on domain {og_image_domain_minus_www}"
@@ -139,14 +167,14 @@ def image_url_is_disqualified(url: str, mimetype_via_magic=None, log_prefix="") 
             logger.info(log_prefix_local + f"ignore og:image based on URL suffix {x}")
             return True
 
-    for pattern in ignore_images_whose_urls_contain_these_substrings:
+    for pattern in ignore_og_images_whose_urls_contain_these_substrings:
         if pattern in url:
             logger.info(log_prefix + f"ignore image {url} based on substring {pattern}")
             return True
 
     if (
         mimetype_via_magic
-        and mimetype_via_magic in ignore_images_with_these_content_types
+        and mimetype_via_magic in ignore_og_images_with_these_content_types
     ):
         logger.info(
             log_prefix
@@ -155,7 +183,7 @@ def image_url_is_disqualified(url: str, mimetype_via_magic=None, log_prefix="") 
         return True
 
     parsed_url = urlparse(url)
-    for each in ignore_images_with_these_exact_filenames:
+    for each in ignore_og_images_with_these_exact_filenames:
         if each in os.path.basename(parsed_url.path):
             logger.info(
                 log_prefix_local
@@ -448,11 +476,7 @@ def get_background_pixel(img, log_prefix=""):
         )
 
     most_common_pixels = collections.Counter(pixel_samples).most_common()
-    for (
-        each_pixel_KV
-    ) in (
-        most_common_pixels
-    ):  # do it this tedious way in case I would want to, say, skip over the transparent pixels and get the next most common pixel color that was not transparent
+    for each_pixel_KV in most_common_pixels:  # do it this tedious way in case I would want to, say, skip over the transparent pixels and get the next most common pixel color that was not transparent
         if "srgba" in each_pixel_KV[0]:
             background_pixel_as_Color = Color(
                 config.settings["THUMBS"]["BG_COLOR_FOR_TRANSPARENT_THUMBS"]
@@ -701,7 +725,7 @@ def populate_image_slug_in_story_object(
     )
 
     # preferentially render thumbs from certain domains with better quality
-    if og_image_domain_minus_www in domains_with_higher_quality_resizing:
+    if og_image_domain_minus_www in domains_that_receive_higher_quality_resizing:
         WEBP_EXTRALARGE_THUMB_COMPRESSION_QUALITY = 100
 
     # if multipage PDF, keep only first page
@@ -773,7 +797,6 @@ def populate_image_slug_in_story_object(
 
             # if PDF format, rasterize using Ghostscript
             elif image_format in ["pdf", "ai"]:
-
                 # TODO
                 if force_im6:
                     pass
