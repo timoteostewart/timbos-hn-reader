@@ -78,12 +78,11 @@ filename_substrings_making_exempt_from_trim = [
 ]
 
 ignore_og_images_whose_urls_contain_these_substrings = [
-    "https://www.redditstatic.com/new-icon.png",
+    "redditstatic.com/new-icon.png",
 ]
 
 ignore_og_images_at_these_exact_urls = [
     "https://pastebin.com/i/facebook.png",
-    "https://s0.wp.com/i/blank.jpg",
     "https://archive.org/images/notfound.png",
 ]
 
@@ -94,6 +93,35 @@ ignore_og_images_with_these_content_types = {
     "image/avif",  # TODO: support avif and jpeg XL
     "text/html",
     # "image/svg+xml",
+}
+
+ignore_og_images_with_these_filename_stems = {
+    "404",
+    "blank",
+    "blank-thumbnail",
+    "blank_thumbnail",
+    "coming-soon",
+    "coming_soon",
+    "default",
+    "empty",
+    "error",
+    "image-not-available",
+    "image_not_available",
+    "missing",
+    "no-image",
+    "no-image-available",
+    "no-photo",
+    "no-thumbnail",
+    "no_image",
+    "no_image_available",
+    "no_photo",
+    "no_thumbnail",
+    "not-available",
+    "not-found",
+    "not_available",
+    "not_found",
+    "notfound",
+    "placeholder",
 }
 
 ignore_og_images_with_these_exact_filenames = {
@@ -183,11 +211,20 @@ def image_url_is_disqualified(url: str, mimetype_via_magic=None, log_prefix="") 
         return True
 
     parsed_url = urlparse(url)
+    basename = os.path.basename(parsed_url.path)
     for each in ignore_og_images_with_these_exact_filenames:
-        if each in os.path.basename(parsed_url.path):
+        if each in basename:
             logger.info(
                 log_prefix_local
-                + f"ignore og:image based on filename {os.path.basename(parsed_url.path)} in {url}"
+                + f"ignore og:image based on file basename {basename} in {url}"
+            )
+            return True
+    filename_stem = os.path.splitext(basename)[0]
+    for each in ignore_og_images_with_these_filename_stems:
+        if each in filename_stem:
+            logger.info(
+                log_prefix_local
+                + f"ignore og:image based on filename stem {filename_stem} in {url}"
             )
             return True
 

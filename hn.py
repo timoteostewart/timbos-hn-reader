@@ -1487,7 +1487,7 @@ def page_package_processor(page_package: PageOfStories, context: dict = None):
         more_button_lm = (
             '<hr class="before-more-buttons"/>'
             '<div class="more-buttons">'
-            '<div class="next-page-link-tray">'
+            '<div id="no-more-pages-message" class="next-page-link-tray">'
             f"no more pages of {page_package.story_type}. "
             f'<a href="{get_story_page_url(page_package.story_type, 1, light_mode=True)}">'
             f"page 1 of {page_package.story_type}"
@@ -1499,7 +1499,7 @@ def page_package_processor(page_package: PageOfStories, context: dict = None):
         more_button_dm = (
             '<hr class="before-more-buttons"/>'
             '<div class="more-buttons">'
-            '<div class="next-page-link-tray">'
+            '<div id="no-more-pages-message" class="next-page-link-tray">'
             f"no more pages of {page_package.story_type}. "
             f'<a href="{get_story_page_url(page_package.story_type, 1, light_mode=False)}">'
             f"page 1 of {page_package.story_type}"
@@ -1762,7 +1762,9 @@ def populate_story_card_html_in_story_object(story_object):
 
     story_card_html += (
         f'<a href="{story_object.title_hyperlink}">'
-        + utils_text.insert_possible_line_breaks(story_object.title)
+        + utils_text.insert_possible_line_breaks(
+            story_object.title.replace("<", "&lt;")
+        )
         + "</a>"
     )
 

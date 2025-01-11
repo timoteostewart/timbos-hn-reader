@@ -27,6 +27,7 @@ logger = None
 ## TODO:
 # - create kafka_logger in main.py
 # - in other files, import main, and then use kafka_logger.info() etc.
+# - in addition to checking for og:image, check for og:image:secure_url
 
 
 def check_for_required_dirs():
