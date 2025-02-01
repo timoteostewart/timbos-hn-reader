@@ -11,6 +11,7 @@ most_recent_nordvpn_messages.txt
 restats
 secrets_file.py
 user-sync
+temp/
 
 # ========================================
 # source: https://github.com/github/gitignore/blob/main/Global/VisualStudioCode.gitignore

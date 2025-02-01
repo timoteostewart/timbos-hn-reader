@@ -1100,8 +1100,29 @@ for k, v in fingerprints_bablosoft_com_responses_cached.items():
     fingerprints_bablosoft_com_responses[k] = json.loads(v)
 
 
-async def monkeypatched_computer_0_7_1(self, proxy, browser_name) -> None:
-    # hrequests-0.7.1
+# async def monkeypatched_computer_0_7_1(self, proxy, browser_name) -> None:
+#     # hrequests-0.7.1
+#     data = fingerprints_bablosoft_com_responses[browser_name]
+
+#     # self.useragent = data.get("ua")
+#     self.vendor = data.get("vendor")
+#     self.renderer = data.get("renderer")
+#     self.width = data.get("width", 0)
+#     self.height = data.get("height", 0)
+#     self.avail_width = data.get("availWidth", 0)
+#     self.avail_height = data.get("availHeight", 0)
+#     # If the Window is too small for the captcha
+#     if (
+#         self.width
+#         and self.height > 810
+#         and self.avail_height > 810
+#         and self.avail_width > 810
+#     ):
+#         return
+
+
+async def monkeypatched_computer_0_8_2(self, proxy, browser_name) -> None:
+    # hrequests-0.8.2
     data = fingerprints_bablosoft_com_responses[browser_name]
 
     # self.useragent = data.get("ua")
@@ -1121,11 +1142,10 @@ async def monkeypatched_computer_0_7_1(self, proxy, browser_name) -> None:
         return
 
 
-# noqa: E402
-import hrequests.playwright_mock as hrequests_playright_mock
+import hrequests.playwright_mock as hrequests_playright_mock  # noqa: E402
 
 faker = hrequests_playright_mock.Faker
-faker.computer = monkeypatched_computer_0_7_1
+faker.computer = monkeypatched_computer_0_8_2
 
 
 re_ip_address = r"^(\d{1,3}\.){3}\d{1,3}$"
@@ -1143,22 +1163,22 @@ def is_ip_address(ip_address):
     return True
 
 
-async def monkeypatched_check_proxy_0_7_1(self) -> None:
-    # hrequests-0.7.1
-    self.country = "United States"
-    self.country_code = "US"
-    self.region = "TX"
-    self.city = "Austin"
-    self.zip = "78723"
-    self.latitude = 30.3023
-    self.longitude = -97.6914
-    self.timezone = "America/Chicago"
+# async def monkeypatched_check_proxy_0_7_1(self) -> None:
+#     # hrequests-0.7.1
+#     self.country = "United States"
+#     self.country_code = "US"
+#     self.region = "TX"
+#     self.city = "Austin"
+#     self.zip = "78723"
+#     self.latitude = 30.3023
+#     self.longitude = -97.6914
+#     self.timezone = "America/Chicago"
 
 
-async def monkeypatched_check_proxy_0_8_1(
+async def monkeypatched_check_proxy_0_8_2(
     self, httpx_client: httpx.AsyncClient
 ) -> None:
-    # hrequests-0.8.1
+    # hrequests-0.8.2
     self.country = "United States"
     self.country_code = "US"
     self.region = "TX"
@@ -1170,27 +1190,27 @@ async def monkeypatched_check_proxy_0_8_1(
 
 
 proxy_manager = hrequests.playwright_mock.ProxyManager
-proxy_manager.check_proxy = monkeypatched_check_proxy_0_8_1
+proxy_manager.check_proxy = monkeypatched_check_proxy_0_8_2
 
 
-async def monkeypatched_goto_0_7_1(self, url):
-    # hrequests-0.7.1
+# async def monkeypatched_goto_0_7_1(self, url):
+#     # hrequests-0.7.1
+#     resp = await self.page.goto(url)
+#     if resp:
+#         self.status_code = resp.status
+#     else:
+#         logger.error("monkeypatched_goto_0_7_1(): resp is None. ~Tim~")
+#     return resp
+
+
+async def monkeypatched_goto_0_8_2(self, url):
+    # hrequests-0.8.2
     resp = await self.page.goto(url)
     if resp:
         self.status_code = resp.status
     else:
-        logger.error("monkeypatched_goto_0_7_1(): resp is None. ~Tim~")
+        logger.error("monkeypatched_goto_0_8_2(): resp is None. ~Tim~")
     return resp
 
 
-async def monkeypatched_goto_0_8_1(self, url):
-    # hrequests-0.8.1
-    resp = await self.page.goto(url)
-    if resp:
-        self.status_code = resp.status
-    else:
-        logger.error("monkeypatched_goto_0_8_1(): resp is None. ~Tim~")
-    return resp
-
-
-hrequests.BrowserSession._goto = monkeypatched_goto_0_8_1
+hrequests.BrowserSession._goto = monkeypatched_goto_0_8_2

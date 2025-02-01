@@ -91,6 +91,7 @@ def generic_exception_handler(
 
 
 def asdfft1(item_id=None, pos_on_page=None):
+    # asdfft1 = acquire story details for first time v1
     log_prefix_id = f"id={item_id}: "
     log_prefix_local = log_prefix_id + "asdfft1: "
 
@@ -224,7 +225,6 @@ def asdfft1(item_id=None, pos_on_page=None):
             og_image_url_result = soup.find("meta", {"property": "og:image"})
             if og_image_url_result:
                 if og_image_url_result.has_attr("content"):
-
                     meta_og_image_content = og_image_url_result["content"]
 
                     if meta_og_image_content.startswith("data:"):
@@ -276,9 +276,7 @@ def asdfft1(item_id=None, pos_on_page=None):
                                         + f"saved og:image base64 inline data to {local_file_with_og_image_inline_data_decoded} url={story_object.url} ~Tim~"
                                     )
 
-                                    story_object.og_image_inline_data_decoded_local_path = (
-                                        local_file_with_og_image_inline_data_decoded
-                                    )
+                                    story_object.og_image_inline_data_decoded_local_path = local_file_with_og_image_inline_data_decoded
 
                     else:
                         story_object.og_image_url = og_image_url_result["content"]
@@ -362,7 +360,6 @@ def asdfft1(item_id=None, pos_on_page=None):
             )
 
         if story_object.og_image_url or story_object.og_image_is_inline_data:
-
             if story_object.og_image_url and thumbs.image_url_is_disqualified(
                 url=story_object.og_image_url, log_prefix=log_prefix_local
             ):
@@ -451,11 +448,9 @@ generic_binary_mimetypes = set(
 
 
 def asdfft2(item_id=None, pos_on_page=None):
+    # asdfft2 = acquire story details for first time v2
     log_prefix_id = f"id={item_id}: "
     log_prefix_local = log_prefix_id + "asdfft2: "
-
-    # short delay since asdfft1() and asdfft2() are called in sequence and scrape the same page
-    time.sleep(utils_random.random_real(0.5, 1.5))
 
     story_as_dict = None
     try:
@@ -620,7 +615,7 @@ def asdfft2(item_id=None, pos_on_page=None):
         if mimetype_via_file_command:
             possible_magic_types.append(mimetype_via_file_command)
         if mimetype_via_exiftool:
-            if isinstance(type(mimetype_via_exiftool), str  ):
+            if isinstance(type(mimetype_via_exiftool), str):
                 possible_magic_types.append(mimetype_via_exiftool)
             else:
                 logger.info(
@@ -796,7 +791,6 @@ def asdfft2(item_id=None, pos_on_page=None):
         og_image_url_result = soup.find("meta", {"property": "og:image"})
         if og_image_url_result:
             if og_image_url_result.has_attr("content"):
-
                 meta_og_image_content = og_image_url_result["content"]
 
                 if meta_og_image_content.startswith("data:"):
@@ -917,7 +911,6 @@ def asdfft2(item_id=None, pos_on_page=None):
         # TODO: extract a frame as a screenshot, OR, even better, extract 12 frames and arrange them in a 4x3 grid: 2024-02-13T15:15:56Z [new]     INFO     id 39358138: asdfft1(): unexpected linked url content-type video/mp4 for url https://www.goody2.ai/video/goody2-169.mp4
 
     if story_object.og_image_url or story_object.og_image_is_inline_data:
-
         if story_object.og_image_is_inline_data:
             # TODO: implement this
             story_object.has_thumb = False  # since this is a stub
@@ -1076,7 +1069,7 @@ def freshen_up(story_object=None, page_package=None):
             log_prefix_local
             + f"freshen_up: query to hacker-news.firebaseio.com failed for story id={story_object.id} ; so re-using old story details"
         )
-        raise Exception("failed to freshen story: "+exc)
+        raise Exception("failed to freshen story: " + exc)
 
     if not updated_story_data_as_dict:
         logger.info(
@@ -1276,7 +1269,6 @@ def item_factory(story_as_dict):
 
 
 def page_package_processor(page_package: PageOfStories, context: dict = None):
-
     ppp_unique_id = utils_hash.get_sha1_of_current_time(
         salt=utils_random.random_real(0, 1)
     )
@@ -1426,7 +1418,7 @@ def page_package_processor(page_package: PageOfStories, context: dict = None):
                 exc_slug = f"{exc_name}: {exc_msg}"
                 logger.error(
                     log_prefix_rank_cur_id_loop
-                    +  "asdfft: unexpected exception: "
+                    + "asdfft: unexpected exception: "
                     + exc_slug
                 )
                 tb_str = traceback.format_exc()
@@ -1496,7 +1488,7 @@ def page_package_processor(page_package: PageOfStories, context: dict = None):
         more_button_lm = (
             '<hr class="before-more-buttons"/>'
             '<div class="more-buttons">'
-            '<div class="next-page-link-tray">'
+            '<div id="no-more-pages-message" class="next-page-link-tray">'
             f"no more pages of {page_package.story_type}. "
             f'<a href="{get_story_page_url(page_package.story_type, 1, light_mode=True)}">'
             f"page 1 of {page_package.story_type}"
@@ -1508,7 +1500,7 @@ def page_package_processor(page_package: PageOfStories, context: dict = None):
         more_button_dm = (
             '<hr class="before-more-buttons"/>'
             '<div class="more-buttons">'
-            '<div class="next-page-link-tray">'
+            '<div id="no-more-pages-message" class="next-page-link-tray">'
             f"no more pages of {page_package.story_type}. "
             f'<a href="{get_story_page_url(page_package.story_type, 1, light_mode=False)}">'
             f"page 1 of {page_package.story_type}"
@@ -1743,7 +1735,6 @@ def page_package_processor(page_package: PageOfStories, context: dict = None):
 
 
 def populate_story_card_html_in_story_object(story_object):
-
     # slugs must begin and end with <div> tags
 
     data_separator_slug = f'<div class="data-separator">{config.settings["SYMBOLS"]["DATA_SEPARATOR"]}</div>'
@@ -1772,7 +1763,9 @@ def populate_story_card_html_in_story_object(story_object):
 
     story_card_html += (
         f'<a href="{story_object.title_hyperlink}">'
-        + utils_text.insert_possible_line_breaks(story_object.title)
+        + utils_text.insert_possible_line_breaks(
+            story_object.title.replace("<", "&lt;")
+        )
         + "</a>"
     )
 

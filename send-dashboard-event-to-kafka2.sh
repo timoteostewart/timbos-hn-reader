@@ -64,7 +64,7 @@ message="{${kv_pairs}}"
 
 # printf "${message}\n"
 
-echo "${message}" | kafkacat -P -b "${kafka_server_host_ip}:${kafka_server_port}" -t "${kafka_dashboard_topic}"
+echo "${message}" | kcat -P -b "${kafka_server_host_ip}:${kafka_server_port}" -t "${kafka_dashboard_topic}"
 
 res=$?
 

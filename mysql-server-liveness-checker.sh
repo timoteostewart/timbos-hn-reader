@@ -25,7 +25,7 @@ remote_host_ip="$(get-secret 'mysql_server_host_ip')"
 # mysql_server_hostname="$(get-secret 'mysql_server_hostname')"
 remote_host_port_of_interest="$(get-secret 'mysql_server_port')"
 
-nmap_xml="$(create-nmap-xml "${remote_host_ip}")"
+nmap_tempfile="$(create-nmap-xml "${remote_host_ip}")"
 remote_host_is_reachable="$(is-host-reachable "${remote_host_ip}" "${nmap_tempfile}")"
 remote_host_port_of_interest_state="$(get-port-state "${remote_host_ip}" "${remote_host_port_of_interest}" "${nmap_tempfile}")"
 
