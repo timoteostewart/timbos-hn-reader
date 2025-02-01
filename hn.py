@@ -91,6 +91,7 @@ def generic_exception_handler(
 
 
 def asdfft1(item_id=None, pos_on_page=None):
+    # asdfft1 = acquire story details for first time v1
     log_prefix_id = f"id={item_id}: "
     log_prefix_local = log_prefix_id + "asdfft1: "
 
@@ -447,7 +448,7 @@ generic_binary_mimetypes = set(
 
 
 def asdfft2(item_id=None, pos_on_page=None):
-    # asdfft2=acquire story details for first time v2
+    # asdfft2 = acquire story details for first time v2
     log_prefix_id = f"id={item_id}: "
     log_prefix_local = log_prefix_id + "asdfft2: "
 
